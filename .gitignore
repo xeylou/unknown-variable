@@ -5,7 +5,7 @@ node_modules/
 .env
 
 # Base de données SQLite (données du serveur)
-data/
+/data/
 
 # Serveur Lavalink — binaires lourds & config (reconstructibles via LAVALINK.md)
 lavalink/
