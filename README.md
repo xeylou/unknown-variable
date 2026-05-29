@@ -2,7 +2,7 @@
 
 Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 67 commandes, 16 composants, 7 events. Nom du bot personnalisable via `BOT_NAME`.
 
-> 📘 **Guides compagnons :** [`SETUP.md`](SETUP.md) (installation pas-à-pas, mises à jour, BDD) · [`LAVALINK.md`](LAVALINK.md) (module musique).
+> 📘 Ce README couvre **tout** : installation, mise en route, hébergement, mises à jour et base de données. Seul le module musique a son guide dédié : [`LAVALINK.md`](LAVALINK.md).
 
 **Modules :**
 - 🎫 **Tickets** — panneau + sélecteur, catégories isolées par équipe, transcript, notation, réouverture 7 j en DM
@@ -41,16 +41,31 @@ Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 67 commandes,
 
 ## 2. Préparation du serveur Discord
 
-Active **Mode développeur** (Paramètres utilisateur → Avancés → Mode développeur) pour pouvoir copier les IDs (clic droit → *Copier l'identifiant*).
+Active **Mode développeur** (Paramètres utilisateur → Avancés) pour pouvoir copier les IDs (clic droit → *Copier l'identifiant*). `GUILD_ID` = clic droit sur le serveur.
 
-Récupère :
-- `GUILD_ID` : clic droit sur ton serveur.
-- `STAFF_ROLE_ID` : crée un rôle « Staff » → clic droit sur le rôle.
-- `ADMIN_ROLE_ID` *(optionnel)* : crée un rôle « Administration » pour les commandes sensibles (`/backup`, `/config`, `/logs`, `/setup-*`, `/lockdown serveur`, `/role temp`, `/rappel-role`).
-- `TICKET_CATEGORY_ID` : crée une **catégorie** Discord nommée « Tickets » → clic droit.
-- `LOGS_CHANNEL_ID` : crée un salon `#logs-tickets` (visible seulement par le staff) → clic droit.
+### Rôles à créer **avant** le démarrage du bot
 
-Place le **rôle du bot au-dessus** des rôles qu'il doit gérer (sinon il ne pourra pas attribuer/retirer ces rôles).
+| Rôle | Sert à | Comment |
+|---|---|---|
+| `Staff` | Modération (`KICK`/`BAN`/`TIMEOUT`/`WARN`…) | Créer un rôle « Staff », copier son ID → `STAFF_ROLE_ID` dans `.env`. |
+| `Administration` *(optionnel)* | Commandes sensibles (`/config`, `/logs`, `/backup`, `/lockdown serveur`, `/setup-*`, `/role temp`, `/rappel-role`) | Créer un rôle « Admin », copier son ID → `ADMIN_ROLE_ID` dans `.env`. |
+| `Membre vérifié` | Donné quand un membre clique « J'accepte le règlement » | À configurer après le boot via `/config reglement role:`. |
+| **Un rôle par catégorie de ticket** | Équipe responsable d'une catégorie. **Seuls eux voient les tickets** de cette catégorie et reçoivent le ping à l'ouverture. | Un rôle par catégorie (`@Support`, `@Bug-team`, `@Builders`…). Les IDs iront dans `src/config.ts` (voir [§6.1](#61-srcconfigts--catégories-de-tickets-couleurs)). |
+
+⚠️ **Hiérarchie cruciale** : le rôle du bot doit être **au-dessus** de tous les rôles qu'il manipule (Staff, Admin, rôles temporaires, rôles de tickets, autorôle). Sinon `Missing Permissions` sur les attribute/remove.
+
+### Salons & catégories à créer
+
+| Élément | Sert à | Variable / commande |
+|---|---|---|
+| Catégorie « Tickets » | Conteneur des salons de tickets | `TICKET_CATEGORY_ID` dans `.env` |
+| Salon `#logs-tickets` (privé staff) | Transcripts à la fermeture | `LOGS_CHANNEL_ID` dans `.env` |
+| Salon `#bienvenue` | Welcome card / message | `/config accueil` |
+| Salon `#règlement` | Affichage du règlement | `/setup-reglement` |
+| Salons `#logs-messages`, `#logs-modération`, etc. (privés staff) | Logs serveur catégorisés | `/logs salon …` |
+| Salon `#suggestions` | Réception `/suggestion` | `/config suggestions` |
+| Salon vocal « ➕ Créer un vocal » | Pattern « rejoindre pour créer » | `/config vocaux-temp` |
+| Salon `#tickets` | Panneau de sélection des catégories | `/setup-tickets` (à lancer dedans) |
 
 ---
 
@@ -59,22 +74,65 @@ Place le **rôle du bot au-dessus** des rôles qu'il doit gérer (sinon il ne po
 ```bash
 git clone <ton-repo> unknown_variable
 cd unknown_variable
-npm install
+npm install                 # installe + génère le client Prisma (hook postinstall)
 cp .env.example .env
 # Édite .env avec tes valeurs
+npx prisma db push          # crée la base SQLite + les tables (1ʳᵉ fois)
 npm start
 ```
 
-Premier déploiement en jeu (à faire dans l'ordre) :
+> Si tu vois `Cannot find module '.prisma/client'` au démarrage : le client Prisma n'a pas été généré — lance `npx prisma generate` (puis `npx prisma db push`).
+
+> ⚠️ Avant le boot : configure les **catégories de tickets** dans `src/config.ts` (étape la plus oubliée — voir [§6.1](#61-srcconfigts--catégories-de-tickets-couleurs)). Une catégorie sans `staffRoleId` refuse la création de ticket.
+
+### Mise en route en jeu (dans l'ordre, une seule fois)
+
+À faire dans Discord après le premier boot :
+
 ```
-/permissions check         → bouton « Tout corriger » pour accorder les perms aux rôles
-/logs tout-dans salon:#logs
-/config reglement role:@Membre
-/setup-reglement           → dans le salon #règlement
-/setup-tickets             → dans le salon #tickets
+1. /permissions check
+   → Bouton « Tout corriger » : accorde aux rôles Staff/Admin/ticket-staff les
+     perms Discord nécessaires pour que les /commandes apparaissent dans leur
+     auto-complétion.
+
+2. /logs tout-dans salon:#logs-modération
+   → Active les 8 catégories de logs dans un salon. Granularise ensuite avec
+     /logs salon categorie:messages salon:#logs-messages
+
+3. /config reglement role:@Membre vérifié
+   → Rôle donné quand un membre clique « J'accepte ».
+
+4. /setup-reglement
+   → À lancer DANS #règlement. Stocke l'ID du salon pour les DM de sanctions.
+
+5. /config autorole role:@En attente        (optionnel)
+   → Rôle attribué à chaque arrivée (typiquement « pré-vérification »).
+
+6. /config accueil salon:#bienvenue carte-image:true
+   → Welcome card. Ajoute message:"..." et/ou image-fond:https://...
+     Variables : {user} {username} {server} {count}.
+
+7. /config suggestions salon:#suggestions
+
+8. /config vocaux-temp salon:#➕-créer-vocal [categorie:#Vocaux]
+
+9. /setup-tickets
+   → À lancer DANS #tickets. Déploie le menu déroulant.
 ```
 
-Voir [§8 Configuration à chaud](#8-configuration-à-chaud-via-commandes) pour la liste complète.
+### Modules optionnels à activer si voulus
+
+```
+/config automod actif:true phishing:true token-leak:true zalgo:true
+/config antiraid actif:true age-min-compte:7 expulser-jeunes:true
+/config captcha actif:true role-non-verifie:@Non-vérifié role-verifie:@Vérifié salon:#vérification
+/config minecraft ip:play.monserveur.fr salon-statut:#statut-mc
+/config minecraft-rcon host:play.monserveur.fr mot-de-passe:xxx port:25575 role-en-jeu:@En jeu
+/setup-roles role1:@Joueur role2:@Builder titre:"Choisis ton rôle"
+/config invitation url:https://discord.gg/xxxx
+```
+
+Référence complète de toutes les commandes de config : [§8](#8-configuration-à-chaud-via-commandes). Intégrations externes (Twitch, YouTube, RSS, GitHub) : [§8.5](#85-suivi--notifications).
 
 ---
 
@@ -156,7 +214,7 @@ Source de vérité : [`.env.example`](.env.example) (copier en `.env`).
 | `GITHUB_WEBHOOK_HOST` | `0.0.0.0` | Adresse d'écoute du récepteur webhook. |
 | `GITHUB_WEBHOOK_PATH` | `/github/webhook` | Chemin de l'endpoint webhook (`POST`). |
 
-> **GitHub — mode hybride** : `GITHUB_TOKEN` (polling, marche derrière un NAT) et/ou `GITHUB_WEBHOOK_SECRET` (webhooks temps réel, exige que le bot soit joignable). Détails, scopes du PAT et config du webhook dans [`SETUP.md`](SETUP.md#si-suivi-github-commits-prmerges-cicd-releases).
+> **GitHub — mode hybride** : `GITHUB_TOKEN` (polling, marche derrière un NAT) et/ou `GITHUB_WEBHOOK_SECRET` (webhooks temps réel, exige que le bot soit joignable). Détails, scopes du PAT et config du webhook : [§8.5 Suivi GitHub](#suivi-github-git).
 
 ---
 
@@ -387,7 +445,19 @@ Exemples d'URL à passer à `/notif ajouter-rss` :
 
 #### Suivi GitHub (`/git`)
 
-Suit l'activité de dépôts (commits, PR/merges, **CI/CD GitHub Actions**, releases, issues, reviews). **Hybride** : webhooks temps réel (`GITHUB_WEBHOOK_SECRET`) et/ou polling de secours (`GITHUB_TOKEN`) — une déduplication interne évite tout doublon. Activation, scopes du token et config du webhook : voir [`SETUP.md`](SETUP.md#si-suivi-github-commits-prmerges-cicd-releases).
+Suit l'activité de dépôts (commits, PR/merges, **CI/CD GitHub Actions**, releases, issues, reviews). **Hybride** : webhooks temps réel (`GITHUB_WEBHOOK_SECRET`) et/ou polling de secours (`GITHUB_TOKEN`) — une déduplication interne évite tout doublon. Le module reste désactivé tant qu'aucune des deux variables n'est remplie. Pour des dépôts **privés**, les deux approches marchent :
+
+**Option A — Polling (recommandé, zéro infra réseau, marche derrière un NAT/box maison)**
+1. Crée un *fine-grained PAT* sur https://github.com/settings/tokens (Tokens → Fine-grained), accès aux dépôts voulus, en **lecture seule** : *Metadata*, *Contents*, *Pull requests*, *Actions*, *Issues*.
+2. `.env` : `GITHUB_TOKEN=github_pat_...` → redémarrer.
+3. Le bot interroge l'API toutes les ~2 min. Premier passage : état mémorisé **sans annoncer** (évite le flood) ; les events suivants déclenchent les messages.
+
+**Option B — Webhooks (temps réel, exige que le bot soit joignable depuis Internet)**
+1. `.env` : `GITHUB_WEBHOOK_SECRET=<chaîne aléatoire>` (+ éventuellement `GITHUB_WEBHOOK_PORT`, défaut 3000) → redémarrer. Le bot expose `POST <hôte>:<port>/github/webhook` (signatures vérifiées en HMAC-SHA256).
+2. Dépôt → *Settings → Webhooks → Add webhook* : Payload URL = `http(s)://<hôte>:<port>/github/webhook`, Content type = `application/json`, Secret = la même valeur, « Send me everything » (ou push / pull_request / workflow_run / release / issues / pull_request_review).
+3. Derrière un NAT/box maison : expose le port via un tunnel (`cloudflared tunnel`, `smee.io`) — ou reste en **Option A** (aucune ouverture de port).
+
+> Renseigner **les deux** = mode hybride : webhooks pour le temps réel + polling lent en filet de sécurité (réconciliation ~10 min). Pense à `npm run deploy` après avoir activé le module (les commandes `/git` ne s'enregistrent que si `GITHUB_TOKEN`/`GITHUB_WEBHOOK_SECRET` est défini).
 
 | Commande | Paramètres | Effet |
 |---|---|---|
@@ -397,8 +467,6 @@ Suit l'activité de dépôts (commits, PR/merges, **CI/CD GitHub Actions**, rele
 | `/git lier-membre` | `membre:user` `pseudo-github:string` | Lie un membre Discord à un pseudo GitHub (mention auto dans les annonces). |
 | `/git digest` / `digest-off` | `salon:chan` `[frequence]` `[heure]` | Récap périodique (commits, PR mergées, releases, état CI). |
 | `/gitlink lier\|statut\|delier` | `[pseudo-github]` | Chaque membre déclare son pseudo GitHub pour être mentionné sur ses commits / PR. |
-
-> Premier passage en polling : l'état est mémorisé **sans annoncer**. Pense à `npm run deploy` après avoir activé le module (les commandes `/git` ne s'enregistrent que si `GITHUB_TOKEN`/`GITHUB_WEBHOOK_SECRET` est défini).
 
 ### 8.6 Salons statistiques
 
@@ -512,7 +580,7 @@ Suit l'activité de dépôts (commits, PR/merges, **CI/CD GitHub Actions**, rele
 | `/git digest\|digest-off` | admin | Active / désactive le récap périodique d'activité. |
 | `/gitlink lier\|statut\|delier` | staff | Liaison auto-déclarée pseudo GitHub ↔ compte Discord. |
 
-> **Hybride** webhooks + polling de secours — voir [§5](#5-variables-denvironnement-env) (`GITHUB_*`) et [`SETUP.md`](SETUP.md#si-suivi-github-commits-prmerges-cicd-releases). Sans `GITHUB_TOKEN` ni `GITHUB_WEBHOOK_SECRET`, le module est désactivé (commandes non déployées).
+> **Hybride** webhooks + polling de secours — voir [§5](#5-variables-denvironnement-env) (`GITHUB_*`) et [§8.5 Suivi GitHub](#suivi-github-git). Sans `GITHUB_TOKEN` ni `GITHUB_WEBHOOK_SECRET`, le module est désactivé (commandes non déployées).
 
 ### 🎵 Musique
 
@@ -564,50 +632,184 @@ Données persistantes : `data/unknown_variable.db`. **Sauvegarde ce dossier** po
 
 ---
 
-## 11. Maintenance
+## 11. Maintenance & mises à jour
+
+### Commandes courantes
 
 ```bash
-# Logs en direct
-sudo journalctl -u unknown_variable -f
+sudo journalctl -u unknown_variable -f      # logs en direct
+sudo systemctl restart unknown_variable     # redémarrer
+```
 
-# Redémarrer
-sudo systemctl restart unknown_variable
+### Mettre à jour le bot
 
-# Mettre à jour
+```bash
 cd /home/unknown_variable/unknown_variable
 git pull
-npm install
-npx prisma generate                     # si schema.prisma a changé
+npm install            # réinstalle si besoin + régénère le client Prisma (hook postinstall)
+npx prisma db push     # uniquement si prisma/schema.prisma a changé (voir §12)
 sudo systemctl restart unknown_variable
+sudo journalctl -u unknown_variable -f      # surveille le redémarrage
 ```
+
+**Avant un `git pull` :**
+- Sauvegarde la BDD : `cp data/<bot>.db data/backup-$(date +%F).db`.
+- Sauvegarde la config en jeu : `/backup export` dans Discord (garde le `.json` à part).
+
+**Si le redémarrage échoue** → `sudo journalctl -u unknown_variable -n 100 --no-pager`. Causes classiques :
+- `Used disallowed intents` → intent activé dans le code mais pas dans le Developer Portal.
+- `Cannot find module '.prisma/client'` → `npx prisma generate` puis `npx prisma db push`.
+- Token invalide → token régénéré dans le Portal mais pas reporté dans `.env`.
 
 ### Re-déployer les slash-commands
 
-Les commandes sont déployées automatiquement au boot pour `GUILD_ID`. Pour les pousser globalement (visible sur tous les serveurs après ~1 h) :
+Déployées automatiquement au boot pour `GUILD_ID`. Pour les pousser **globalement** (tous serveurs, propagation ~1 h) : `npm run deploy:global`.
+
+### Mettre à jour les dépendances npm
 
 ```bash
-npm run deploy:global
+npm outdated          # liste ce qui peut bouger
+npm update            # respecte le semver de package.json (^x.y.z)
+npm audit && npm audit fix
+npm start             # teste en local avant systemctl restart
 ```
 
-### Sauvegarder la base
+**Mise à jour majeure** (`discord.js` v14→v15, Prisma 7→8…) — risquée : lire le CHANGELOG, bumper manuellement, `npm install` en test, `npx tsc --noEmit`, tester en local contre un serveur de test, puis déployer.
 
-```bash
-cp data/unknown_variable.db data/backup-$(date +%F).db
-```
+**Dépendances natives à surveiller :**
 
-### Sauvegarder la config en jeu
+| Dépendance | Point d'attention |
+|---|---|
+| `better-sqlite3` | Compilation native — peut nécessiter `apt install build-essential python3`. Échec → `npm rebuild better-sqlite3 --build-from-source`. |
+| `@napi-rs/canvas` | Binding Rust pré-buildé ; sur ARM/Alpine, vérifier le bon binaire. |
+| `@prisma/adapter-better-sqlite3` | Doit être de la **même version majeure** que `@prisma/client` (les deux en 7.x). |
 
-```
-/backup export
-```
+### Mettre à jour Lavalink (musique)
+
+YouTube change ses protections régulièrement — cause #1 des pannes de musique. Détails dans [`LAVALINK.md`](LAVALINK.md). En résumé : arrêter Lavalink, sauvegarder `Lavalink.jar` + `application.yml`, télécharger la dernière v4 ([releases](https://github.com/lavalink-devs/Lavalink/releases)), et surtout **bumper le plugin YouTube** dans `application.yml` (`dev.lavalink.youtube:youtube-plugin:X.Y.Z`) quand `/play` ne renvoie plus rien. Lavalink v4 exige **Java 17+**.
+
+### Mettre à jour l'hôte
+
+Au moins tous les 3 mois : `sudo apt update && sudo apt upgrade -y`, puis `sudo systemctl restart unknown_variable lavalink`.
+
+### Rotation du token Discord
+
+En cas de fuite (commit accidentel du `.env`, partage) : Developer Portal → **Bot → Reset Token**, mettre à jour `.env`, `sudo systemctl restart unknown_variable`. L'ancien token meurt immédiatement.
 
 ---
 
-## 12. Dépannage
+## 12. Base de données
+
+### Stack & stockage
+
+- **SQLite**, fichier unique `data/<bot>.db` (chemin via `DATABASE_PATH`, dérivé de `BOT_NAME` sinon).
+- **Prisma 7** + driver adapter `@prisma/adapter-better-sqlite3` ([src/database.ts](src/database.ts)). `schema.prisma` ne contient **pas** d'URL : elle est injectée à l'exécution depuis `config.database.path` (chemin absolu).
+- Cache mémoire des clés `guild_config` ([src/utils/configCache.ts](src/utils/configCache.ts), TTL 60 s, invalidation à l'écriture).
+
+### Modèles principaux
+
+| Table | Contenu | Durabilité |
+|---|---|---|
+| `guild_config` | Config clé/valeur (~80+ clés) | Durable |
+| `tickets` | Tickets (numéro, catégorie, claim, rating, commentaire) | Durable |
+| `sanctions` | Casier : warn/kick/ban/timeout/softban | Durable |
+| `tags` | FAQ `/tag` | Durable |
+| `notifications` | Abonnements YouTube/Twitch/RSS | Durable |
+| `github_repos` / `github_seen` / `github_links` | Dépôts suivis, dédup, liaisons GitHub↔Discord | Durable |
+| `mc_watchers`, `mc_links`, `mc_link_codes` | Suivi & liaisons Minecraft | Durable |
+| `stat_channels` | Compteurs de membres par rôle | Durable |
+| `reaction_role_panels` / `_entries` | Panneaux reaction-roles | Durable |
+| `temp_roles` | Rôles temporaires à expirer | Durable (sinon retrait raté) |
+| `reminders` / `recurring_reminders` | Rappels persos & récurrents | Volatile |
+| `polls` / `poll_votes` | Sondages persistants | Volatile |
+| `giveaways` / `giveaway_entries` | Giveaways en cours | Volatile |
+| `suggestions`, `temp_voice`, `afk`, `captcha_pending` | États transitoires | Volatile |
+
+**`/backup export` n'exporte que les tables durables** (config + stats + mc_watchers + notifications + tags + reaction-roles) — c'est pour migrer une config vers un autre serveur, pas du disaster recovery. Pour ce dernier, copie le fichier `.db` complet.
+
+### Sauvegardes
+
+```bash
+# Snapshot ponctuel
+cp data/<bot>.db data/backup-$(date +%F-%H%M).db
+
+# Sauvegarde 100 % propre, même bot allumé (SQLite WAL)
+sqlite3 data/<bot>.db ".backup data/snapshot.db"
+```
+
+Cron quotidien + rotation 7 jours (`crontab -e`) :
+```cron
+0 3 * * * cp /home/unknown_variable/unknown_variable/data/<bot>.db /home/unknown_variable/backups/uv-$(date +\%F).db && find /home/unknown_variable/backups -name 'uv-*.db' -mtime +7 -delete
+```
+
+Restauration :
+```bash
+sudo systemctl stop unknown_variable
+cp data/backup-2026-05-25.db data/<bot>.db
+sudo systemctl start unknown_variable
+```
+
+### Migrations Prisma (`db push`)
+
+Le repo **n'a pas de dossier `prisma/migrations/`** : les changements de schéma sont propagés avec **`prisma db push`** (compare `schema.prisma` à la base et applique le diff, sans fichier de migration). Adapté au mono-instance, et **idempotent**. Routine après un changement de schéma :
+
+```bash
+git pull
+npx prisma generate     # régénère le client TS (auto via postinstall)
+npx prisma db push      # synchronise la base
+sudo systemctl restart unknown_variable
+```
+
+- **Sûr** : ajouter une table, une colonne **nullable** ou avec `@default`, un index.
+- **Dangereux (perte de données)** : renommer/supprimer une colonne, changer un type, ajouter une colonne `NOT NULL` sans `@default` sur une table peuplée.
+
+Dans les cas dangereux, vérifie d'abord, puis sauvegarde si besoin :
+```bash
+npx prisma db push --dry-run     # liste les changements sans les appliquer
+```
+Si tu vois `⚠️ data loss warning`, **sauvegarde la base avant**.
+
+> Multi-instance / versionnement : passe aux vraies migrations — `npx prisma migrate dev --name <nom>` puis `npx prisma migrate deploy` en prod (baseline d'une base existante avec `prisma migrate resolve --applied <init>`).
+
+### Inspection / debug
+
+```bash
+sqlite3 data/<bot>.db                                # REPL SQL : .tables, SELECT…, .quit
+npx prisma studio --schema=prisma/schema.prisma      # UI web → http://localhost:5555
+```
+
+### Migration de serveur (changement de VPS)
+
+```bash
+# Ancien serveur
+sudo systemctl stop unknown_variable
+tar czf uv-data.tgz data/ .env src/config.ts         # le code vient de git
+
+# Nouveau serveur
+git clone <repo> unknown_variable && cd unknown_variable
+npm install
+tar xzf ../uv-data.tgz
+# pas besoin de db push : le schéma est déjà appliqué dans le .db copié
+sudo systemctl enable --now unknown_variable
+```
+
+### Passer à Postgres/MySQL (si SQLite devient limitant)
+
+1. `provider = "sqlite"` → `"postgresql"` dans [prisma/schema.prisma](prisma/schema.prisma).
+2. Remplacer l'adapter dans [src/database.ts](src/database.ts) par `@prisma/adapter-pg` (ou équivalent).
+3. Adapter `.env` (`DATABASE_URL=postgres://...`).
+4. Migrer les données : `pgloader sqlite:///data/<bot>.db postgresql://...`.
+5. `npx prisma migrate dev --name init-postgres`.
+
+---
+
+## 13. Dépannage
 
 | Problème | Solution |
 |---|---|
 | `Used disallowed intents` | Active les Privileged Intents dans le Developer Portal (§1). |
+| `Cannot find module '.prisma/client/default'` | Client Prisma non généré : `npx prisma generate`, puis `npx prisma db push`. (Généré aussi par le hook `postinstall` au `npm install`.) |
+| `tsx: not found` | Dépendances non installées : `npm install` dans le dossier du bot. |
 | Slash-commands invisibles dans Discord | Lance `/permissions check` → bouton « Tout corriger ». Discord met le cache à jour après quelques secondes (parfois reconnexion du client). |
 | Le bot ne crée pas les salons | Place son rôle au-dessus du rôle Staff + vérifie la permission `Manage Channels`. |
 | `Missing Permissions` | Le bot n'a pas accès à la catégorie cible — ajuste les permissions de la catégorie. |
@@ -623,3 +825,15 @@ cp data/unknown_variable.db data/backup-$(date +%F).db
 | Webhook GitHub renvoie 401 | Le *Secret* du webhook (Settings du dépôt) doit être **identique** à `GITHUB_WEBHOOK_SECRET`. |
 | « Une catégorie statistique existe déjà » | `/stats supprimer` puis `/stats creer`. |
 | Token Discord exposé sur GitHub | **Régénère immédiatement** dans Developer Portal → Bot → Reset Token. |
+
+---
+
+## 14. Checklist post-installation
+
+- [ ] `/permissions check` → bouton « Tout corriger » → tous les rôles ✅
+- [ ] `/logs voir` → 8 catégories configurées
+- [ ] Un membre lambda **ne voit pas** `/help` (réservé staff/ticket-staff) ; un membre du staff **le voit**
+- [ ] Test : ouvrir un ticket → le bon rôle est pingué, et seuls lui + l'auteur voient le salon
+- [ ] Test : kick un compte alt → DM reçu, casier mis à jour, log dans le salon de modération
+- [ ] Test : poster un lien `discord.gg/xxxx` (si automod actif) → supprimé
+- [ ] Sauvegarde de `data/<bot>.db` planifiée (voir [§12](#12-base-de-données))
