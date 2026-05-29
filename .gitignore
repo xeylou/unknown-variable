@@ -1,0 +1,24 @@
+# Dépendances
+node_modules/
+
+# Secrets — NE JAMAIS COMMIT
+.env
+
+# Base de données SQLite (données du serveur)
+data/
+
+# Serveur Lavalink — binaires lourds & config (reconstructibles via LAVALINK.md)
+lavalink/
+
+# Outillage Claude Code — interne, non destiné au dépôt
+.claude/
+CLAUDE.md
+
+# Dossier de staging généré pour le push initial
+to_push/
+
+# Logs
+*.log
+
+# Divers
+.DS_Store

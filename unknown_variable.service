@@ -1,0 +1,17 @@
+[Unit]
+Description=_unknown_variable Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+User=unknown_variable
+WorkingDirectory=/home/unknown_variable/unknown_variable
+ExecStart=/home/unknown_variable/unknown_variable/node_modules/.bin/tsx src/index.ts
+Environment=NODE_ENV=production
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/unknown_variable.log
+StandardError=append:/var/log/unknown_variable.log
+
+[Install]
+WantedBy=multi-user.target

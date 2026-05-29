@@ -1,0 +1,327 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model giveaway_entries {
+  message_id String
+  user_id    String
+
+  @@id([message_id, user_id])
+}
+
+model giveaways {
+  message_id   String  @id
+  channel_id   String
+  guild_id     String
+  prize        String
+  winners      Int     @default(1)
+  host_id      String
+  ends_at      Int
+  ended        Int     @default(0)
+  paused       Int     @default(0)
+  paused_at    Int?
+  requirements String? // JSON : { min_age_days, required_role_ids: string[] }
+  bonus_roles  String? // JSON : { roleId: multiplier }
+}
+
+model guild_config {
+  guild_id String
+  key      String
+  value    String?
+
+  @@id([guild_id, key])
+}
+
+model notifications {
+  id              Int     @id @default(autoincrement())
+  guild_id        String
+  platform        String  // 'youtube' | 'twitch' | 'rss'
+  target          String  // ID de chaîne YT, login Twitch, ou URL du flux RSS
+  target_name     String?
+  discord_channel String
+  /// Rôle Discord à mentionner à chaque annonce (optionnel).
+  role_id         String?
+  last_item       String?
+}
+
+model reminders {
+  id         Int     @id @default(autoincrement())
+  user_id    String
+  channel_id String
+  guild_id   String?
+  text       String
+  remind_at  Int
+}
+
+/// Rappels récurrents (daily / weekly / monthly). Le moteur planifie la
+/// prochaine échéance puis ré-incrémente après chaque déclenchement.
+model recurring_reminders {
+  id           Int     @id @default(autoincrement())
+  user_id      String
+  channel_id   String
+  guild_id     String?
+  text         String
+  frequency    String  // 'daily' | 'weekly' | 'monthly'
+  next_at      Int
+  role_id      String? // si défini : ping ce rôle au lieu du user
+  created_at   Int
+
+  @@index([next_at], map: "idx_recurring_reminders_next_at")
+}
+
+model sanctions {
+  id           Int     @id @default(autoincrement())
+  guild_id     String
+  user_id      String
+  moderator_id String
+  type         String
+  reason       String?
+  created_at   Int
+  expires_at   Int?
+  active       Int     @default(1)
+
+  @@index([guild_id, user_id], map: "idx_sanctions_user")
+}
+
+model suggestion_votes {
+  suggestion_id Int
+  user_id       String
+  vote          Int
+
+  @@id([suggestion_id, user_id])
+}
+
+model suggestions {
+  id         Int     @id @default(autoincrement())
+  guild_id   String
+  message_id String?
+  thread_id  String?
+  tag        String? // catégorie libre : idée / bug / ux / minecraft / …
+  author_id  String
+  content    String
+  status     String  @default("pending")
+  created_at Int
+}
+
+model temp_voice {
+  channel_id String @id
+  guild_id   String
+  owner_id   String
+  created_at Int
+}
+
+/// Préférences sauvegardées par owner : appliquées à chaque nouvelle création.
+model tempvoice_prefs {
+  user_id    String @id
+  name       String?
+  user_limit Int?
+  locked     Int    @default(0)
+  updated_at Int
+}
+
+model tickets {
+  channel_id String  @id
+  guild_id   String
+  user_id    String
+  number     Int?
+  category   String?
+  claimed_by String?
+  status     String  @default("open")
+  created_at Int
+  closed_at  Int?
+  rating     Int?
+  /// Commentaire libre laissé par l'auteur à la fermeture (modale DM, max 1000 chars).
+  comment    String?
+
+  @@index([guild_id, user_id, created_at], map: "idx_tickets_user_time")
+}
+
+model mc_watchers {
+  id           Int     @id @default(autoincrement())
+  guild_id     String
+  channel_id   String
+  message_id   String?
+  ip           String
+  role_id      String
+  interval_min Int     @default(5)
+  last_online  Int?
+  created_at   Int
+
+  @@index([guild_id], map: "idx_mc_watchers_guild")
+}
+
+model stat_channels {
+  channel_id String  @id
+  guild_id   String
+  role_id    String
+  label      String?
+
+  @@index([guild_id], map: "idx_stat_channels_guild")
+}
+
+/// Notes privées staff sur un membre.
+model member_notes {
+  id           Int     @id @default(autoincrement())
+  guild_id     String
+  user_id      String
+  moderator_id String
+  content      String
+  created_at   Int
+
+  @@index([guild_id, user_id], map: "idx_member_notes_user")
+}
+
+/// Rôles temporaires (auto-retirés à `expires_at`).
+model temp_roles {
+  id         Int    @id @default(autoincrement())
+  guild_id   String
+  user_id    String
+  role_id    String
+  expires_at Int
+  assigned_by String
+  reason     String?
+  created_at Int
+
+  @@index([expires_at], map: "idx_temp_roles_expires")
+}
+
+/// Panneaux reaction-roles : un message avec des emojis qui attribuent un rôle.
+model reaction_role_panels {
+  message_id String @id
+  guild_id   String
+  channel_id String
+  exclusive  Int    @default(0) // 1 = un seul rôle parmi la liste
+  created_at Int
+}
+
+/// Entrées d'un panneau reaction-role : emoji → rôle.
+model reaction_role_entries {
+  message_id String
+  emoji      String // unicode ou `name:id`
+  role_id    String
+
+  @@id([message_id, emoji])
+  @@index([message_id], map: "idx_reaction_role_entries_msg")
+}
+
+/// Sondages persistants (multi-options, durée arbitraire, anonyme optionnel).
+model polls {
+  message_id    String  @id
+  guild_id      String
+  channel_id    String
+  host_id       String
+  question      String
+  options       String  // JSON : string[]
+  multi_choice  Int     @default(0)
+  anonymous     Int     @default(0)
+  ends_at       Int
+  ended         Int     @default(0)
+  created_at    Int
+}
+
+/// Votes individuels sur un sondage persistant.
+model poll_votes {
+  message_id String
+  user_id    String
+  option_idx Int
+
+  @@id([message_id, user_id, option_idx])
+  @@index([message_id], map: "idx_poll_votes_msg")
+}
+
+/// Système de tags / FAQ : réponses pré-écrites rappelées par /tag.
+model tags {
+  guild_id   String
+  name       String
+  content    String
+  created_by String
+  created_at Int
+
+  @@id([guild_id, name])
+}
+
+/// Statut AFK des membres. `since` est la date de mise en AFK.
+model afk {
+  guild_id String
+  user_id  String
+  reason   String?
+  since    Int
+
+  @@id([guild_id, user_id])
+}
+
+/// Liaisons compte Discord ↔ pseudo Minecraft (vérifiées par challenge).
+model mc_links {
+  guild_id     String
+  user_id      String
+  mc_uuid      String
+  mc_username  String
+  linked_at    Int
+
+  @@id([guild_id, user_id])
+  @@index([guild_id, mc_username], map: "idx_mc_links_username")
+}
+
+/// Codes de vérification en attente pour /mclink — TTL court.
+model mc_link_codes {
+  code        String @id
+  guild_id    String
+  user_id     String
+  mc_username String
+  expires_at  Int
+}
+
+/// Tickets de CAPTCHA en attente (à vérifier dans une modale).
+model captcha_pending {
+  guild_id   String
+  user_id    String
+  answer     String
+  attempts   Int    @default(0)
+  created_at Int
+
+  @@id([guild_id, user_id])
+}
+
+/// Dépôts GitHub suivis (annonces commits / PR / CI / releases dans Discord).
+/// Reçu par webhook (temps réel) et/ou polling de secours — voir features/github/.
+model github_repos {
+  id              Int     @id @default(autoincrement())
+  guild_id        String
+  owner           String
+  repo            String
+  discord_channel String  // salon par défaut des annonces
+  branches        String? // JSON string[] des branches suivies ; null = branche par défaut
+  events          String? // JSON string[] des types d'events activés ; null = tous
+  role_id         String? // rôle pingué sur échec CI / event important
+  status_channel  String? // salon du message « statut pipeline » live
+  status_message  String? // id du message « statut pipeline » live (édité en place)
+  state           String? // JSON : curseurs polling + ETags (last_commit_sha, etag_*…)
+  created_at      Int
+
+  @@index([guild_id], map: "idx_github_repos_guild")
+}
+
+/// Ledger de déduplication : empêche webhook + polling d'annoncer 2× le même
+/// event. La clé suit le format « owner/repo:type:identifiant ».
+model github_seen {
+  key     String @id
+  seen_at Int
+
+  @@index([seen_at], map: "idx_github_seen_time")
+}
+
+/// Liaison pseudo GitHub ↔ compte Discord — permet de @mentionner l'auteur d'un
+/// commit / d'une PR dans les annonces. Auto-déclarée (calque mc_links).
+model github_links {
+  guild_id     String
+  user_id      String
+  github_login String
+  linked_at    Int
+
+  @@id([guild_id, user_id])
+  @@index([guild_id, github_login], map: "idx_github_links_login")
+}

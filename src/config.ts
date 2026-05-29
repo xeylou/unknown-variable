@@ -1,0 +1,127 @@
+import 'dotenv/config';
+import fs from 'node:fs';
+import path from 'node:path';
+import { z } from 'zod';
+
+const envSchema = z.object({
+  DISCORD_TOKEN: z.string().min(1, 'DISCORD_TOKEN is required'),
+  CLIENT_ID: z.string().min(1, 'CLIENT_ID is required'),
+  GUILD_ID: z.string().min(1, 'GUILD_ID is required'),
+  STAFF_ROLE_ID: z.string().optional(),
+  ADMIN_ROLE_ID: z.string().optional(),
+  DATABASE_PATH: z.string().default('./data/unknown_variable.db'),
+  TWITCH_CLIENT_ID: z.string().optional(),
+  TWITCH_CLIENT_SECRET: z.string().optional(),
+  TICKET_CATEGORY_ID: z.string().optional(),
+  LOGS_CHANNEL_ID: z.string().optional(),
+  LAVALINK_HOST: z.string().default('localhost'),
+  LAVALINK_PORT: z.coerce.number().default(2333),
+  LAVALINK_PASSWORD: z.string().optional(),
+  LAVALINK_SECURE: z.string().optional(),
+  GITHUB_TOKEN: z.string().optional(),
+  GITHUB_WEBHOOK_SECRET: z.string().optional(),
+  GITHUB_WEBHOOK_PORT: z.coerce.number().default(3000),
+  GITHUB_WEBHOOK_HOST: z.string().default('0.0.0.0'),
+  GITHUB_WEBHOOK_PATH: z.string().default('/github/webhook')
+});
+
+const envParsed = envSchema.safeParse(process.env);
+
+if (!envParsed.success) {
+  console.error('❌ Erreur de configuration dans le fichier .env :');
+  envParsed.error.issues.forEach((err) => console.error(`   - ${err.path.join('.')}: ${err.message}`));
+  process.exit(1);
+}
+
+const env = envParsed.data;
+
+// Crée le dossier de la DB SQLite si nécessaire — better-sqlite3 ne le crée
+// pas tout seul et le bot crashe sinon au premier accès.
+const dbDir = path.dirname(path.resolve(env.DATABASE_PATH));
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+/**
+ * Configuration centrale du bot.
+ * Les valeurs sensibles viennent du fichier .env, le reste est éditable ici.
+ */
+export default {
+  // --- Identifiants Discord (.env) ---
+  token: env.DISCORD_TOKEN,
+  clientId: env.CLIENT_ID,
+  guildId: env.GUILD_ID,
+  staffRoleId: env.STAFF_ROLE_ID,
+  adminRoleId: env.ADMIN_ROLE_ID,
+
+  // --- Base de données ---
+  database: {
+    path: env.DATABASE_PATH
+  },
+
+  // --- Notifications Twitch (optionnel — laisser vide désactive Twitch) ---
+  twitch: {
+    clientId: env.TWITCH_CLIENT_ID || null,
+    clientSecret: env.TWITCH_CLIENT_SECRET || null
+  },
+
+  // --- Serveur Lavalink (musique — optionnel : sans mot de passe, la musique est désactivée) ---
+  lavalink: {
+    host: env.LAVALINK_HOST,
+    port: env.LAVALINK_PORT,
+    password: env.LAVALINK_PASSWORD || null,
+    secure: env.LAVALINK_SECURE === 'true'
+  },
+
+  // --- Intégration GitHub (optionnel — désactivée si ni token ni secret webhook) ---
+  // Hybride : webhooks (temps réel) si `webhookSecret`, polling (secours/primaire)
+  // si `token`. Voir features/github/. Au moins l'un des deux active le module.
+  github: {
+    token: env.GITHUB_TOKEN || null,
+    webhookSecret: env.GITHUB_WEBHOOK_SECRET || null,
+    webhookPort: env.GITHUB_WEBHOOK_PORT,
+    webhookHost: env.GITHUB_WEBHOOK_HOST,
+    webhookPath: env.GITHUB_WEBHOOK_PATH
+  },
+
+  // --- Couleurs réutilisables dans les embeds ---
+  colors: {
+    primary: 0x5865f2,
+    neutral: 0x2b2d31,
+    success: 0x57f287,
+    danger: 0xed4245,
+    warning: 0xfee75c
+  },
+
+  // --- Système de tickets ---
+  tickets: {
+    categoryId: env.TICKET_CATEGORY_ID || null, // catégorie Discord où ranger les tickets
+    logsChannelId: env.LOGS_CHANNEL_ID || null, // salon où envoyer les transcripts
+    // Modifie librement les catégories du menu déroulant
+    // Chaque catégorie cible UN rôle Discord (l'équipe responsable). Seuls ce
+    // rôle + `ADMIN_ROLE_ID` voient le ticket — pas le rôle staff global. Seul
+    // le rôle spécifique est pingué à l'ouverture.
+    // ⚠️ Remplis chaque `staffRoleId` par l'ID du rôle Discord correspondant
+    // (clic droit sur le rôle → Copier l'identifiant, en mode développeur).
+    // Une catégorie sans `staffRoleId` valide refusera la création de tickets.
+    categories: [
+      { value: 'support', label: 'Support général',  description: 'Question ou aide',           emoji: '🛠️', staffRoleId: '' },
+      { value: 'bug',     label: 'Signaler un bug',  description: 'Rapporter un problème',      emoji: '🐛', staffRoleId: '' },
+      { value: 'build',   label: 'Demande de build', description: 'Commander une construction', emoji: '🏗️', staffRoleId: '' },
+      { value: 'staff',   label: 'Contact staff',    description: 'Demande privée au staff',    emoji: '👤', staffRoleId: '1507070171158941816' },
+      { value: 'other',   label: 'Autre',            description: 'Autre demande',              emoji: '❓', staffRoleId: '' }
+    ] as Array<{
+      value: string;
+      label: string;
+      description: string;
+      emoji: string;
+      /**
+       * Rôle Discord responsable de cette catégorie. Obligatoire : ce rôle est
+       * le seul à voir/recevoir le ping (avec `ADMIN_ROLE_ID` qui voit tout
+       * mais n'est pas pingué). Mets la chaîne vide pour désactiver la
+       * catégorie tant qu'aucun rôle n'est attribué.
+       */
+      staffRoleId: string;
+    }>
+  }
+};

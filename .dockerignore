@@ -1,0 +1,22 @@
+# Dépendances : réinstallées dans l'image (les binaires natifs de l'hôte
+# ne sont pas compatibles avec Alpine Linux)
+node_modules
+
+# Secrets — fournis via --env-file au lancement
+.env
+
+# Base de données : montée en volume, jamais incluse dans l'image
+data
+
+# Serveur Lavalink — binaires lourds, service séparé (hors image)
+lavalink
+
+# Outillage Claude Code & staging — inutiles dans l'image
+.claude
+CLAUDE.md
+to_push
+
+# Build, logs, divers
+dist
+*.log
+.git
