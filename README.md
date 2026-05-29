@@ -77,6 +77,7 @@ cd unknown_variable
 npm install                 # installe + génère le client Prisma (hook postinstall)
 cp .env.example .env
 # Édite .env avec tes valeurs
+npx prisma generate
 npx prisma db push          # crée la base SQLite + les tables (1ʳᵉ fois)
 npm start
 ```
