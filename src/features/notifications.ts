@@ -178,7 +178,7 @@ export function parseFirstFeedItem(xml: string): { id: string; title: string; li
 async function checkRSS(n: NotificationRow): Promise<void> {
   const res = await fetch(n.target, {
     headers: {
-      'User-Agent': 'unknown_variable-bot/1.0 (Discord notification)',
+      'User-Agent': `${config.botSlug}-bot/1.0 (Discord notification)`,
       Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml; q=0.9, */*; q=0.5'
     }
   }).catch((e) => { log.warn(`RSS fetch failed (${n.target})`, e); return null; });

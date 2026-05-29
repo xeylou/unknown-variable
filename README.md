@@ -1,6 +1,6 @@
 # 🤖 _unknown_variable — Bot Discord multifonction
 
-Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 65 commandes, 16 composants, 7 events.
+Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 67 commandes, 16 composants, 7 events. Nom du bot personnalisable via `BOT_NAME`.
 
 > 📘 **Guides compagnons :** [`SETUP.md`](SETUP.md) (installation pas-à-pas, mises à jour, BDD) · [`LAVALINK.md`](LAVALINK.md) (module musique).
 
@@ -15,6 +15,7 @@ Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 65 commandes,
 - 🧰 **Utilitaires** — `/userinfo`, `/serverinfo`, `/avatar`, `/ping`, `/botinfo`, rappels (ponctuels, récurrents, par rôle), tags FAQ, AFK, embed builder
 - ⛏️ **Minecraft** — statut, suivi automatique, RCON (whitelist, rôle en jeu)
 - 🔔 **Notifications** — YouTube, Twitch, et **flux RSS génériques** (Instagram, TikTok, X via RSSHub, Reddit, blogs, podcasts…) avec ping de rôle configurable
+- 🐙 **GitHub** — suivi de dépôts privés (commits, PR/merges, **CI/CD**, releases, issues, reviews) en **hybride** webhooks temps réel + polling de secours ; statut pipeline live, ping de rôle sur échec CI, digest périodique, liaison GitHub↔Discord
 - 🎵 **Musique** — lecture YouTube via Lavalink (file, filtres, paroles)
 - 📊 **Salons statistiques** — compteurs de membres par rôle
 
@@ -33,6 +34,8 @@ Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 65 commandes,
    - Bot Permissions : `Manage Channels`, `Manage Roles`, `Send Messages`, `Embed Links`, `Attach Files`, `Read Message History`, `View Channels`, `Kick Members`, `Ban Members`, `Moderate Members`, `Manage Messages`, `Move Members`, `Mute Members`, `Deafen Members`, `Add Reactions`, `View Audit Log`
    - Plus simple : coche `Administrator` pour éviter les soucis de permission.
    - Copie l'URL en bas, ouvre-la, invite le bot sur ton serveur.
+
+> 💡 Le **nom de l'application** (Developer Portal → General Information → *Name*) devient le nom affiché du bot dans Discord — repris automatiquement dans les embeds. Pour le branding interne (logs, User-Agent, nom du fichier BDD, statut), tu peux aussi définir `BOT_NAME` dans le `.env` (voir [§5](#5-variables-denvironnement-env)).
 
 ---
 
@@ -135,16 +138,25 @@ Source de vérité : [`.env.example`](.env.example) (copier en `.env`).
 
 | Variable | Défaut | Description |
 |---|---|---|
+| `BOT_NAME` | `_unknown_variable` | Nom de marque (logs, User-Agent, statut, nom du fichier BDD). Le nom **affiché dans Discord** vient lui du Developer Portal. |
+| `BOT_STATUS` | *(vide)* | Statuts tournants, séparés par `\|`. Placeholders `{name}` `{count}`. Défaut : `{name} \| /help \| {count} serveur(s)`. |
 | `ADMIN_ROLE_ID` | *(vide)* | Rôle « super-staff » pour les commandes sensibles. Sans ça, il faut la permission Discord « Administrateur ». |
 | `TICKET_CATEGORY_ID` | *(vide)* | Catégorie Discord où ranger les salons de tickets. Sans ça, ils sont créés à la racine. |
 | `LOGS_CHANNEL_ID` | *(vide)* | Salon où sont déposés les transcripts à la fermeture d'un ticket. |
-| `DATABASE_PATH` | `./data/unknown_variable.db` | Chemin du fichier SQLite. |
+| `DATABASE_PATH` | `./data/<slug BOT_NAME>.db` | Chemin du fichier SQLite. Dérivé de `BOT_NAME` si absent (défaut → `./data/unknown_variable.db`). ⚠️ Fixe-le explicitement si tu changes `BOT_NAME` avec une base existante, sinon le bot pointera sur un nouveau fichier vide. |
 | `TWITCH_CLIENT_ID` | *(vide)* | Client ID Twitch — sans ça, `/notif ajouter-twitch` est désactivé. Création : https://dev.twitch.tv/console/apps |
 | `TWITCH_CLIENT_SECRET` | *(vide)* | Secret Twitch. |
 | `LAVALINK_HOST` | `localhost` | Hôte du serveur Lavalink (musique). |
 | `LAVALINK_PORT` | `2333` | Port du serveur Lavalink. |
 | `LAVALINK_PASSWORD` | *(vide)* | **Sans mot de passe, le module musique est désactivé.** Voir [`LAVALINK.md`](LAVALINK.md). |
 | `LAVALINK_SECURE` | `false` | `true` si le serveur Lavalink utilise wss/https. |
+| `GITHUB_TOKEN` | *(vide)* | PAT fine-grained **lecture seule** → active le polling, `/git statut` et la mention des auteurs. Sans token **ni** secret webhook, le module GitHub est désactivé. |
+| `GITHUB_WEBHOOK_SECRET` | *(vide)* | Active le récepteur webhook (signatures HMAC-SHA256) → mode temps réel. |
+| `GITHUB_WEBHOOK_PORT` | `3000` | Port d'écoute du récepteur webhook. |
+| `GITHUB_WEBHOOK_HOST` | `0.0.0.0` | Adresse d'écoute du récepteur webhook. |
+| `GITHUB_WEBHOOK_PATH` | `/github/webhook` | Chemin de l'endpoint webhook (`POST`). |
+
+> **GitHub — mode hybride** : `GITHUB_TOKEN` (polling, marche derrière un NAT) et/ou `GITHUB_WEBHOOK_SECRET` (webhooks temps réel, exige que le bot soit joignable). Détails, scopes du PAT et config du webhook dans [`SETUP.md`](SETUP.md#si-suivi-github-commits-prmerges-cicd-releases).
 
 ---
 
@@ -373,6 +385,21 @@ Exemples d'URL à passer à `/notif ajouter-rss` :
 - Le poll du bot tourne toutes les **5 min** — une annonce peut donc avoir jusqu'à 5 min de retard.
 - À la première lecture, le bot mémorise l'état actuel **sans annoncer** (évite de flooder à la mise en place). Les publications **suivantes** déclenchent l'annonce.
 
+#### Suivi GitHub (`/git`)
+
+Suit l'activité de dépôts (commits, PR/merges, **CI/CD GitHub Actions**, releases, issues, reviews). **Hybride** : webhooks temps réel (`GITHUB_WEBHOOK_SECRET`) et/ou polling de secours (`GITHUB_TOKEN`) — une déduplication interne évite tout doublon. Activation, scopes du token et config du webhook : voir [`SETUP.md`](SETUP.md#si-suivi-github-commits-prmerges-cicd-releases).
+
+| Commande | Paramètres | Effet |
+|---|---|---|
+| `/git suivre` | `depot:owner/repo` `salon:chan` `[branches]` `[role]` `[salon-statut]` `[events]` | Suit un dépôt. `role` pingué sur **échec CI**, `salon-statut` = embed « pipeline » édité en place. |
+| `/git liste` / `retirer id:int` / `config id:int [..]` | — | Lister / retirer / reconfigurer un dépôt suivi. |
+| `/git statut` | `depot:owner/repo` | État instantané : dernier commit, PR ouvertes, dernière CI *(nécessite `GITHUB_TOKEN`)*. |
+| `/git lier-membre` | `membre:user` `pseudo-github:string` | Lie un membre Discord à un pseudo GitHub (mention auto dans les annonces). |
+| `/git digest` / `digest-off` | `salon:chan` `[frequence]` `[heure]` | Récap périodique (commits, PR mergées, releases, état CI). |
+| `/gitlink lier\|statut\|delier` | `[pseudo-github]` | Chaque membre déclare son pseudo GitHub pour être mentionné sur ses commits / PR. |
+
+> Premier passage en polling : l'état est mémorisé **sans annoncer**. Pense à `npm run deploy` après avoir activé le module (les commandes `/git` ne s'enregistrent que si `GITHUB_TOKEN`/`GITHUB_WEBHOOK_SECRET` est défini).
+
 ### 8.6 Salons statistiques
 
 | Commande | Paramètres | Effet |
@@ -475,6 +502,18 @@ Exemples d'URL à passer à `/notif ajouter-rss` :
 | `/mcwhitelist add\|remove\|list` | admin | Whitelist via RCON. |
 | `/notif ajouter-youtube\|ajouter-twitch\|ajouter-rss\|liste\|supprimer` | admin | Notifications YouTube / Twitch / RSS (Instagram, TikTok, X via RSSHub, blogs…). Option `role` pour ping. |
 
+### 🐙 Git / GitHub
+
+| Commande | Tier | Description |
+|---|---|---|
+| `/git suivre\|liste\|config\|retirer` | admin | Gère les dépôts suivis (salon, rôle, branches, events, salon-statut). |
+| `/git statut <depot>` | admin | État instantané d'un dépôt (dernier commit, PR ouvertes, dernière CI). |
+| `/git lier-membre <membre> <pseudo>` | admin | Lie un membre à un pseudo GitHub (mention auto). |
+| `/git digest\|digest-off` | admin | Active / désactive le récap périodique d'activité. |
+| `/gitlink lier\|statut\|delier` | staff | Liaison auto-déclarée pseudo GitHub ↔ compte Discord. |
+
+> **Hybride** webhooks + polling de secours — voir [§5](#5-variables-denvironnement-env) (`GITHUB_*`) et [`SETUP.md`](SETUP.md#si-suivi-github-commits-prmerges-cicd-releases). Sans `GITHUB_TOKEN` ni `GITHUB_WEBHOOK_SECRET`, le module est désactivé (commandes non déployées).
+
 ### 🎵 Musique
 
 > Nécessite un serveur **Lavalink** — voir [`LAVALINK.md`](LAVALINK.md). Sans `LAVALINK_PASSWORD`, le module est désactivé.
@@ -510,9 +549,9 @@ src/
 ├── events/               Événements Discord (logs, automod, anti-raid, captcha…)
 ├── commands/             Slash-commands, rangées par module
 │   ├── tickets/   moderation/   community/   utility/
-│   ├── integrations/   minecraft/   music/   giveaways/
+│   ├── integrations/   minecraft/   music/   giveaways/   git/
 ├── components/           Boutons / menus / modales (routage par customId)
-├── features/             Logique métier (logger, automod, giveaways, mcwatch…)
+├── features/             Logique métier (logger, automod, giveaways, mcwatch, github/…)
 ├── utils/                Helpers (durations, permissions, sanctions, configCache, logger)
 ├── workers/              Workers Node (welcomecard.worker.ts — rend la PNG hors event loop)
 └── data/                 Contenus éditables (reglement.ts, help.ts)
@@ -579,5 +618,8 @@ cp data/unknown_variable.db data/backup-$(date +%F).db
 | RCON échoue | `/config minecraft-rcon` — l'IP/port/mot de passe doivent correspondre à `enable-rcon=true` dans `server.properties`. |
 | Twitch désactivé | `TWITCH_CLIENT_ID` + `TWITCH_CLIENT_SECRET` requis dans `.env`. |
 | Notifications YouTube vides | L'ID doit commencer par `UC…` (Paramètres avancés → Identifiant de chaîne, pas le pseudo). |
+| `/git` invisible dans Discord | Le module GitHub n'est déployé que si `GITHUB_TOKEN` **ou** `GITHUB_WEBHOOK_SECRET` est défini — ajoute-le puis `npm run deploy`. |
+| Aucune annonce GitHub | Vérifie le token/secret. En polling, le 1ᵉʳ passage mémorise l'état **sans annoncer** ; pousse un nouveau commit pour tester. |
+| Webhook GitHub renvoie 401 | Le *Secret* du webhook (Settings du dépôt) doit être **identique** à `GITHUB_WEBHOOK_SECRET`. |
 | « Une catégorie statistique existe déjà » | `/stats supprimer` puis `/stats creer`. |
 | Token Discord exposé sur GitHub | **Régénère immédiatement** dans Developer Portal → Bot → Reset Token. |

@@ -9,7 +9,13 @@ const envSchema = z.object({
   GUILD_ID: z.string().min(1, 'GUILD_ID is required'),
   STAFF_ROLE_ID: z.string().optional(),
   ADMIN_ROLE_ID: z.string().optional(),
-  DATABASE_PATH: z.string().default('./data/unknown_variable.db'),
+  // Nom du bot — sert au branding (logs, User-Agent, statut, nom du fichier BDD).
+  // Le nom AFFICHÉ dans Discord vient lui de l'application (client.user.username).
+  BOT_NAME: z.string().default('_unknown_variable'),
+  // Statuts tournants, séparés par « | ». Placeholders : {name} {count}.
+  BOT_STATUS: z.string().optional(),
+  // Si absent, dérivé de BOT_NAME : ./data/<slug>.db
+  DATABASE_PATH: z.string().optional(),
   TWITCH_CLIENT_ID: z.string().optional(),
   TWITCH_CLIENT_SECRET: z.string().optional(),
   TICKET_CATEGORY_ID: z.string().optional(),
@@ -35,9 +41,25 @@ if (!envParsed.success) {
 
 const env = envParsed.data;
 
+// Nom du bot + slug sûr pour fichiers / User-Agent (« _unknown_variable » →
+// « unknown_variable », « My Cool Bot ! » → « my_cool_bot »).
+const botName = env.BOT_NAME;
+const botSlug =
+  botName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'bot';
+
+// Chemin BDD : explicite via DATABASE_PATH, sinon dérivé du nom du bot.
+// ⚠️ Changer BOT_NAME change le fichier par défaut — fixe DATABASE_PATH si tu
+// veux conserver une base existante.
+const databasePath = env.DATABASE_PATH ?? `./data/${botSlug}.db`;
+
+// Liste de statuts tournants (optionnelle), parsée depuis BOT_STATUS.
+const botStatus = env.BOT_STATUS
+  ? env.BOT_STATUS.split('|').map((s) => s.trim()).filter(Boolean)
+  : null;
+
 // Crée le dossier de la DB SQLite si nécessaire — better-sqlite3 ne le crée
 // pas tout seul et le bot crashe sinon au premier accès.
-const dbDir = path.dirname(path.resolve(env.DATABASE_PATH));
+const dbDir = path.dirname(path.resolve(databasePath));
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
@@ -47,6 +69,14 @@ if (!fs.existsSync(dbDir)) {
  * Les valeurs sensibles viennent du fichier .env, le reste est éditable ici.
  */
 export default {
+  // --- Identité du bot ---
+  // `botName` : nom de marque (logs, statut, footers techniques). Le nom vu
+  // dans Discord reste `client.user.username` (fixé au Developer Portal).
+  // `botSlug` : version sûre pour fichiers / User-Agent.
+  botName,
+  botSlug,
+  botStatus, // string[] | null — statuts tournants personnalisés
+
   // --- Identifiants Discord (.env) ---
   token: env.DISCORD_TOKEN,
   clientId: env.CLIENT_ID,
@@ -56,7 +86,7 @@ export default {
 
   // --- Base de données ---
   database: {
-    path: env.DATABASE_PATH
+    path: databasePath
   },
 
   // --- Notifications Twitch (optionnel — laisser vide désactive Twitch) ---

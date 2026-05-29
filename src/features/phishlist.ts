@@ -1,4 +1,5 @@
 import { createLogger } from '../utils/logger';
+import config from '../config';
 
 const log = createLogger('phishlist');
 
@@ -11,7 +12,7 @@ const log = createLogger('phishlist');
 
 const URL = 'https://phish.sinking.yachts/v2/all';
 const REFRESH_MS = 60 * 60 * 1000; // 1 h
-const USER_AGENT = 'unknown_variable-bot/1.0 (Discord)';
+const USER_AGENT = `${config.botSlug}-bot/1.0 (Discord)`;
 
 let domains: Set<string> = new Set();
 let lastFetched = 0;

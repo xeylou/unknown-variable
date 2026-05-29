@@ -19,7 +19,7 @@ Document compagnon de [`README.md`](README.md) (qui liste exhaustivement ce qui 
    - ☑️ `SERVER MEMBERS INTENT`
    - ☑️ `MESSAGE CONTENT INTENT`
    - (`PRESENCE INTENT` non requis)
-4. **General Information** → copier l'**Application ID** (= `CLIENT_ID`).
+4. **General Information** → copier l'**Application ID** (= `CLIENT_ID`). Le champ *Name* ici devient le **nom affiché du bot** dans Discord (repris dans les embeds). Pour le branding interne, voir `BOT_NAME` plus bas.
 5. **OAuth2 → URL Generator** :
    - Scopes : `bot`, `applications.commands`
    - Permissions minimales : `Manage Channels`, `Manage Roles`, `Send Messages`, `Embed Links`, `Attach Files`, `Read Message History`, `View Channels`, `Kick Members`, `Ban Members`, `Moderate Members`, `Manage Messages`, `Move Members`, `Mute Members`, `Deafen Members`, `Add Reactions`, `View Audit Log`
@@ -75,7 +75,20 @@ cp .env.example .env
 
 Obligatoires : `DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`, `STAFF_ROLE_ID`.
 Recommandés : `ADMIN_ROLE_ID`, `TICKET_CATEGORY_ID`, `LOGS_CHANNEL_ID`.
-Optionnels : Twitch (`TWITCH_CLIENT_ID`/`SECRET`), Lavalink (`LAVALINK_*`). Voir [§5 du README](README.md#5-variables-denvironnement-env).
+Optionnels : Twitch (`TWITCH_CLIENT_ID`/`SECRET`), Lavalink (`LAVALINK_*`), GitHub (`GITHUB_TOKEN`/`GITHUB_WEBHOOK_SECRET`). Voir [§5 du README](README.md#5-variables-denvironnement-env).
+
+#### Nommer le bot (`BOT_NAME`)
+
+Le nom **affiché dans Discord** vient du Developer Portal (General Information → *Name*) et est repris automatiquement dans les embeds. Pour le **branding interne** (logs, User-Agent, statut, nom du fichier BDD), définis `BOT_NAME` :
+
+```bash
+BOT_NAME=Mon Super Bot
+# Optionnel — statuts tournants (séparés par « | », placeholders {name} {count}) :
+BOT_STATUS={name} en ligne|/help|{count} serveur(s)
+```
+
+- Défaut : `_unknown_variable`. Un slug sûr en est dérivé (`Mon Super Bot` → `mon_super_bot`) pour le User-Agent et le **nom du fichier BDD** (`./data/<slug>.db`).
+- ⚠️ Si tu changes `BOT_NAME` alors qu'une base existe déjà, fixe `DATABASE_PATH` explicitement pour continuer à pointer dessus (sinon le bot crée une nouvelle base vide).
 
 ### Configurer les catégories de tickets dans `src/config.ts`
 

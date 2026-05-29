@@ -1,4 +1,5 @@
 import { Events, type Client } from 'discord.js';
+import config from '../config';
 import * as giveaways from '../features/giveaways';
 import * as github from '../features/github';
 import * as mcingame from '../features/mcingame';
@@ -40,14 +41,16 @@ export default {
     tempvoice.cleanup(client).catch((e) => log.warn('tempvoice cleanup failed', e));
 
     // --- Activité tournante ---
-    const activities = [
-      () => 'void process active',
-      () => `self-aware system anomaly`,
-      () => 'fatal exception occurred',
-    ];
+    // Personnalisable via BOT_STATUS (séparé par « | », placeholders {name} {count}).
+    // Par défaut : basé sur le nom du bot. Ex. pour garder l'ancien thème :
+    //   BOT_STATUS=void process active|self-aware system anomaly|fatal exception occurred
+    const statusTemplates = config.botStatus ?? ['{name}', '/help', '{count} serveur(s)'];
+    const renderStatus = (tpl: string): string =>
+      tpl.replace(/\{name\}/g, client.user.username)
+        .replace(/\{count\}/g, String(client.guilds.cache.size));
     let activityIndex = 0;
     const rotateActivity = () => {
-      client.user?.setActivity(activities[activityIndex % activities.length]());
+      client.user?.setActivity(renderStatus(statusTemplates[activityIndex % statusTemplates.length]));
       activityIndex++;
     };
     rotateActivity();

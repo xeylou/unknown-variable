@@ -109,7 +109,7 @@ async function doCheck(interaction: ChatInputCommandInteraction<'cached'>) {
       '`/permissions grant-staff`, `/permissions grant-admin` et `/permissions grant-ticket-staff` séparément.'
     )
     .addFields(fields)
-    .setFooter({ text: 'Alternative manuelle : Paramètres serveur → Intégrations → unknown_variable → permissions par commande.' });
+    .setFooter({ text: `Alternative manuelle : Paramètres serveur → Intégrations → ${interaction.client.user.username} → permissions par commande.` });
 
   const needsAnything =
     (config.staffRoleId && STAFF_PERMS.some((p) => !staffRole?.permissions.has(p.flag as PermissionResolvable))) ||

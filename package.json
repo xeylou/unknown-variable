@@ -1,7 +1,7 @@
 {
   "name": "unknown_variable",
   "version": "1.0.0",
-  "description": "_unknown_variable — bot Discord multifonction",
+  "description": "Bot Discord multifonction — nom configurable via BOT_NAME",
   "main": "src/index.ts",
   "scripts": {
     "start": "tsx src/index.ts",

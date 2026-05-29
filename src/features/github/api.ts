@@ -20,7 +20,7 @@ function buildHeaders(etag?: string | null): Record<string, string> {
   const h: Record<string, string> = {
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
-    'User-Agent': 'unknown_variable-bot/1.0'
+    'User-Agent': `${config.botSlug}-bot/1.0`
   };
   if (config.github.token) h.Authorization = `Bearer ${config.github.token}`;
   if (etag) h['If-None-Match'] = etag;
