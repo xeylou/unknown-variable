@@ -35,6 +35,7 @@ async function buildEmbed(s: SuggestionRow): Promise<EmbedBuilder> {
     .setAuthor({ name: `Suggestion #${s.id}` })
     .setDescription(s.content)
     .addFields(fields)
+    .setFooter({ text: '💡 Propose la tienne avec /suggestion' })
     .setTimestamp(s.created_at);
 }
 
