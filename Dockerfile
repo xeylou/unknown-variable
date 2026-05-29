@@ -18,4 +18,7 @@ RUN npx prisma generate
 # La base de données vit dans /app/data (à monter en volume pour la persistance)
 VOLUME ["/app/data"]
 
-CMD ["npm", "start"]
+# Au démarrage : synchronise les tables sur le volume monté (idempotent) puis lance le bot.
+# ⚠️ `prisma db push` est nécessaire ici car la base vit dans le volume runtime, pas
+# dans l'image. Les slash-commands restent à enregistrer une fois : `docker exec <c> npm run deploy`.
+CMD ["sh", "-c", "npx prisma db push && npm start"]

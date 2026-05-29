@@ -74,15 +74,18 @@ Active **Mode développeur** (Paramètres utilisateur → Avancés) pour pouvoir
 ```bash
 git clone <ton-repo> unknown_variable
 cd unknown_variable
-npm install                 # installe + génère le client Prisma (hook postinstall)
+npm install                 # 1. deps + génère le client Prisma (hook postinstall)
 cp .env.example .env
-# Édite .env avec tes valeurs
-npx prisma generate
-npx prisma db push          # crée la base SQLite + les tables (1ʳᵉ fois)
-npm start
+nano .env                   # 2. remplis DISCORD_TOKEN, CLIENT_ID, GUILD_ID, STAFF_ROLE_ID (+ BOT_NAME si voulu)
+npx prisma generate         # 3. (re)génère le client — filet si le postinstall a été sauté
+npx prisma db push          # 4. crée le dossier data/ + les tables SQLite
+npm run deploy              # 5. ENREGISTRE les slash-commands sur ton serveur (GUILD_ID) — sinon aucune commande n'apparaît
+npm start                   # 6. lance le bot
 ```
 
-> Si tu vois `Cannot find module '.prisma/client'` au démarrage : le client Prisma n'a pas été généré — lance `npx prisma generate` (puis `npx prisma db push`).
+> **Ordre important** : `db push` (4) doit suivre l'édition du `.env` (le chemin de la base dépend de `BOT_NAME`), et `npm run deploy` (5) est **indispensable** — les commandes ne sont **pas** déployées automatiquement au boot.
+>
+> Erreurs fréquentes et leur cause : voir [§13 Dépannage](#13-dépannage). En particulier `Cannot find module '.prisma/client'` → relance l'étape 3 ; `The table … does not exist` → relance l'étape 4.
 
 > ⚠️ Avant le boot : configure les **catégories de tickets** dans `src/config.ts` (étape la plus oubliée — voir [§6.1](#61-srcconfigts--catégories-de-tickets-couleurs)). Une catégorie sans `staffRoleId` refuse la création de ticket.
 
@@ -664,7 +667,7 @@ sudo journalctl -u unknown_variable -f      # surveille le redémarrage
 
 ### Re-déployer les slash-commands
 
-Déployées automatiquement au boot pour `GUILD_ID`. Pour les pousser **globalement** (tous serveurs, propagation ~1 h) : `npm run deploy:global`.
+Les slash-commands sont enregistrées par **`npm run deploy`** (sur `GUILD_ID`, immédiat) — **pas** automatiquement au boot du bot. À relancer après avoir **ajouté ou modifié** une commande. Pour les pousser **globalement** (tous serveurs, propagation ~1 h) : `npm run deploy:global`.
 
 ### Mettre à jour les dépendances npm
 
@@ -811,7 +814,11 @@ sudo systemctl enable --now unknown_variable
 | `Used disallowed intents` | Active les Privileged Intents dans le Developer Portal (§1). |
 | `Cannot find module '.prisma/client/default'` | Client Prisma non généré : `npx prisma generate`, puis `npx prisma db push`. (Généré aussi par le hook `postinstall` au `npm install`.) |
 | `tsx: not found` | Dépendances non installées : `npm install` dans le dossier du bot. |
-| Slash-commands invisibles dans Discord | Lance `/permissions check` → bouton « Tout corriger ». Discord met le cache à jour après quelques secondes (parfois reconnexion du client). |
+| `The table main.X does not exist` au boot | `db push` a visé un autre fichier que le runtime (chemins désalignés). Le chemin se dérive de `BOT_NAME` des deux côtés ; relance `npx prisma db push` puis `npm start`. Sinon, fixe `DATABASE_PATH` dans `.env` (même valeur pour le CLI et le runtime). |
+| Aucune slash-command dans Discord (jamais apparues) | Tu n'as pas lancé **`npm run deploy`** — les commandes **ne se déploient pas au boot**. Lance-le (sur `GUILD_ID`, immédiat). |
+| Slash-commands déployées mais invisibles pour un rôle | `/permissions check` → bouton « Tout corriger » (Discord n'affiche une commande qu'aux rôles ayant la perm requise). Cache rafraîchi après quelques secondes. |
+| `❌ Erreur de configuration dans le fichier .env` (le bot quitte) | Une variable obligatoire manque/est invalide (`DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`) — le message liste précisément laquelle. |
+| `Unable to open the database file` (au `db push`) | Dossier `data/` absent ; il est normalement créé par `prisma.config.ts`. Si l'erreur persiste : `mkdir -p data` puis relance `npx prisma db push`. |
 | Le bot ne crée pas les salons | Place son rôle au-dessus du rôle Staff + vérifie la permission `Manage Channels`. |
 | `Missing Permissions` | Le bot n'a pas accès à la catégorie cible — ajuste les permissions de la catégorie. |
 | Ticket : « catégorie n'a pas de rôle responsable » | Édite [`src/config.ts`](src/config.ts) → remplis `staffRoleId` de la catégorie concernée, redémarre, relance `/setup-tickets`. |
