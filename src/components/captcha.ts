@@ -1,9 +1,11 @@
 import {
   MessageFlags, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle,
+  EmbedBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder,
   type Client
 } from 'discord.js';
 import { getConfig } from '../utils/configCache';
 import { verifyAnswer, refreshChallenge } from '../features/captcha';
+import config from '../config';
 import type { ComponentInteraction } from '../types';
 
 export default {
@@ -27,10 +29,12 @@ export default {
         .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(
           new TextInputBuilder()
             .setCustomId('answer')
-            .setLabel('Réponse (chiffre)')
+            .setLabel('Recopie les caractères de l\'image')
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
-            .setMaxLength(8)
+            .setMinLength(6)
+            .setMaxLength(6)
+            .setPlaceholder('Ex: A3MX7K')
         ));
       return interaction.showModal(modal);
     }
@@ -39,8 +43,8 @@ export default {
       if (!interaction.isModalSubmit()) return;
       const answer = interaction.fields.getTextInputValue('answer');
       const res = await verifyAnswer(guildId, interaction.user.id, answer);
+
       if (res.ok) {
-        // Attribue le rôle vérifié, retire le rôle non-vérifié.
         const guild = await client.guilds.fetch(guildId).catch(() => null);
         if (!guild) {
           return interaction.reply({ content: '✅ Vérification réussie, mais le serveur est introuvable.', flags: MessageFlags.Ephemeral });
@@ -72,12 +76,33 @@ export default {
         });
       }
       if (res.reason === 'exhausted') {
-        const c = await refreshChallenge(guildId, interaction.user.id);
-        return interaction.reply({
-          content: `❌ Trois mauvaises réponses. Un nouveau challenge t'a été généré : **${c.question}**\n` +
-                   `Reclique sur le bouton « Je suis humain » pour réessayer.`,
-          flags: MessageFlags.Ephemeral
-        });
+        const { imageBuffer } = await refreshChallenge(guildId, interaction.user.id);
+
+        const baseDesc =
+          '❌ Trois mauvaises réponses. Un nouveau défi a été généré — ' +
+          '**recopie les caractères affichés dans l\'image** ci-dessous.\n\n' +
+          'Reclique sur le bouton **« Je suis humain »** pour réessayer.';
+
+        const embed = new EmbedBuilder()
+          .setColor(config.colors.warning)
+          .setTitle('🔄 Nouveau défi CAPTCHA')
+          .setDescription(imageBuffer ? baseDesc : baseDesc + '\n\n⚠️ L\'image est indisponible, contacte un staff.');
+
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`captcha:verify:${guildId}`)
+            .setLabel('Je suis humain')
+            .setEmoji('🤖')
+            .setStyle(ButtonStyle.Primary)
+        );
+
+        const files: AttachmentBuilder[] = [];
+        if (imageBuffer) {
+          files.push(new AttachmentBuilder(imageBuffer, { name: 'captcha.png' }));
+          embed.setImage('attachment://captcha.png');
+        }
+
+        return interaction.reply({ embeds: [embed], components: [row], files, flags: MessageFlags.Ephemeral });
       }
     }
   }
