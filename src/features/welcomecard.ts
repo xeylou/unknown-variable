@@ -32,10 +32,11 @@ const pending = new Map<number, (res: Reply) => void>();
 const WORKER_TIMEOUT_MS = 8000;
 
 function spawnWorker(): Worker {
-  // `tsx` doit charger le worker (sinon le fichier .ts n'est pas exécutable).
-  const w = new Worker(path.resolve(__dirname, '..', 'workers', 'welcomecard.worker.ts'), {
-    execArgv: ['--import', 'tsx']
-  });
+  // Le worker hérite de `process.execArgv` — il se charge donc avec le même
+  // runtime que le thread principal (tsx/ts-node). Forcer `--import tsx` ici
+  // cassait le chargement du .ts sur certaines versions de tsx
+  // (ERR_UNKNOWN_FILE_EXTENSION dans le worker).
+  const w = new Worker(path.resolve(__dirname, '..', 'workers', 'welcomecard.worker.ts'));
   w.on('message', (msg: Reply) => {
     const resolver = pending.get(msg.id);
     if (resolver) {

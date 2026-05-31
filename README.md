@@ -9,7 +9,7 @@ Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 67 commandes,
 - 🛡️ **Modération** — sanctions DM + casier + log, lockdown salon/serveur, anti-raid, auto-modération (phishing, tokens, Zalgo, mots, spam, invites)
 - 📜 **Logs & Audit** — journal par catégorie (messages, membres, rôles, salons, vocal, serveur, modération, bot)
 - 📜 **Règlement** — affichage en deux embeds + bouton d'acceptation → rôle d'accès
-- 👋 **Accueil** — welcome card PNG, autorôle, CAPTCHA mathématique, message DM
+- 👋 **Accueil** — welcome card PNG, autorôle, CAPTCHA visuel (image bruitée), message DM
 - 🎉 **Engagement** — giveaways (conditions + multiplicateurs), suggestions (thread + vote), sondages persistants et natifs
 - 🔊 **Vocaux temporaires** — salon « rejoindre pour créer » + panneau de contrôle
 - 🧰 **Utilitaires** — `/userinfo`, `/serverinfo`, `/avatar`, `/ping`, `/botinfo`, rappels (ponctuels, récurrents, par rôle), tags FAQ, AFK, embed builder
@@ -373,7 +373,7 @@ Tout ce qui est listé ici est modifiable **sans redémarrage**, stocké en base
 | `automod-spam` | `[messages:3-20]` `[secondes:3-30]` `[exclusion-minutes:1-60]` | Seuil et durée du timeout anti-spam. Défauts 5 / 7 / 5. |
 | `invite-whitelist` | `action:add\|remove\|list` `[guild-id:string]` | Serveurs alliés autorisés à voir leurs invitations passer (sinon supprimées si automod actif). |
 | `antiraid` | `actif:bool` `[age-min-compte:0-365]` `[expulser-jeunes:bool]` `[verrouillage-auto:bool]` `[quarantaine:role]` | Détection de vague + actions auto. `age-min-compte` 0 = désactivé. |
-| `captcha` | `actif:bool` `[role-non-verifie:role]` `[role-verifie:role]` `salon:chan` | Vérification math à l'entrée. Le rôle non-verifie bloque l'accès, le rôle verifie le débloque après réussite. |
+| `captcha` | `actif:bool` `[role-non-verifie:role]` `[role-verifie:role]` `salon:chan` | Vérification visuelle à l'entrée : image bruitée avec 6 caractères à recopier (insensible à la casse). Le rôle non-verifie bloque l'accès, le rôle verifie le débloque après réussite. |
 | `accueil` | `salon:chan` `[message:string]` `[carte-image:bool]` `[image-fond:url]` `[message-dm:string]` | Welcome dans le salon + DM. Variables : `{user}` `{username}` `{server}` `{count}`. `image-fond` accepte une URL `https://...` ou `retirer` pour revenir au dégradé. |
 | `depart` | `salon:chan` `[message:string]` | Au revoir. Variables : `{username}` `{server}` `{count}`. |
 | `autorole` | `role:role` | Rôle attribué à toute nouvelle arrivée. |

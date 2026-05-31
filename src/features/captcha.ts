@@ -26,7 +26,7 @@ const log = createLogger('captcha');
 
 const MAX_ATTEMPTS = 3;
 const TTL_MS = 30 * 60 * 1000;
-const WORKER_TIMEOUT_MS = 5000;
+const WORKER_TIMEOUT_MS = 8000;
 
 // Charset sans caractères ambigus (0/O, 1/I/l, Q/U/V)
 const CHARS = 'ABCDEFGHJKMNPRSTWXY23456789';
@@ -42,9 +42,11 @@ let nextId = 1;
 const renderQueue = new Map<number, (res: WorkerReply) => void>();
 
 function spawnCaptchaWorker(): Worker {
-  const w = new Worker(path.resolve(__dirname, '..', 'workers', 'captcha.worker.ts'), {
-    execArgv: ['--import', 'tsx']
-  });
+  // Le worker hérite de `process.execArgv` — il se charge donc avec le même
+  // runtime que le thread principal (tsx/ts-node). Forcer `--import tsx` ici
+  // cassait le chargement du .ts sur certaines versions de tsx
+  // (ERR_UNKNOWN_FILE_EXTENSION dans le worker).
+  const w = new Worker(path.resolve(__dirname, '..', 'workers', 'captcha.worker.ts'));
   w.on('message', (msg: WorkerReply) => {
     const resolver = renderQueue.get(msg.id);
     if (resolver) {
@@ -165,7 +167,7 @@ export async function onMemberJoin(member: GuildMember): Promise<void> {
   if (channelId) {
     const channel = member.guild.channels.cache.get(channelId);
     if (channel?.isTextBased() && 'send' in channel) {
-      // Reconstruire le payload pour le channel (AttachmentBuilder ne peut pas être réutilisé)
+      // Reconstruire le payload pour le salon (un AttachmentBuilder ne peut pas être réutilisé).
       const channelPayload = buildCaptchaPayload(member.guild.name, member.guild.id, imageBuffer);
       channel.send({
         content: `${member}`,
