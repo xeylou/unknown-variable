@@ -1,17 +1,16 @@
-import { Worker } from 'node:worker_threads';
-import path from 'node:path';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('welcomecard');
 
 /**
- * Orchestrateur de génération des cartes de bienvenue. Le rendu Canvas est
- * délégué à un worker dédié (`src/workers/welcomecard.worker.ts`) afin de ne
- * pas bloquer l'event loop principal lors des arrivées massives.
+ * Génération des cartes de bienvenue. Le rendu Canvas est fait directement dans
+ * le thread principal : le dessin est négligeable et `canvas.encode('png')` est
+ * asynchrone (offload natif napi-rs), donc l'event loop n'est pas bloqué.
  *
- * Pattern : un worker persistant, file de requêtes id → resolver. Si le
- * worker meurt (exception non gérée), on le redémarre paresseusement à la
- * prochaine demande.
+ * On n'utilise PAS de worker thread : tsx n'enregistre pas son loader TypeScript
+ * dans les workers (`module.register()` est local au thread), ce qui faisait
+ * planter le worker avec ERR_UNKNOWN_FILE_EXTENSION sur le fichier .ts.
  */
 
 type RenderParams = {
@@ -23,84 +22,98 @@ type RenderParams = {
   backgroundURL?: string | null;
 };
 
-type Reply = { id: number; ok: true; buffer: Buffer } | { id: number; ok: false; error: string };
-
-let worker: Worker | null = null;
-let nextId = 1;
-const pending = new Map<number, (res: Reply) => void>();
-
-const WORKER_TIMEOUT_MS = 8000;
-
-function spawnWorker(): Worker {
-  // Le worker hérite de `process.execArgv` — il se charge donc avec le même
-  // runtime que le thread principal (tsx/ts-node). Forcer `--import tsx` ici
-  // cassait le chargement du .ts sur certaines versions de tsx
-  // (ERR_UNKNOWN_FILE_EXTENSION dans le worker).
-  const w = new Worker(path.resolve(__dirname, '..', 'workers', 'welcomecard.worker.ts'));
-  w.on('message', (msg: Reply) => {
-    const resolver = pending.get(msg.id);
-    if (resolver) {
-      pending.delete(msg.id);
-      resolver(msg);
-    }
-  });
-  w.on('error', (e) => {
-    log.warn('worker error', e);
-    // Toutes les requêtes en attente échouent
-    for (const [id, resolver] of pending) {
-      resolver({ id, ok: false, error: 'worker error' });
-    }
-    pending.clear();
-    worker = null;
-  });
-  w.on('exit', (code) => {
-    if (code !== 0) log.warn(`worker exited with code ${code}`);
-    worker = null;
-  });
-  return w;
-}
+const WIDTH = 800;
+const HEIGHT = 250;
+const AVATAR_SIZE = 160;
 
 /**
- * Génère la carte PNG. Retourne `null` en cas d'échec (mauvaise réponse du
- * worker, timeout, ou worker mort en cours) ; l'appelant doit dégrader
+ * Génère la carte PNG. Retourne `null` en cas d'échec ; l'appelant doit dégrader
  * gracieusement (envoyer le message de bienvenue sans image).
  */
 export async function renderWelcomeCard(params: RenderParams): Promise<Buffer | null> {
-  if (!worker) worker = spawnWorker();
-  const id = nextId++;
+  try {
+    const canvas = createCanvas(WIDTH, HEIGHT);
+    const ctx = canvas.getContext('2d');
 
-  return new Promise<Buffer | null>((resolve) => {
-    const timer = setTimeout(() => {
-      pending.delete(id);
-      log.warn(`render timeout pour ${params.username}`);
-      resolve(null);
-    }, WORKER_TIMEOUT_MS);
-    timer.unref();
+    // Fond : dégradé bleu sombre → indigo Discord. Couche de base (fallback si
+    // l'image custom échoue, et couleur sous les PNG transparents).
+    const grad = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+    grad.addColorStop(0, '#1e2747');
+    grad.addColorStop(1, '#5865f2');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-    pending.set(id, (reply) => {
-      clearTimeout(timer);
-      if (reply.ok) resolve(reply.buffer);
-      else {
-        log.warn('render failed:', reply.error);
-        resolve(null);
+    // Image de fond personnalisée (cover). En cas d'échec on garde le dégradé.
+    if (params.backgroundURL) {
+      try {
+        const bg = await loadImage(params.backgroundURL);
+        const ratio = Math.max(WIDTH / bg.width, HEIGHT / bg.height);
+        const w = bg.width * ratio;
+        const h = bg.height * ratio;
+        ctx.drawImage(bg, (WIDTH - w) / 2, (HEIGHT - h) / 2, w, h);
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      } catch {
+        // Image inaccessible : on garde le dégradé déjà dessiné.
       }
-    });
-
-    try {
-      worker!.postMessage({ id, params });
-    } catch (e) {
-      clearTimeout(timer);
-      pending.delete(id);
-      log.warn('postMessage failed', e);
-      resolve(null);
     }
-  });
+
+    // Cadre subtil
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(10, 10, WIDTH - 20, HEIGHT - 20);
+
+    // Avatar circulaire
+    const avatarX = 60;
+    const avatarY = (HEIGHT - AVATAR_SIZE) / 2;
+    try {
+      const avatar = await loadImage(params.avatarURL);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(avatarX + AVATAR_SIZE / 2, avatarY + AVATAR_SIZE / 2, AVATAR_SIZE / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(avatar, avatarX, avatarY, AVATAR_SIZE, AVATAR_SIZE);
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(avatarX + AVATAR_SIZE / 2, avatarY + AVATAR_SIZE / 2, AVATAR_SIZE / 2 + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+    } catch {
+      // Avatar inaccessible : cercle vide, le rendu continue.
+      ctx.beginPath();
+      ctx.arc(avatarX + AVATAR_SIZE / 2, avatarY + AVATAR_SIZE / 2, AVATAR_SIZE / 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fill();
+    }
+
+    // Texte
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'top';
+
+    ctx.font = 'bold 38px sans-serif';
+    ctx.fillText('Bienvenue !', 250, 50);
+
+    ctx.font = 'bold 32px sans-serif';
+    const usernameDisplay = params.username.length > 22 ? `${params.username.slice(0, 22)}…` : params.username;
+    ctx.fillText(usernameDisplay, 250, 100);
+
+    ctx.font = '22px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fillText(`Tu es le ${params.memberCount}ᵉ membre de ${params.guildName}`, 250, 160);
+
+    return Buffer.from(await canvas.encode('png'));
+  } catch (e) {
+    log.warn('render failed:', e instanceof Error ? e.message : String(e));
+    return null;
+  }
 }
 
-/** Ferme proprement le worker (graceful shutdown). */
-export async function closeWorker() {
-  if (worker) {
-    await worker.terminate().catch(() => {});
-    worker = null;
-  }
+/**
+ * Conservé pour compatibilité avec le shutdown (`index.ts`). Plus de worker à
+ * fermer depuis le passage au rendu inline — no-op.
+ */
+export async function closeWorker(): Promise<void> {
+  // no-op
 }
