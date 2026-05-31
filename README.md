@@ -9,7 +9,7 @@ Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 67 commandes,
 - 🛡️ **Modération** — sanctions DM + casier + log, lockdown salon/serveur, anti-raid, auto-modération (phishing, tokens, Zalgo, mots, spam, invites)
 - 📜 **Logs & Audit** — journal par catégorie (messages, membres, rôles, salons, vocal, serveur, modération, bot)
 - 📜 **Règlement** — affichage en deux embeds + bouton d'acceptation → rôle d'accès
-- 👋 **Accueil** — message de bienvenue en DM à l'obtention du rôle membre (welcome card PNG optionnelle), autorôle, CAPTCHA visuel (image bruitée) affiché en éphémère via un bouton
+- 👋 **Accueil** — bienvenue à l'obtention du rôle membre : MP (carte PNG + embed d'orientation configurable) et carte postée dans un salon sans ping, autorôle, CAPTCHA visuel (image bruitée) affiché en éphémère via un bouton
 - 🎉 **Engagement** — giveaways (conditions + multiplicateurs), suggestions (thread + vote), sondages persistants et natifs
 - 🔊 **Vocaux temporaires** — salon « rejoindre pour créer » + panneau de contrôle
 - 🧰 **Utilitaires** — `/userinfo`, `/serverinfo`, `/avatar`, `/ping`, `/botinfo`, rappels (ponctuels, récurrents, par rôle), tags FAQ, AFK, embed builder
@@ -375,7 +375,7 @@ Tout ce qui est listé ici est modifiable **sans redémarrage**, stocké en base
 | `invite-whitelist` | `action:add\|remove\|list` `[guild-id:string]` | Serveurs alliés autorisés à voir leurs invitations passer (sinon supprimées si automod actif). |
 | `antiraid` | `actif:bool` `[age-min-compte:0-365]` `[expulser-jeunes:bool]` `[verrouillage-auto:bool]` `[quarantaine:role]` | Détection de vague + actions auto. `age-min-compte` 0 = désactivé. |
 | `captcha` | `actif:bool` `[role-non-verifie:role]` `[role-verifie:role]` | Vérification visuelle à l'entrée : image bruitée avec 6 caractères à recopier (insensible à la casse). Le défi s'affiche **en éphémère** (visible du seul membre) quand il clique sur le bouton déployé par `/setup-captcha` — aucun DM, rien de public. Le rôle non-verifie bloque l'accès, le rôle verifie le débloque après réussite. |
-| `accueil` | `[message:string]` `[carte-image:bool]` `[image-fond:url]` | Message de bienvenue envoyé en **DM** quand le membre obtient le rôle règlement (après captcha + règlement). Carte image optionnelle. Variables : `{user}` `{username}` `{server}` `{count}`. `image-fond` accepte une URL `https://...` ou `retirer` pour revenir au dégradé. |
+| `accueil` | `[message:string]` `[salon:chan]` `[carte-image:bool]` `[image-fond:url]` | Bienvenue quand le membre obtient le rôle règlement (après captcha + règlement) : **MP** au membre (carte + un 2ᵉ embed d'orientation éditable dans `src/data/welcome.ts`) et, si `salon` est fourni, la carte est aussi postée dans ce salon **sans ping**. Variables : `{user}` `{username}` `{server}` `{count}`. `image-fond` accepte une URL `https://...` ou `retirer` pour revenir au dégradé. |
 | `depart` | `salon:chan` `[message:string]` | Au revoir. Variables : `{username}` `{server}` `{count}`. |
 | `autorole` | `role:role` | Rôle attribué à toute nouvelle arrivée. |
 | `reglement` | `role:role` | Rôle donné au clic sur « J'accepte le règlement ». |

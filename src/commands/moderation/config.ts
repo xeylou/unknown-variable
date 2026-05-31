@@ -48,9 +48,12 @@ export default {
         .setDescription('Fenêtre de détection en secondes (défaut 7)').setMinValue(3).setMaxValue(30))
       .addIntegerOption((o) => o.setName('exclusion-minutes')
         .setDescription("Durée d'exclusion en minutes (défaut 5)").setMinValue(1).setMaxValue(60)))
-    .addSubcommand((s) => s.setName('accueil').setDescription("Message de bienvenue (DM envoyé à l'obtention du rôle règlement)")
+    .addSubcommand((s) => s.setName('accueil').setDescription("Message de bienvenue (MP + salon, à l'obtention du rôle règlement)")
       .addStringOption((o) => o.setName('message')
         .setDescription('Message — variables : {user} {username} {server} {count}'))
+      .addChannelOption((o) => o.setName('salon')
+        .setDescription('Salon où poster la carte de bienvenue (sans ping) — laisser vide pour MP seul')
+        .addChannelTypes(ChannelType.GuildText))
       .addBooleanOption((o) => o.setName('carte-image').setDescription('Joindre une carte image générée (welcome card)'))
       .addStringOption((o) => o.setName('image-fond')
         .setDescription("URL d'image de fond pour la carte (https://...) — « retirer » pour revenir au dégradé")))
@@ -191,6 +194,8 @@ export default {
     if (sub === 'accueil') {
       const msg = interaction.options.getString('message');
       if (msg) await setConfig(gid, 'welcome_message', msg);
+      const salon = interaction.options.getChannel('salon');
+      if (salon) await setConfig(gid, 'welcome_channel', salon.id);
       const card = interaction.options.getBoolean('carte-image');
       if (card !== null) await setConfig(gid, 'welcome_card_enabled', card ? '1' : '0');
       const bgRaw = interaction.options.getString('image-fond')?.trim();
@@ -209,7 +214,7 @@ export default {
       const bgLabel = bgChange === 'set' ? ' · image de fond définie'
         : bgChange === 'remove' ? ' · image de fond retirée'
         : '';
-      return ok(`✅ Bienvenue (DM à l'obtention du rôle règlement) mise à jour${msg ? ' · message défini' : ''}${card !== null ? ` · carte ${card ? 'on' : 'off'}` : ''}${bgLabel}`);
+      return ok(`✅ Bienvenue (MP${salon ? ` + ${salon}` : ''}, à l'obtention du rôle règlement) mise à jour${msg ? ' · message défini' : ''}${card !== null ? ` · carte ${card ? 'on' : 'off'}` : ''}${bgLabel}`);
     }
     if (sub === 'depart') {
       const ch = interaction.options.getChannel('salon', true);
@@ -311,7 +316,7 @@ export default {
       .addFields(
         { name: '🛡️ Auto-modération', value: await bool('automod_enabled'), inline: true },
         { name: '🚨 Anti-raid', value: `${await bool('antiraid_enabled')}\nÂge min. : ${await getConfig(gid, 'antiraid_min_age_days', '0')} j`, inline: true },
-        { name: '👋 Bienvenue (DM)', value: `${(await getConfig(gid, 'welcome_message')) ? '✅ Message défini' : '🔹 Message par défaut'} · carte ${(await getConfig(gid, 'welcome_card_enabled', '0')) === '1' ? 'on' : 'off'}`, inline: true },
+        { name: '👋 Bienvenue', value: `MP ✅ · salon ${showChan(await getConfig(gid, 'welcome_channel'))} · carte ${(await getConfig(gid, 'welcome_card_enabled', '0')) === '1' ? 'on' : 'off'}`, inline: true },
         { name: '🚪 Départ', value: showChan(await getConfig(gid, 'goodbye_channel')), inline: true },
         { name: '🎭 Autorôle', value: showRole(await getConfig(gid, 'autorole')), inline: true },
         { name: '✅ Rôle règlement', value: showRole(await getConfig(gid, 'verified_role')), inline: true },

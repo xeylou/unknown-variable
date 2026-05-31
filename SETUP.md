@@ -47,6 +47,7 @@ Activer **Mode développeur** (Paramètres utilisateur → Avancés) pour copier
 |---|---|---|
 | Catégorie « Tickets » | Conteneur des salons de tickets | `TICKET_CATEGORY_ID` dans `.env` |
 | Salon `#logs-tickets` (privé staff) | Transcripts à la fermeture | `LOGS_CHANNEL_ID` dans `.env` |
+| Salon `#bienvenue` *(optionnel)* | Carte de bienvenue (sans ping) à l'obtention du rôle membre | `/config accueil salon:` |
 | Salon `#règlement` | Affichage du règlement | `/setup-reglement` |
 | Salons `#logs-messages`, `#logs-modération`, etc. (privés staff) | Logs serveur catégorisés | `/logs salon ...` |
 | Salon `#suggestions` | Réception `/suggestion` | `/config suggestions` |
@@ -147,11 +148,11 @@ Si Lavalink configuré : `🎵 Lavalink connecté`. Sinon : `Module musique dés
    → (optionnel) Rôle attribué à chaque arrivée — typiquement un rôle
      « pré-vérification » sans accès, levé par le bouton règlement.
 
-6. /config accueil carte-image:true message:"Bienvenue {user} sur {server} 🎉"
-   → Message de bienvenue envoyé en DM au moment où le membre obtient le rôle
-     règlement (après captcha + acceptation du règlement). Welcome card activée.
-     Ajoute image-fond:https://... pour une image de fond personnalisée.
-     Variables : {user} {username} {server} {count}.
+6. /config accueil carte-image:true message:"Bienvenue {username} 🎉" salon:#bienvenue
+   → À l'obtention du rôle règlement (après captcha + règlement) : le membre reçoit
+     un MP (carte + un 2ᵉ embed d'orientation que tu édites dans src/data/welcome.ts),
+     et la carte est aussi postée dans #bienvenue SANS ping (salon: est optionnel).
+     image-fond:https://... pour une image de fond. Variables : {user} {username} {server} {count}.
 
 7. /config suggestions salon:#suggestions
    → Salon où atterrissent les /suggestion.

@@ -93,7 +93,7 @@ export const helpCategories: HelpCategory[] = [
       { usage: '/config invite-whitelist add|remove|list', description: 'Liste blanche des invitations Discord (serveurs alliés autorisés).' },
       { usage: '/config antiraid <actif> [age-min-compte] [expulser-jeunes] [verrouillage-auto] [quarantaine]', description: 'Anti-raid avec actions automatiques (kick / niveau vérification / quarantaine).' },
       { usage: '/config captcha <actif> [role-non-verifie] [role-verifie]', description: 'Vérification anti-robot visuelle à l\'entrée (image à recopier, affichée en éphémère). Déploie le bouton avec /setup-captcha.' },
-      { usage: '/config accueil [message] [carte-image] [image-fond]', description: 'Message de bienvenue envoyé en DM à l\'obtention du rôle règlement, carte image optionnelle. Variables : {user} {username} {server} {count}.' },
+      { usage: '/config accueil [message] [salon] [carte-image] [image-fond]', description: 'Bienvenue à l\'obtention du rôle règlement : MP au membre (carte + 2ᵉ embed éditable dans src/data/welcome.ts) et, si salon fourni, carte postée dans ce salon sans ping. Variables : {user} {username} {server} {count}.' },
       { usage: '/config depart <salon> [message]', description: 'Salon et message d\'au revoir. Variables : {username} {server} {count}.' },
       { usage: '/config autorole <role>', description: 'Rôle attribué automatiquement à chaque nouvelle arrivée.' },
       { usage: '/config reglement <role>', description: 'Rôle donné lorsqu\'un membre accepte le règlement.' },
