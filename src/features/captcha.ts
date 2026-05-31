@@ -14,8 +14,9 @@ const log = createLogger('captcha');
 /**
  * CAPTCHA d'entrée visuel : génère une image bruitée avec 6 caractères distordus
  * que le membre doit recopier via une modale. Le membre rejoint → reçoit le rôle
- * « non vérifié » + un DM avec l'image. Le bouton ouvre une modale ; en cas de
- * réussite le rôle vérifié est attribué (et le non-vérifié retiré).
+ * « non vérifié » et le défi est posté dans le salon de vérification. Le bouton
+ * ouvre une modale ; en cas de réussite le rôle vérifié est attribué (et le
+ * non-vérifié retiré).
  *
  * Le rendu Canvas est fait directement dans le thread principal : le dessin
  * d'une petite image est négligeable (~1-2 ms) et `canvas.encode('png')` est
@@ -28,7 +29,7 @@ const log = createLogger('captcha');
  *   `captcha_enabled`         — '1' pour activer
  *   `captcha_unverified_role` — rôle attribué à l'arrivée (bloque tout sauf #vérification)
  *   `captcha_verified_role`   — rôle final (peut être identique à `verified_role`)
- *   `captcha_channel`         — salon où inviter le membre s'il ne reçoit pas de DM
+ *   `captcha_channel`         — salon de vérification où le défi est posté
  */
 
 const MAX_ATTEMPTS = 3;
@@ -156,7 +157,7 @@ function buildCaptchaPayload(guildName: string, guildId: string, imageBuffer: Bu
 
 /**
  * Déclenché à l'arrivée d'un nouveau membre. Si le CAPTCHA est activé,
- * applique le rôle non-vérifié et envoie le défi visuel (DM + salon de fallback).
+ * applique le rôle non-vérifié et poste le défi visuel dans le salon de vérification.
  */
 export async function onMemberJoin(member: GuildMember): Promise<void> {
   if ((await getConfig(member.guild.id, 'captcha_enabled', '0')) !== '1') return;
@@ -172,27 +173,20 @@ export async function onMemberJoin(member: GuildMember): Promise<void> {
     create: { guild_id: member.guild.id, user_id: member.id, answer: code, created_at: Date.now() }
   });
 
-  const imageBuffer = await renderCaptchaImage(code);
-  const payload = buildCaptchaPayload(member.guild.name, member.guild.id, imageBuffer);
-
-  const dmSent = await member.send(payload).catch(() => null);
-
   const channelId = await getConfig(member.guild.id, 'captcha_channel');
-  if (channelId) {
-    const channel = member.guild.channels.cache.get(channelId);
-    if (channel?.isTextBased() && 'send' in channel) {
-      // Reconstruire le payload pour le salon (un AttachmentBuilder ne peut pas être réutilisé).
-      const channelPayload = buildCaptchaPayload(member.guild.name, member.guild.id, imageBuffer);
-      channel.send({
-        content: `${member}`,
-        ...channelPayload,
-        allowedMentions: { users: [member.id] }
-      }).catch(() => {});
-    }
+  if (!channelId) {
+    log.warn(`captcha activé sans salon de vérification dans ${member.guild.id} — défi non posté`);
+    return;
   }
-
-  if (!dmSent && !channelId) {
-    log.warn(`captcha sans canal de fallback dans ${member.guild.id}`);
+  const channel = member.guild.channels.cache.get(channelId);
+  if (channel?.isTextBased() && 'send' in channel) {
+    const imageBuffer = await renderCaptchaImage(code);
+    const payload = buildCaptchaPayload(member.guild.name, member.guild.id, imageBuffer);
+    channel.send({
+      content: `${member}`,
+      ...payload,
+      allowedMentions: { users: [member.id] }
+    }).catch(() => {});
   }
 }
 

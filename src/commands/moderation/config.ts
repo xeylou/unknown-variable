@@ -37,7 +37,7 @@ export default {
       .addBooleanOption((o) => o.setName('actif').setDescription('Activer ?').setRequired(true))
       .addRoleOption((o) => o.setName('role-non-verifie').setDescription('Rôle attribué à l\'arrivée (bloque tout sauf #vérification)'))
       .addRoleOption((o) => o.setName('role-verifie').setDescription('Rôle attribué après réussite du CAPTCHA'))
-      .addChannelOption((o) => o.setName('salon').setDescription('Salon de fallback si le DM est bloqué')))
+      .addChannelOption((o) => o.setName('salon').setDescription('Salon de vérification où le captcha est posté')))
     .addSubcommand((s) => s.setName('mot-ajouter').setDescription('Ajouter un mot interdit')
       .addStringOption((o) => o.setName('mot').setDescription('Mot à interdire').setRequired(true)))
     .addSubcommand((s) => s.setName('mot-retirer').setDescription('Retirer un mot interdit')
@@ -49,15 +49,12 @@ export default {
         .setDescription('Fenêtre de détection en secondes (défaut 7)').setMinValue(3).setMaxValue(30))
       .addIntegerOption((o) => o.setName('exclusion-minutes')
         .setDescription("Durée d'exclusion en minutes (défaut 5)").setMinValue(1).setMaxValue(60)))
-    .addSubcommand((s) => s.setName('accueil').setDescription('Salon et message de bienvenue')
-      .addChannelOption((o) => o.setName('salon').setDescription('Salon de bienvenue')
-        .addChannelTypes(ChannelType.GuildText).setRequired(true))
+    .addSubcommand((s) => s.setName('accueil').setDescription("Message de bienvenue (DM envoyé à l'obtention du rôle règlement)")
       .addStringOption((o) => o.setName('message')
         .setDescription('Message — variables : {user} {username} {server} {count}'))
       .addBooleanOption((o) => o.setName('carte-image').setDescription('Joindre une carte image générée (welcome card)'))
       .addStringOption((o) => o.setName('image-fond')
-        .setDescription("URL d'image de fond pour la carte (https://...) — « retirer » pour revenir au dégradé"))
-      .addStringOption((o) => o.setName('message-dm').setDescription('Message DM envoyé en plus (placeholders pareils)')))
+        .setDescription("URL d'image de fond pour la carte (https://...) — « retirer » pour revenir au dégradé")))
     .addSubcommand((s) => s.setName('depart').setDescription("Salon et message d'au revoir")
       .addChannelOption((o) => o.setName('salon').setDescription('Salon de départ')
         .addChannelTypes(ChannelType.GuildText).setRequired(true))
@@ -195,9 +192,7 @@ export default {
       return ok('✅ Seuil anti-spam mis à jour.');
     }
     if (sub === 'accueil') {
-      const ch = interaction.options.getChannel('salon', true);
-      await setConfig(gid, 'welcome_channel', ch.id);
-      const msg = interaction.options.getString('message', true);
+      const msg = interaction.options.getString('message');
       if (msg) await setConfig(gid, 'welcome_message', msg);
       const card = interaction.options.getBoolean('carte-image');
       if (card !== null) await setConfig(gid, 'welcome_card_enabled', card ? '1' : '0');
@@ -214,12 +209,10 @@ export default {
           return ok('❌ URL invalide pour l\'image de fond. Attendu : `https://...` ou `retirer`.');
         }
       }
-      const dmMsg = interaction.options.getString('message-dm');
-      if (dmMsg) await setConfig(gid, 'welcome_dm_message', dmMsg);
       const bgLabel = bgChange === 'set' ? ' · image de fond définie'
         : bgChange === 'remove' ? ' · image de fond retirée'
         : '';
-      return ok(`✅ Salon de bienvenue : ${ch}${card !== null ? ` · carte ${card ? 'on' : 'off'}` : ''}${bgLabel}${dmMsg ? ' · DM activé' : ''}`);
+      return ok(`✅ Bienvenue (DM à l'obtention du rôle règlement) mise à jour${msg ? ' · message défini' : ''}${card !== null ? ` · carte ${card ? 'on' : 'off'}` : ''}${bgLabel}`);
     }
     if (sub === 'depart') {
       const ch = interaction.options.getChannel('salon', true);
@@ -321,7 +314,7 @@ export default {
       .addFields(
         { name: '🛡️ Auto-modération', value: await bool('automod_enabled'), inline: true },
         { name: '🚨 Anti-raid', value: `${await bool('antiraid_enabled')}\nÂge min. : ${await getConfig(gid, 'antiraid_min_age_days', '0')} j`, inline: true },
-        { name: '👋 Accueil', value: showChan(await getConfig(gid, 'welcome_channel')), inline: true },
+        { name: '👋 Bienvenue (DM)', value: `${(await getConfig(gid, 'welcome_message')) ? '✅ Message défini' : '🔹 Message par défaut'} · carte ${(await getConfig(gid, 'welcome_card_enabled', '0')) === '1' ? 'on' : 'off'}`, inline: true },
         { name: '🚪 Départ', value: showChan(await getConfig(gid, 'goodbye_channel')), inline: true },
         { name: '🎭 Autorôle', value: showRole(await getConfig(gid, 'autorole')), inline: true },
         { name: '✅ Rôle règlement', value: showRole(await getConfig(gid, 'verified_role')), inline: true },

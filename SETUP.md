@@ -47,7 +47,6 @@ Activer **Mode développeur** (Paramètres utilisateur → Avancés) pour copier
 |---|---|---|
 | Catégorie « Tickets » | Conteneur des salons de tickets | `TICKET_CATEGORY_ID` dans `.env` |
 | Salon `#logs-tickets` (privé staff) | Transcripts à la fermeture | `LOGS_CHANNEL_ID` dans `.env` |
-| Salon `#bienvenue` | Welcome card / message | `/config accueil` |
 | Salon `#règlement` | Affichage du règlement | `/setup-reglement` |
 | Salons `#logs-messages`, `#logs-modération`, etc. (privés staff) | Logs serveur catégorisés | `/logs salon ...` |
 | Salon `#suggestions` | Réception `/suggestion` | `/config suggestions` |
@@ -148,8 +147,9 @@ Si Lavalink configuré : `🎵 Lavalink connecté`. Sinon : `Module musique dés
    → (optionnel) Rôle attribué à chaque arrivée — typiquement un rôle
      « pré-vérification » sans accès, levé par le bouton règlement.
 
-6. /config accueil salon:#bienvenue carte-image:true
-   → Active welcome card. Ajoute message:"..." pour un texte custom.
+6. /config accueil carte-image:true message:"Bienvenue {user} sur {server} 🎉"
+   → Message de bienvenue envoyé en DM au moment où le membre obtient le rôle
+     règlement (après captcha + acceptation du règlement). Welcome card activée.
      Ajoute image-fond:https://... pour une image de fond personnalisée.
      Variables : {user} {username} {server} {count}.
 
