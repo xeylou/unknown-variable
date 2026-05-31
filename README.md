@@ -9,7 +9,7 @@ Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 67 commandes,
 - 🛡️ **Modération** — sanctions DM + casier + log, lockdown salon/serveur, anti-raid, auto-modération (phishing, tokens, Zalgo, mots, spam, invites)
 - 📜 **Logs & Audit** — journal par catégorie (messages, membres, rôles, salons, vocal, serveur, modération, bot)
 - 📜 **Règlement** — affichage en deux embeds + bouton d'acceptation → rôle d'accès
-- 👋 **Accueil** — message de bienvenue en DM à l'obtention du rôle membre (welcome card PNG optionnelle), autorôle, CAPTCHA visuel (image bruitée) posté en salon
+- 👋 **Accueil** — message de bienvenue en DM à l'obtention du rôle membre (welcome card PNG optionnelle), autorôle, CAPTCHA visuel (image bruitée) affiché en éphémère via un bouton
 - 🎉 **Engagement** — giveaways (conditions + multiplicateurs), suggestions (thread + vote), sondages persistants et natifs
 - 🔊 **Vocaux temporaires** — salon « rejoindre pour créer » + panneau de contrôle
 - 🧰 **Utilitaires** — `/userinfo`, `/serverinfo`, `/avatar`, `/ping`, `/botinfo`, rappels (ponctuels, récurrents, par rôle), tags FAQ, AFK, embed builder
@@ -129,7 +129,8 @@ npm start                   # 6. lance le bot
 ```
 /config automod actif:true phishing:true token-leak:true zalgo:true
 /config antiraid actif:true age-min-compte:7 expulser-jeunes:true
-/config captcha actif:true role-non-verifie:@Non-vérifié role-verifie:@Vérifié salon:#vérification
+/config captcha actif:true role-non-verifie:@Non-vérifié role-verifie:@Vérifié
+/setup-captcha          # à lancer DANS #vérification : déploie le bouton « Vérifier » (défi en éphémère)
 /config minecraft ip:play.monserveur.fr salon-statut:#statut-mc
 /config minecraft-rcon host:play.monserveur.fr mot-de-passe:xxx port:25575 role-en-jeu:@En jeu
 /setup-roles role1:@Joueur role2:@Builder titre:"Choisis ton rôle"
@@ -373,7 +374,7 @@ Tout ce qui est listé ici est modifiable **sans redémarrage**, stocké en base
 | `automod-spam` | `[messages:3-20]` `[secondes:3-30]` `[exclusion-minutes:1-60]` | Seuil et durée du timeout anti-spam. Défauts 5 / 7 / 5. |
 | `invite-whitelist` | `action:add\|remove\|list` `[guild-id:string]` | Serveurs alliés autorisés à voir leurs invitations passer (sinon supprimées si automod actif). |
 | `antiraid` | `actif:bool` `[age-min-compte:0-365]` `[expulser-jeunes:bool]` `[verrouillage-auto:bool]` `[quarantaine:role]` | Détection de vague + actions auto. `age-min-compte` 0 = désactivé. |
-| `captcha` | `actif:bool` `[role-non-verifie:role]` `[role-verifie:role]` `salon:chan` | Vérification visuelle à l'entrée : image bruitée avec 6 caractères à recopier (insensible à la casse), **postée dans le salon de vérification** (`salon`, plus de DM). Le rôle non-verifie bloque l'accès, le rôle verifie le débloque après réussite. |
+| `captcha` | `actif:bool` `[role-non-verifie:role]` `[role-verifie:role]` | Vérification visuelle à l'entrée : image bruitée avec 6 caractères à recopier (insensible à la casse). Le défi s'affiche **en éphémère** (visible du seul membre) quand il clique sur le bouton déployé par `/setup-captcha` — aucun DM, rien de public. Le rôle non-verifie bloque l'accès, le rôle verifie le débloque après réussite. |
 | `accueil` | `[message:string]` `[carte-image:bool]` `[image-fond:url]` | Message de bienvenue envoyé en **DM** quand le membre obtient le rôle règlement (après captcha + règlement). Carte image optionnelle. Variables : `{user}` `{username}` `{server}` `{count}`. `image-fond` accepte une URL `https://...` ou `retirer` pour revenir au dégradé. |
 | `depart` | `salon:chan` `[message:string]` | Au revoir. Variables : `{username}` `{server}` `{count}`. |
 | `autorole` | `role:role` | Rôle attribué à toute nouvelle arrivée. |
@@ -534,6 +535,7 @@ Suit l'activité de dépôts (commits, PR/merges, **CI/CD GitHub Actions**, rele
 | Commande | Tier | Description |
 |---|---|---|
 | `/setup-reglement` | admin | Déploie le règlement + bouton. |
+| `/setup-captcha` | admin | Déploie le bouton de vérification anti-robot (défi affiché en éphémère, visible du seul membre). |
 | `/setup-roles` | admin | Panneau de rôles auto-attribuables (boutons). |
 | `/setup-reaction-roles` | admin | Panneau classique emoji → rôle (réactions). |
 | `/suggestion <proposition> [categorie]` | public | Cooldown 10 min · thread auto · vote 👍/👎 · validation staff. |

@@ -36,8 +36,7 @@ export default {
     .addSubcommand((s) => s.setName('captcha').setDescription("Configurer la vérification anti-robot à l'entrée")
       .addBooleanOption((o) => o.setName('actif').setDescription('Activer ?').setRequired(true))
       .addRoleOption((o) => o.setName('role-non-verifie').setDescription('Rôle attribué à l\'arrivée (bloque tout sauf #vérification)'))
-      .addRoleOption((o) => o.setName('role-verifie').setDescription('Rôle attribué après réussite du CAPTCHA'))
-      .addChannelOption((o) => o.setName('salon').setDescription('Salon de vérification où le captcha est posté')))
+      .addRoleOption((o) => o.setName('role-verifie').setDescription('Rôle attribué après réussite du CAPTCHA')))
     .addSubcommand((s) => s.setName('mot-ajouter').setDescription('Ajouter un mot interdit')
       .addStringOption((o) => o.setName('mot').setDescription('Mot à interdire').setRequired(true)))
     .addSubcommand((s) => s.setName('mot-retirer').setDescription('Retirer un mot interdit')
@@ -160,12 +159,10 @@ export default {
       const a = interaction.options.getBoolean('actif');
       const unverified = interaction.options.getRole('role-non-verifie');
       const verified = interaction.options.getRole('role-verifie');
-      const chan = interaction.options.getChannel('salon', true);
       await setConfig(gid, 'captcha_enabled', a ? '1' : '0');
       if (unverified) await setConfig(gid, 'captcha_unverified_role', unverified.id);
       if (verified) await setConfig(gid, 'captcha_verified_role', verified.id);
-      if (chan) await setConfig(gid, 'captcha_channel', chan.id);
-      return ok(`✅ CAPTCHA **${a ? 'activé' : 'désactivé'}**.`);
+      return ok(`✅ CAPTCHA **${a ? 'activé' : 'désactivé'}**.${a ? ' Déploie le bouton de vérification avec `/setup-captcha` dans ton salon de vérification.' : ''}`);
     }
     if (sub === 'mot-ajouter' || sub === 'mot-retirer') {
       const word = interaction.options.getString('mot', true).toLowerCase().trim();

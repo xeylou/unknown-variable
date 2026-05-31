@@ -168,7 +168,8 @@ Si Lavalink configuré : `🎵 Lavalink connecté`. Sinon : `Module musique dés
 ```
 /config automod actif:true phishing:true token-leak:true zalgo:true
 /config antiraid actif:true age-min-compte:7 expulser-jeunes:true
-/config captcha actif:true role-non-verifie:@Non-vérifié role-verifie:@Vérifié salon:#vérification
+/config captcha actif:true role-non-verifie:@Non-vérifié role-verifie:@Vérifié
+# puis, DANS le salon #vérification : /setup-captcha  (déploie le bouton ; le défi s'affiche en éphémère)
 /config minecraft ip:play.monserveur.fr salon-statut:#statut-mc
 /config minecraft-rcon host:play.monserveur.fr mot-de-passe:xxx port:25575 role-en-jeu:@En jeu
 /setup-roles role1:@Joueur role2:@Builder titre:"Choisis ton rôle"

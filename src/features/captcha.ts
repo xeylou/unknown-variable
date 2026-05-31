@@ -14,9 +14,11 @@ const log = createLogger('captcha');
 /**
  * CAPTCHA d'entrée visuel : génère une image bruitée avec 6 caractères distordus
  * que le membre doit recopier via une modale. Le membre rejoint → reçoit le rôle
- * « non vérifié » et le défi est posté dans le salon de vérification. Le bouton
- * ouvre une modale ; en cas de réussite le rôle vérifié est attribué (et le
- * non-vérifié retiré).
+ * « non vérifié ». Dans le salon de vérification, un bouton permanent « Vérifier »
+ * (déployé par /setup-captcha) affiche le défi EN ÉPHÉMÈRE — visible du seul
+ * membre, donc personne d'autre ne le voit. Le bouton « Je suis humain » ouvre
+ * une modale ; en cas de réussite le rôle vérifié est attribué (et le non-vérifié
+ * retiré).
  *
  * Le rendu Canvas est fait directement dans le thread principal : le dessin
  * d'une petite image est négligeable (~1-2 ms) et `canvas.encode('png')` est
@@ -29,7 +31,6 @@ const log = createLogger('captcha');
  *   `captcha_enabled`         — '1' pour activer
  *   `captcha_unverified_role` — rôle attribué à l'arrivée (bloque tout sauf #vérification)
  *   `captcha_verified_role`   — rôle final (peut être identique à `verified_role`)
- *   `captcha_channel`         — salon de vérification où le défi est posté
  */
 
 const MAX_ATTEMPTS = 3;
@@ -156,38 +157,16 @@ function buildCaptchaPayload(guildName: string, guildId: string, imageBuffer: Bu
 // ─── API publique ───────────────────────────────────────────────────────────────
 
 /**
- * Déclenché à l'arrivée d'un nouveau membre. Si le CAPTCHA est activé,
- * applique le rôle non-vérifié et poste le défi visuel dans le salon de vérification.
+ * Déclenché à l'arrivée d'un nouveau membre. Si le CAPTCHA est activé, applique
+ * le rôle non-vérifié (qui restreint l'accès au salon de vérification). Le défi
+ * lui-même est généré à la demande, en éphémère, lorsque le membre clique sur le
+ * bouton « Vérifier » déployé par /setup-captcha (voir components/captcha.ts).
  */
 export async function onMemberJoin(member: GuildMember): Promise<void> {
   if ((await getConfig(member.guild.id, 'captcha_enabled', '0')) !== '1') return;
   const unverifiedRoleId = await getConfig(member.guild.id, 'captcha_unverified_role');
   if (!unverifiedRoleId) return;
-
   await member.roles.add(unverifiedRoleId, 'CAPTCHA en attente').catch(() => {});
-
-  const code = makeCode();
-  await prisma.captcha_pending.upsert({
-    where: { guild_id_user_id: { guild_id: member.guild.id, user_id: member.id } },
-    update: { answer: code, attempts: 0, created_at: Date.now() },
-    create: { guild_id: member.guild.id, user_id: member.id, answer: code, created_at: Date.now() }
-  });
-
-  const channelId = await getConfig(member.guild.id, 'captcha_channel');
-  if (!channelId) {
-    log.warn(`captcha activé sans salon de vérification dans ${member.guild.id} — défi non posté`);
-    return;
-  }
-  const channel = member.guild.channels.cache.get(channelId);
-  if (channel?.isTextBased() && 'send' in channel) {
-    const imageBuffer = await renderCaptchaImage(code);
-    const payload = buildCaptchaPayload(member.guild.name, member.guild.id, imageBuffer);
-    channel.send({
-      content: `${member}`,
-      ...payload,
-      allowedMentions: { users: [member.id] }
-    }).catch(() => {});
-  }
 }
 
 /**
@@ -221,10 +200,9 @@ export async function verifyAnswer(guildId: string, userId: string, answer: stri
 }
 
 /**
- * Génère un nouveau défi visuel pour un membre ayant épuisé ses tentatives.
- * Retourne le buffer image pour que l'appelant puisse l'inclure dans sa réponse.
+ * Génère un nouveau code, le stocke (remise à zéro des tentatives) et rend l'image.
  */
-export async function refreshChallenge(guildId: string, userId: string) {
+async function generateChallenge(guildId: string, userId: string): Promise<{ imageBuffer: Buffer | null }> {
   const code = makeCode();
   await prisma.captcha_pending.upsert({
     where: { guild_id_user_id: { guild_id: guildId, user_id: userId } },
@@ -233,4 +211,14 @@ export async function refreshChallenge(guildId: string, userId: string) {
   });
   const imageBuffer = await renderCaptchaImage(code);
   return { imageBuffer };
+}
+
+/**
+ * Génère un défi et construit le payload éphémère (image + bouton « Je suis
+ * humain ») affiché quand le membre clique sur « Vérifier ». L'image n'est ainsi
+ * visible que du membre concerné. Sert aussi à régénérer un défi après échec.
+ */
+export async function buildChallengeReply(guild: { id: string; name: string }, userId: string) {
+  const { imageBuffer } = await generateChallenge(guild.id, userId);
+  return buildCaptchaPayload(guild.name, guild.id, imageBuffer);
 }
