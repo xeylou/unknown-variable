@@ -1,124 +1,127 @@
-# 🤖 _unknown_variable — Bot Discord multifonction
+# unknown-variable - Bot Discord
 
 Bot Discord multifonction (TypeScript strict + Prisma 7 + SQLite). 67 commandes, 16 composants, 7 events. Nom du bot personnalisable via `BOT_NAME`.
 
-> 📘 Ce README couvre **tout** : installation, mise en route, hébergement, mises à jour et base de données. Seul le module musique a son guide dédié : [`LAVALINK.md`](LAVALINK.md).
+> 📘 Ce README couvre l'installation, la mise en route, l'hébergement, les mises à jour et la base de données. Seul le module musique a son guide dédié : [`LAVALINK.md`](LAVALINK.md).
 
 **Modules :**
-- 🎫 **Tickets** — panneau + sélecteur, catégories isolées par équipe, transcript, notation, réouverture 7 j en DM
-- 🛡️ **Modération** — sanctions DM + casier + log, lockdown salon/serveur, anti-raid, auto-modération (phishing, tokens, Zalgo, mots, spam, invites)
-- 📜 **Logs & Audit** — journal par catégorie (messages, membres, rôles, salons, vocal, serveur, modération, bot)
-- 📜 **Règlement** — affichage en deux embeds + bouton d'acceptation → rôle d'accès
-- 👋 **Accueil** — bienvenue à l'obtention du rôle membre : MP (carte PNG + embed d'orientation configurable) et carte postée dans un salon sans ping, autorôle, CAPTCHA visuel (image bruitée) affiché en éphémère via un bouton
-- 🎉 **Engagement** — giveaways (conditions + multiplicateurs), suggestions (thread + vote), sondages persistants et natifs
-- 🔊 **Vocaux temporaires** — salon « rejoindre pour créer » + panneau de contrôle
-- 🧰 **Utilitaires** — `/userinfo`, `/serverinfo`, `/avatar`, `/ping`, `/botinfo`, rappels (ponctuels, récurrents, par rôle), tags FAQ, AFK, embed builder
-- ⛏️ **Minecraft** — statut, suivi automatique, RCON (whitelist, rôle en jeu)
-- 🔔 **Notifications** — YouTube, Twitch, et **flux RSS génériques** (Instagram, TikTok, X via RSSHub, Reddit, blogs, podcasts…) avec ping de rôle configurable
-- 🐙 **GitHub** — suivi de dépôts privés (commits, PR/merges, **CI/CD**, releases, issues, reviews) en **hybride** webhooks temps réel + polling de secours ; statut pipeline live, ping de rôle sur échec CI, digest périodique, liaison GitHub↔Discord
-- 🎵 **Musique** — lecture YouTube via Lavalink (file, filtres, paroles)
-- 📊 **Salons statistiques** — compteurs de membres par rôle
+- **Tickets** - panneau + sélecteur, catégories isolées par équipe, transcript, notation, réouverture 7 j en DM
+- **Modération** - sanctions DM + casier + log, lockdown salon/serveur, anti-raid, auto-modération (phishing, tokens, Zalgo, mots, spam, invites)
+- **Logs & Audit** - journal par catégorie (messages, membres, rôles, salons, vocal, serveur, modération, bot)
+- **Règlement** - affichage en deux embeds + bouton d'acceptation → rôle d'accès
+- **Accueil** - bienvenue à l'obtention du rôle membre : MP (carte PNG + embed d'orientation configurable) et carte postée dans un salon sans ping, autorôle, CAPTCHA visuel (image bruitée) affiché en éphémère via un bouton
+- **Engagement** - giveaways (conditions + multiplicateurs), suggestions (thread + vote), sondages persistants et natifs
+- **Vocaux temporaires** - salon "rejoindre pour créer" + panneau de contrôle
+- **Utilitaires** - `/userinfo`, `/serverinfo`, `/avatar`, `/ping`, `/botinfo`, rappels (ponctuels, récurrents, par rôle), tags FAQ, AFK, embed builder
+- **Minecraft** - statut, suivi automatique, RCON (whitelist, rôle en jeu)
+- **Notifications** - YouTube, Twitch, et **flux RSS génériques** (Instagram, TikTok, X via RSSHub, Reddit, blogs, podcasts…) avec ping de rôle configurable
+- **GitHub** - suivi de dépôts privés (commits, PR/merges, **CI/CD**, releases, issues, reviews) en **hybride** webhooks temps réel + polling de secours ; statut pipeline live, ping de rôle sur échec CI, digest périodique, liaison GitHub↔Discord
+- **Musique** - lecture YouTube via Lavalink (file, filtres, paroles)
+- **Salons statistiques** - compteurs de membres par rôle
 
 ---
 
 ## 1. Création du bot Discord
 
-1. Va sur https://discord.com/developers/applications → **New Application**.
-2. Onglet **Bot** → **Reset Token** → copie le token (= `DISCORD_TOKEN`).
-3. Onglet **Bot** → active les **Privileged Gateway Intents** :
-   - `SERVER MEMBERS INTENT` ✅
+1. Sur https://discord.com/developers/applications → **New Application**.
+2. Onglet **Bot** → **Reset Token** → copier le token (= `DISCORD_TOKEN`).
+3. Onglet **Bot** → activer les **Privileged Gateway Intents** :
+   - `SERVER MEMBERS INTENT`  
    - `MESSAGE CONTENT INTENT` ✅
-4. Onglet **General Information** → copie l'**Application ID** (= `CLIENT_ID`).
+4. Onglet **General Information** → copier l'**Application ID** (= `CLIENT_ID`).
 5. Onglet **OAuth2 → URL Generator** :
    - Scopes : `bot`, `applications.commands`
    - Bot Permissions : `Manage Channels`, `Manage Roles`, `Send Messages`, `Embed Links`, `Attach Files`, `Read Message History`, `View Channels`, `Kick Members`, `Ban Members`, `Moderate Members`, `Manage Messages`, `Move Members`, `Mute Members`, `Deafen Members`, `Add Reactions`, `View Audit Log`
-   - Plus simple : coche `Administrator` pour éviter les soucis de permission.
-   - Copie l'URL en bas, ouvre-la, invite le bot sur ton serveur.
+   - Plus simple : cocher `Administrator` pour éviter les soucis de permission & ajouts de fonctionnalités futures.
+   - Copier l'URL en bas de la page, et inviter le bot sur le serveur souhaité.
 
-> 💡 Le **nom de l'application** (Developer Portal → General Information → *Name*) devient le nom affiché du bot dans Discord — repris automatiquement dans les embeds. Pour le branding interne (logs, User-Agent, nom du fichier BDD, statut), tu peux aussi définir `BOT_NAME` dans le `.env` (voir [§5](#5-variables-denvironnement-env)).
+> 💡 Le **nom de l'application** (Developer Portal → General Information → *Name*) devient le nom du bot sur Discord : repris automatiquement dans les embeds. Pour l'usage interne (logs, User-Agent, nom du fichier de la BDD, statut), tu peux définir `BOT_NAME` dans le `.env` (voir [$5](#5-variables-denvironnement-env)).
 
 ---
 
 ## 2. Préparation du serveur Discord
 
-Active **Mode développeur** (Paramètres utilisateur → Avancés) pour pouvoir copier les IDs (clic droit → *Copier l'identifiant*). `GUILD_ID` = clic droit sur le serveur.
+Activer le **Mode développeur** (Paramètres utilisateur → Avancés) pour copier les IDs par la suite (clic droit → *Copier l'identifiant*). Par exemple, `GUILD_ID` = clic droit sur le serveur -> copier l'ID du serveur.
 
-### Rôles à créer **avant** le démarrage du bot
+### Rôles à créer avant le démarrage du bot
 
 | Rôle | Sert à | Comment |
 |---|---|---|
-| `Staff` | Modération (`KICK`/`BAN`/`TIMEOUT`/`WARN`…) | Créer un rôle « Staff », copier son ID → `STAFF_ROLE_ID` dans `.env`. |
-| `Administration` *(optionnel)* | Commandes sensibles (`/config`, `/logs`, `/backup`, `/lockdown serveur`, `/setup-*`, `/role temp`, `/rappel-role`) | Créer un rôle « Admin », copier son ID → `ADMIN_ROLE_ID` dans `.env`. |
-| `Membre vérifié` | Donné quand un membre clique « J'accepte le règlement » | À configurer après le boot via `/config reglement role:`. |
-| **Un rôle par catégorie de ticket** | Équipe responsable d'une catégorie. **Seuls eux voient les tickets** de cette catégorie et reçoivent le ping à l'ouverture. | Un rôle par catégorie (`@Support`, `@Bug-team`, `@Builders`…). Les IDs iront dans `src/config.ts` (voir [§6.1](#61-srcconfigts--catégories-de-tickets-couleurs)). |
+| `Administration` *(optionnel)* | Commandes sensibles admin (`/config`, `/logs`, `/backup`, `/lockdown serveur`, `/setup-*`, `/role temp`, `/rappel-role`) | Créer un rôle "Admin", copier son ID → `ADMIN_ROLE_ID` dans `.env`. |
+| `Staff` | Modération (`KICK`/`BAN`/`TIMEOUT`/`WARN`…) | Créer un rôle "Staff", copier son ID → `STAFF_ROLE_ID` dans `.env`. |
+| `Membre vérifié` | Donné quand un membre clique "J'accepte le règlement" | À configurer après le boot via `/config reglement role:`. |
+| **Un rôle staff par catégorie de ticket** | Équipe responsable d'une catégorie. **Seuls les staffs nécessairent voient les tickets** de leur catégorie et reçoivent le ping à l'ouverture. | Un rôle par catégorie (`@Support`, `@Bug-team`, `@Builders`…). Les IDs iront dans `src/config.ts` (voir [§6.1](#61-srcconfigts--catégories-de-tickets-couleurs)). |
 
-⚠️ **Hiérarchie cruciale** : le rôle du bot doit être **au-dessus** de tous les rôles qu'il manipule (Staff, Admin, rôles temporaires, rôles de tickets, autorôle). Sinon `Missing Permissions` sur les attribute/remove.
+⚠️ Le rôle du bot doit être **au-dessus** de tous les rôles qu'il manipule (Staff, Admin, rôles temporaires, rôles de tickets, autorôle). Sinon `Missing Permissions` sur les attribute/remove.
 
 ### Salons & catégories à créer
 
-| Élément | Sert à | Variable / commande |
+| Élément | Utilité | Variable / commande |
 |---|---|---|
-| Catégorie « Tickets » | Conteneur des salons de tickets | `TICKET_CATEGORY_ID` dans `.env` |
-| Salon `#logs-tickets` (privé staff) | Transcripts à la fermeture | `LOGS_CHANNEL_ID` dans `.env` |
-| Salon `#bienvenue` | Welcome card / message | `/config accueil` |
+| Catégorie "Tickets" | Catégorie pour les tickets | `TICKET_CATEGORY_ID` dans `.env` |
+| Salon `#logs-tickets` (privé staff) | Historique des tickets à la fermeture | `LOGS_CHANNEL_ID` dans `.env` |
+| Salon d'accueil (`#arrivées`, `#bienvenue`...) | Image d'accueil / message | `/config accueil` |
 | Salon `#règlement` | Affichage du règlement | `/setup-reglement` |
 | Salons `#logs-messages`, `#logs-modération`, etc. (privés staff) | Logs serveur catégorisés | `/logs salon …` |
-| Salon `#suggestions` | Réception `/suggestion` | `/config suggestions` |
-| Salon vocal « ➕ Créer un vocal » | Pattern « rejoindre pour créer » | `/config vocaux-temp` |
-| Salon `#tickets` | Panneau de sélection des catégories | `/setup-tickets` (à lancer dedans) |
+| Salon `#suggestions` | Réception des suggestions de `/suggestion` des membres | `/config suggestions` |
+| Salon vocal "Créer un vocal" | Créer et configurer un vocal pour soit | `/config vocaux-temp` |
+| Salon `#tickets` | Panneau de choix des catégories pour créer un ticket, pour les membres | `/setup-tickets` (à lancer dans le salon) |
 
 ---
 
 ## 3. Installation locale
 
+Dépendance : NodeJS > 20
+
 ```bash
-git clone <ton-repo> unknown_variable
-cd unknown_variable
+git clone https://github.com/xeylou/unknown-variable.git bot_discord
+cd bot_discord
 npm install                 # 1. deps + génère le client Prisma (hook postinstall)
 cp .env.example .env
-nano .env                   # 2. remplis DISCORD_TOKEN, CLIENT_ID, GUILD_ID, STAFF_ROLE_ID (+ BOT_NAME si voulu)
-npx prisma generate         # 3. (re)génère le client — filet si le postinstall a été sauté
+# remplis les varibales dans le .env, à minima DISCORD_TOKEN, CLIENT_ID, GUILD_ID, STAFF_ROLE_ID (+ BOT_NAME si souhaité)
+npx prisma generate         # 3. (re)génère le client - filet si le postinstall a été sauté
 npx prisma db push          # 4. crée le dossier data/ + les tables SQLite
-npm run deploy              # 5. ENREGISTRE les slash-commands sur ton serveur (GUILD_ID) — sinon aucune commande n'apparaît
+npm run deploy              # 5. enregistre les slash-commands sur le serveur (GUILD_ID) - sinon aucune commande n'apparaît, A REFFECTUER A CHAQUE AJOUT DE COMMANDE
 npm start                   # 6. lance le bot
 ```
 
-> **Ordre important** : `db push` (4) doit suivre l'édition du `.env` (le chemin de la base dépend de `BOT_NAME`), et `npm run deploy` (5) est **indispensable** — les commandes ne sont **pas** déployées automatiquement au boot.
+> **Ordre important** : `db push` (4) doit suivre l'édition du `.env` (le chemin de la base dépend de `BOT_NAME`), et `npm run deploy` (5) est **indispensable** - les commandes ne sont **pas** déployées automatiquement.
 >
-> Erreurs fréquentes et leur cause : voir [§13 Dépannage](#13-dépannage). En particulier `Cannot find module '.prisma/client'` → relance l'étape 3 ; `The table … does not exist` → relance l'étape 4.
+> Erreurs fréquentes et leur cause : voir [§13 Dépannage](#13-dépannage). En particulier `Cannot find module '.prisma/client'` → relancer l'étape 3 ; `The table … does not exist` → relancer l'étape 4.
 
-> ⚠️ Avant le boot : configure les **catégories de tickets** dans `src/config.ts` (étape la plus oubliée — voir [§6.1](#61-srcconfigts--catégories-de-tickets-couleurs)). Une catégorie sans `staffRoleId` refuse la création de ticket.
+> ⚠️ Avant le boot : configurer les **catégories de tickets** dans `src/config.ts` (étape souvent oubliée... - voir [§6.1](#61-srcconfigts--catégories-de-tickets-couleurs)). Une catégorie sans `staffRoleId` refuse la création de ticket.
 
-### Mise en route en jeu (dans l'ordre, une seule fois)
+### Mise en route sur Discord (dans l'ordre, une seule fois)
 
-À faire dans Discord après le premier boot :
+À faire sur le servveur Discord après le premier boot :
 
 ```
 1. /permissions check
-   → Bouton « Tout corriger » : accorde aux rôles Staff/Admin/ticket-staff les
-     perms Discord nécessaires pour que les /commandes apparaissent dans leur
+   → Bouton "Tout corriger" : accorde aux rôles Staff/Admin/ticket-staff les
+     permissions nécessaires pour que les /commandes apparaissent dans leur
      auto-complétion.
 
 2. /logs tout-dans salon:#logs-modération
-   → Active les 8 catégories de logs dans un salon. Granularise ensuite avec
-     /logs salon categorie:messages salon:#logs-messages
+   → Activer les 8 catégories de logs dans un salon. Granularisation possible
+     avec /logs salon categorie:messages salon:#logs-messages
 
 3. /config reglement role:@Membre vérifié
-   → Rôle donné quand un membre clique « J'accepte ».
+   → Rôle donné quand un membre clique "J'accepte" du règlement.
 
 4. /setup-reglement
-   → À lancer DANS #règlement. Stocke l'ID du salon pour les DM de sanctions.
+   → À lancer DANS le salon #règlement. Stocke l'ID du salon pour le mentionner
+     dans les DM de sanctions.
 
 5. /config autorole role:@En attente        (optionnel)
-   → Rôle attribué à chaque arrivée (typiquement « pré-vérification »).
+   → Rôle attribué à chaque arrivée (typiquement "pré-vérification") avant captcha.
 
 6. /config accueil salon:#bienvenue carte-image:true
-   → Welcome card. Ajoute message:"..." et/ou image-fond:https://...
+   → Welcome card. Ajouter message:"..." et/ou image-fond:https://...
      Variables : {user} {username} {server} {count}.
 
 7. /config suggestions salon:#suggestions
 
-8. /config vocaux-temp salon:#➕-créer-vocal [categorie:#Vocaux]
+8. /config vocaux-temp salon:#créer-vocal [categorie:#Vocaux]
 
 9. /setup-tickets
    → À lancer DANS #tickets. Déploie le menu déroulant.
@@ -130,7 +133,7 @@ npm start                   # 6. lance le bot
 /config automod actif:true phishing:true token-leak:true zalgo:true
 /config antiraid actif:true age-min-compte:7 expulser-jeunes:true
 /config captcha actif:true role-non-verifie:@Non-vérifié role-verifie:@Vérifié
-/setup-captcha          # à lancer DANS #vérification : déploie le bouton « Vérifier » (défi en éphémère)
+/setup-captcha          # à lancer DANS #vérification : déploie le bouton "Vérifier" (défi en éphémère)
 /config minecraft ip:play.monserveur.fr salon-statut:#statut-mc
 /config minecraft-rcon host:play.monserveur.fr mot-de-passe:xxx port:25575 role-en-jeu:@En jeu
 /setup-roles role1:@Joueur role2:@Builder titre:"Choisis ton rôle"
@@ -143,9 +146,7 @@ Référence complète de toutes les commandes de config : [§8](#8-configuration
 
 ## 4. Hébergement
 
-### Option A — VPS Linux (recommandé, ~3-5 €/mois)
-
-Providers : **Hetzner CX22** (~4 €/mois), **OVH VPS Starter**, **Contabo**, **Scaleway Stardust**.
+### Option A - Linux
 
 ```bash
 sudo apt update && sudo apt install -y nodejs npm git
@@ -162,7 +163,7 @@ sudo systemctl enable --now unknown_variable
 sudo systemctl status unknown_variable
 ```
 
-### Option B — Docker
+### Option B - Docker
 
 ```bash
 docker build -t unknown_variable .
@@ -171,7 +172,7 @@ docker run -d --name unknown_variable --restart unless-stopped \
 docker logs -f unknown_variable
 ```
 
-### Option C — Plateformes managées
+### Option C - Plateformes managées
 
 | Plateforme | Prix | Notes |
 |---|---|---|
@@ -180,7 +181,7 @@ docker logs -f unknown_variable
 | **Render** | Free (s'endort) ou ~7 $/mois | Choisir *Background Worker*. |
 | **Sparked Host / Pterodactyl** | ~2 €/mois | Spécialisé bots Discord, panel web. |
 
-⚠️ **Ne jamais** héberger un bot sur Heroku free, Replit free, Glitch : ils s'endorment.
+⚠️ Héberger un bot sur Heroku free, Replit free, Glitch : ils s'endorment.
 
 ---
 
@@ -201,13 +202,13 @@ Source de vérité : [`.env.example`](.env.example) (copier en `.env`).
 
 | Variable | Défaut | Description |
 |---|---|---|
-| `BOT_NAME` | `_unknown_variable` | Nom de marque (logs, User-Agent, statut, nom du fichier BDD). Le nom **affiché dans Discord** vient lui du Developer Portal. |
+| `BOT_NAME` | `_unknown_variable` | Nom de référence des fichiers (logs, User-Agent, statut, nom du fichier BDD). Le nom **affiché dans Discord** vient lui du Developer Portal. |
 | `BOT_STATUS` | *(vide)* | Statuts tournants, séparés par `\|`. Placeholders `{name}` `{count}`. Défaut : `{name} \| /help \| {count} serveur(s)`. |
-| `ADMIN_ROLE_ID` | *(vide)* | Rôle « super-staff » pour les commandes sensibles. Sans ça, il faut la permission Discord « Administrateur ». |
+| `ADMIN_ROLE_ID` | *(vide)* | Rôle admin pour les commandes sensibles. Sans ça, il faut la permission Discord "Administrateur". |
 | `TICKET_CATEGORY_ID` | *(vide)* | Catégorie Discord où ranger les salons de tickets. Sans ça, ils sont créés à la racine. |
 | `LOGS_CHANNEL_ID` | *(vide)* | Salon où sont déposés les transcripts à la fermeture d'un ticket. |
-| `DATABASE_PATH` | `./data/<slug BOT_NAME>.db` | Chemin du fichier SQLite. Dérivé de `BOT_NAME` si absent (défaut → `./data/unknown_variable.db`). ⚠️ Fixe-le explicitement si tu changes `BOT_NAME` avec une base existante, sinon le bot pointera sur un nouveau fichier vide. |
-| `TWITCH_CLIENT_ID` | *(vide)* | Client ID Twitch — sans ça, `/notif ajouter-twitch` est désactivé. Création : https://dev.twitch.tv/console/apps |
+| `DATABASE_PATH` | `./data/<slug BOT_NAME>.db` | Chemin du fichier SQLite. Dérivé de `BOT_NAME` si absent (défaut → `./data/unknown_variable.db`). ⚠️ A fixer explicitement si changement de `BOT_NAME` avec une base existante, sinon le bot pointera sur un nouveau fichier vide... |
+| `TWITCH_CLIENT_ID` | *(vide)* | Client ID Twitch - sans ça, `/notif ajouter-twitch` est désactivé. Création : https://dev.twitch.tv/console/apps |
 | `TWITCH_CLIENT_SECRET` | *(vide)* | Secret Twitch. |
 | `LAVALINK_HOST` | `localhost` | Hôte du serveur Lavalink (musique). |
 | `LAVALINK_PORT` | `2333` | Port du serveur Lavalink. |
@@ -219,15 +220,15 @@ Source de vérité : [`.env.example`](.env.example) (copier en `.env`).
 | `GITHUB_WEBHOOK_HOST` | `0.0.0.0` | Adresse d'écoute du récepteur webhook. |
 | `GITHUB_WEBHOOK_PATH` | `/github/webhook` | Chemin de l'endpoint webhook (`POST`). |
 
-> **GitHub — mode hybride** : `GITHUB_TOKEN` (polling, marche derrière un NAT) et/ou `GITHUB_WEBHOOK_SECRET` (webhooks temps réel, exige que le bot soit joignable). Détails, scopes du PAT et config du webhook : [§8.5 Suivi GitHub](#suivi-github-git).
+> **GitHub - mode hybride** : `GITHUB_TOKEN` (polling, marche derrière un NAT) et/ou `GITHUB_WEBHOOK_SECRET` (webhooks temps réel, exige que le bot soit joignable). Détails, scopes du PAT et config du webhook : [§8.5 Suivi GitHub](#suivi-github-git).
 
 ---
 
 ## 6. Configuration via fichiers (`src/`)
 
-Ce qui se modifie en éditant un fichier source (un redémarrage du bot est nécessaire après changement).
+Tout ce qui se modifie en éditant un fichier source (un redémarrage du bot est nécessaire après changement).
 
-### 6.1 `src/config.ts` — Catégories de tickets, couleurs
+### 6.1 `src/config.ts` - Catégories de tickets, couleurs
 
 Ouvre [`src/config.ts`](src/config.ts) :
 
@@ -235,7 +236,7 @@ Ouvre [`src/config.ts`](src/config.ts) :
 
 ```ts
 colors: {
-  primary: 0x5865f2,  // bleu Discord — la majorité des embeds
+  primary: 0x5865f2,  // bleu Discord - la majorité des embeds
   neutral: 0x2b2d31,  // panneau de tickets, panneaux passifs
   success: 0x57f287,  // confirmation d'action
   danger:  0xed4245,  // erreur, sanction, ban
@@ -243,11 +244,11 @@ colors: {
 }
 ```
 
-Format hexadécimal `0xRRGGBB`. Tu peux utiliser le sélecteur Discord pour trouver une teinte qui matche ton thème.
+Format hexadécimal `0xRRGGBB`. Modifiable.
 
 #### Catégories du menu de tickets (`tickets.categories`)
 
-C'est la liste affichée dans le menu déroulant déployé par `/setup-tickets`. Édite, ajoute ou retire des entrées :
+Liste affichée dans le menu déroulant pour créer un ticket, du message dans `/setup-tickets`. Éditition, ajout ou suppression possibles :
 
 ```ts
 categories: [
@@ -264,19 +265,19 @@ categories: [
 | `value` | Identifiant court (utilisé dans le nom du salon `value-pseudo-numero` et la base). N'utilise que `[a-z0-9-]`. |
 | `label` | Libellé affiché dans le menu et dans le titre de l'embed du ticket. |
 | `description` | Sous-titre du menu déroulant. |
-| `emoji` | Emoji affiché à gauche dans le menu. Unicode ou custom (`<:nom:id>`). |
-| `staffRoleId` | **Obligatoire** — ID du rôle Discord responsable. Pingué à l'ouverture, seul à voir le ticket (avec `ADMIN_ROLE_ID`). Une catégorie sans `staffRoleId` refuse la création. |
+| `emoji` | Emoji affiché à gauche dans le menu. Unicode ou custom Discord (`<:nom:id>`). |
+| `staffRoleId` | **Obligatoire** - ID du rôle Discord responsable. Pingué à l'ouverture, seul à voir le ticket (avec `ADMIN_ROLE_ID`). Une catégorie sans `staffRoleId` refuse la création. |
 
-⚠️ Après modification : relance `/setup-tickets` (les anciens panneaux ont un `customId` qui ne reflète pas les nouvelles valeurs).
+⚠️ Après modification, relancer `/setup-tickets` (les anciens panneaux ont un `customId` qui ne reflète pas les nouvelles valeurs...).
 
-### 6.2 `src/data/reglement.ts` — Texte du règlement
+### 6.2 `src/data/reglement.ts` - Texte du règlement
 
-Affiché par `/setup-reglement`. Modifie librement :
+Affiché par `/setup-reglement`. A modifier librement :
 
 ```ts
 {
-  header: { title: '...', intro: '...' },         // En-tête
-  acceptation: '...',                              // Texte au-dessus du bouton « J'accepte »
+  header: { title: '...', intro: '...' },          // En-tête
+  acceptation: '...',                              // Texte au-dessus du bouton "J'accepte"
   footer: '...',                                   // Pied de page
   articles: [
     { emoji: '🤝', titre: 'Respect & savoir-vivre', contenu: '...' },
@@ -286,11 +287,11 @@ Affiché par `/setup-reglement`. Modifie librement :
 }
 ```
 
-Le règlement est découpé automatiquement en deux embeds (limite Discord 6000 caractères / embed). Tu peux ajouter autant d'articles que tu veux tant que le total reste sous la limite.
+Le règlement est découpé automatiquement en deux embeds (limite Discord 6000 caractères / embed). Possible de rajouter autant d'articles que souhaité tant que le total reste sous la limite.
 
-### 6.3 `src/data/help.ts` — Contenu de `/help`
+### 6.3 `src/data/help.ts` - Contenu de `/help`
 
-Liste des catégories affichées et signature de chaque commande dans l'aide interactive. À éditer si tu ajoutes/retires une commande, ou si tu veux re-classer une commande par tier (`public` / `staff` / `ticket-staff` / `admin`).
+Liste des catégories affichées et signature de chaque commande dans l'aide interactive. À éditer si ajout/retrait d'une commande, ou pour re-classer une commande par tier (`public` / `staff` / `ticket-staff` / `admin`).
 
 ```ts
 {
@@ -308,7 +309,7 @@ Liste des catégories affichées et signature de chaque commande dans l'aide int
 }
 ```
 
-### 6.4 `src/components/tickets.ts` — Limite de tickets / fenêtre de réouverture
+### 6.4 `src/components/tickets.ts` - Limite de tickets / fenêtre de réouverture
 
 | Constante | Défaut | Effet |
 |---|---|---|
@@ -316,17 +317,17 @@ Liste des catégories affichées et signature de chaque commande dans l'aide int
 | `REOPEN_WINDOW_MS` | `7 * 24 * 3600 * 1000` | Fenêtre pendant laquelle un ticket fermé peut être rouvert depuis le DM. |
 
 **Flux de fermeture** : à la fermeture, le DM envoyé à l'auteur contient 3 lignes de boutons :
-1. **Notation 1-5 étoiles** → stockée dans `tickets.rating`.
-2. **« Rouvrir le ticket »** → recrée le salon avec les permissions d'origine (fenêtre `REOPEN_WINDOW_MS`).
-3. **« Laisser un commentaire »** → ouvre une modale ; le texte est stocké dans `tickets.comment` (max 1000 chars) et un embed est posté dans le salon de logs `moderation`. Consultation via `/ticket-reviews`.
+1. **Notation 1-5 étoiles** → stockée dans `tickets.rating` pour review avec le staff.
+2. **Rouvrir le ticket** → recrée le salon avec les permissions d'origine (fenêtre `REOPEN_WINDOW_MS` vu au-dessus).
+3. **Laisser un commentaire** → ouvre une modale ; le texte est stocké dans `tickets.comment` (max 1000 chars) et un embed est posté dans le salon de logs `logs-tickets`. Consultation via `/ticket-reviews`.
 
-Note et commentaire sont **indépendants** : on peut laisser l'un, l'autre, ou les deux.
+Note et commentaire sont **indépendants** : le membre peut en laisser un, l'autre, ou les deux.
 
-### 6.5 `src/commands/community/suggest.ts` — Cooldown des suggestions
+### 6.5 `src/commands/community/suggest.ts` - Cooldown des suggestions
 
 | Constante | Défaut | Effet |
 |---|---|---|
-| `COOLDOWN_MS` | `10 * 60 * 1000` | Délai mini entre deux `/suggestion` du même membre. |
+| `COOLDOWN_MS` | `10 * 60 * 1000` | Délai mini entre deux `/suggestion` par le même membre. |
 | `TAGS` | 6 entrées | Catégories du choix `categorie:` du formulaire. |
 
 ---
@@ -340,17 +341,17 @@ Note et commentaire sont **indépendants** : on peut laisser l'un, l'autre, ou l
 | `public` | Tout le monde | Aucune restriction |
 | `ticket-staff` | Membre d'un rôle `tickets.categories[].staffRoleId` | Visible sur `/help`, `/add-user`, `/remove-user`, `/ticket move` |
 | `staff` | `STAFF_ROLE_ID` ou perm Discord `KickMembers` / `BanMembers` / `ModerateMembers` / `ManageMessages` | `requireStaff` |
-| `admin` | Owner OU perm Discord `Administrator` OU `ADMIN_ROLE_ID` | `requireAdmin` |
+| `admin` | Owner ou perm Discord `Administrator` ou `ADMIN_ROLE_ID` | `requireAdmin` |
 
 ### Permissions Discord vs rôles personnalisés
 
-Discord n'affiche une slash-command à un membre **que si** son rôle possède la permission Discord requise par la commande. Les rôles `STAFF_ROLE_ID` / `ADMIN_ROLE_ID` que tu crées sont vides par défaut — il faut leur **accorder** les bonnes perms.
+Discord n'affiche une slash-command à un membre **que si** son rôle possède la permission Discord requise par la commande. Les rôles `STAFF_ROLE_ID` / `ADMIN_ROLE_ID` crées sont vides par défaut : il faut leur **accorder** les bonnes perms.
 
-**Fais ça en un clic :**
+**En un clic :**
 ```
 /permissions check
 ```
-Le bouton « Tout corriger » accorde au rôle staff, au rôle admin et aux rôles ticket-staff toutes les permissions Discord recommandées. Sinon, en granulaire :
+Le bouton "Tout corriger" accorde au rôle staff, au rôle admin et aux rôles ticket-staff toutes les permissions Discord recommandées. Sinon, en granulaire :
 
 | Commande | Action |
 |---|---|
@@ -362,25 +363,25 @@ Le bouton « Tout corriger » accorde au rôle staff, au rôle admin et aux rôl
 
 ## 8. Configuration à chaud via commandes
 
-Tout ce qui est listé ici est modifiable **sans redémarrage**, stocké en base SQLite (`guild_config`).
+Tout ce qui est listé ici est modifiable **sans redémarrage**, stocké en BDD (`guild_config`).
 
 ### 8.1 `/config <sous-commande>`
 
 | Sous-commande | Paramètres | Effet |
 |---|---|---|
-| `voir` | — | Affiche l'état actuel de tout. |
+| `voir` | - | Affiche l'état actuel de tout. |
 | `automod` | `actif:bool` `[phishing:bool]` `[token-leak:bool]` `[zalgo:bool]` | Active/désactive l'auto-mod et ses sous-modules. |
 | `mot-ajouter` / `mot-retirer` | `mot:string` | Mots interdits (case-insensitive, applique aussi aux variantes leet light). |
 | `automod-spam` | `[messages:3-20]` `[secondes:3-30]` `[exclusion-minutes:1-60]` | Seuil et durée du timeout anti-spam. Défauts 5 / 7 / 5. |
 | `invite-whitelist` | `action:add\|remove\|list` `[guild-id:string]` | Serveurs alliés autorisés à voir leurs invitations passer (sinon supprimées si automod actif). |
 | `antiraid` | `actif:bool` `[age-min-compte:0-365]` `[expulser-jeunes:bool]` `[verrouillage-auto:bool]` `[quarantaine:role]` | Détection de vague + actions auto. `age-min-compte` 0 = désactivé. |
-| `captcha` | `actif:bool` `[role-non-verifie:role]` `[role-verifie:role]` | Vérification visuelle à l'entrée : image bruitée avec 6 caractères à recopier (insensible à la casse). Le défi s'affiche **en éphémère** (visible du seul membre) quand il clique sur le bouton déployé par `/setup-captcha` — aucun DM, rien de public. Le rôle non-verifie bloque l'accès, le rôle verifie le débloque après réussite. |
-| `accueil` | `[message:string]` `[salon:chan]` `[carte-image:bool]` `[image-fond:url]` | Bienvenue quand le membre obtient le rôle règlement (après captcha + règlement) : **MP** au membre (carte + un 2ᵉ embed d'orientation éditable dans `src/data/welcome.ts`) et, si `salon` est fourni, la carte est aussi postée dans ce salon **sans ping**. Variables : `{user}` `{username}` `{server}` `{count}`. `image-fond` accepte une URL `https://...` ou `retirer` pour revenir au dégradé. |
+| `captcha` | `actif:bool` `[role-non-verifie:role]` `[role-verifie:role]` | Vérification visuelle à l'entrée : image bruitée avec 6 caractères à recopier (insensible à la casse). Le défi s'affiche **en éphémère** (visible du seul membre) quand il clique sur le bouton déployé par `/setup-captcha`. Le rôle non-verifie bloque l'accès, le rôle verifie le débloque après réussite. |
+| `accueil` | `[message:string]` `[salon:chan]` `[carte-image:bool]` `[image-fond:url]` | Bienvenue quand le membre obtient le rôle règlement (après captcha + règlement dans mes tests) : **DM** au membre (image personnalisée + un 2ᵉ embed d'orientation sur le serveur éditable dans `src/data/welcome.ts`) et, si `salon` est fourni, la carte est aussi postée dans un salon de bienvenue/accueil **sans ping** du joueur. Variables : `{user}` `{username}` `{server}` `{count}`. `image-fond` accepte une URL `https://...` ou `retirer` pour revenir au dégradé. |
 | `depart` | `salon:chan` `[message:string]` | Au revoir. Variables : `{username}` `{server}` `{count}`. |
 | `autorole` | `role:role` | Rôle attribué à toute nouvelle arrivée. |
-| `reglement` | `role:role` | Rôle donné au clic sur « J'accepte le règlement ». |
+| `reglement` | `role:role` | Rôle donné au clic sur "J'accepte le règlement". |
 | `suggestions` | `salon:chan` | Salon de réception des `/suggestion`. |
-| `vocaux-temp` | `salon:voice` `[categorie:category]` | Salon « rejoindre pour créer ». La catégorie indique où ranger les vocaux créés. |
+| `vocaux-temp` | `salon:voice` `[categorie:category]` | Salon "rejoindre pour créer". La catégorie indique où ranger les vocaux créés. |
 | `minecraft` | `ip:string` `[salon-statut:chan]` | IP suivie + salon où afficher le statut auto-rafraîchi. |
 | `minecraft-rcon` | `host:string` `mot-de-passe:string` `[port:1-65535]` `[role-en-jeu:role]` | RCON pour `/mcwhitelist` et le rôle attribué aux joueurs connectés. Port défaut 25575. |
 | `invitation` | `[url:string]` | URL d'invitation Discord affichée dans les DM de kick/softban/unban. Vide = retirer. |
@@ -392,7 +393,7 @@ Tout ce qui est listé ici est modifiable **sans redémarrage**, stocké en base
 
 | Sous-commande | Paramètres | Effet |
 |---|---|---|
-| `voir` | — | État de chaque catégorie. |
+| `voir` | - | État de chaque catégorie. |
 | `salon` | `categorie:choix` `salon:chan` | Définit le salon de cette catégorie et l'active. |
 | `toggle` | `categorie:choix` `actif:bool` | Active/désactive la catégorie sans la déconfigurer. |
 | `tout-dans` | `salon:chan` | Envoie **toutes** les catégories dans un seul salon (utile en démarrage). |
@@ -401,17 +402,17 @@ Tout ce qui est listé ici est modifiable **sans redémarrage**, stocké en base
 
 | Sous-commande | Paramètres | Effet |
 |---|---|---|
-| `check` | — | Affiche l'état des perms des 3 types de rôles bot + bouton « Tout corriger ». |
-| `grant-staff` | — | Accorde les perms staff à `STAFF_ROLE_ID`. |
-| `grant-admin` | — | Accorde les perms admin à `ADMIN_ROLE_ID`. |
+| `check` | - | Affiche l'état des perms des 3 types de rôles bot + bouton "Tout corriger". |
+| `grant-staff` | - | Accorde les perms staff à `STAFF_ROLE_ID`. |
+| `grant-admin` | - | Accorde les perms admin à `ADMIN_ROLE_ID`. |
 | `grant-ticket-staff` | `[role:role]` | Accorde ManageMessages à tous les `staffRoleId` (ou à un rôle ponctuel). |
 
 ### 8.4 Déploiement de panneaux (`/setup-*`)
 
 | Commande | Paramètres | Effet |
 |---|---|---|
-| `/setup-tickets` | — | Déploie le panneau du menu de tickets dans le salon courant. Relancer après modification de `tickets.categories`. |
-| `/setup-reglement` | — | Déploie le règlement (textes de [`src/data/reglement.ts`](src/data/reglement.ts)) + bouton d'acceptation. |
+| `/setup-tickets` | - | Déploie le panneau du menu de tickets dans le salon courant. Relancer après modification de `tickets.categories`. |
+| `/setup-reglement` | - | Déploie le règlement (textes de [`src/data/reglement.ts`](src/data/reglement.ts)) + bouton d'acceptation. |
 | `/setup-roles` | `role1:role` `[titre]` `[description]` `[role2:role]…[role5:role]` | Panneau de rôles auto-attribuables (jusqu'à 5 rôles, boutons). |
 | `/setup-reaction-roles` | `titre:string` `description:string` `paires:string` `[exclusif:bool]` | Panneau classique emoji → rôle. Format `paires` : `🟦 @Bleu, 🔴 @Rouge` (jusqu'à 10 paires). |
 
@@ -420,17 +421,17 @@ Tout ce qui est listé ici est modifiable **sans redémarrage**, stocké en base
 | Commande | Paramètres | Effet |
 |---|---|---|
 | `/mcsuivi ajouter` | `ip:string` `salon:chan` `role:role` `[intervalle:2-60]` | Panneau de statut MC rafraîchi en boucle. Ping `role` à chaque changement on/off. |
-| `/mcsuivi liste` / `supprimer id:int` | — | Lister / retirer un suivi. |
+| `/mcsuivi liste` / `supprimer id:int` | - | Lister / retirer un suivi. |
 | `/notif ajouter-youtube` | `identifiant-chaine:string` `salon:chan` `[nom]` `[role]` | Suit une chaîne YouTube (ID `UC…`). |
 | `/notif ajouter-twitch` | `pseudo:string` `salon:chan` `[role]` | Suit un streamer Twitch (nécessite `TWITCH_CLIENT_ID/SECRET` dans `.env`). |
 | `/notif ajouter-rss` | `url:string` `salon:chan` `[nom]` `[role]` | Suit un flux **RSS / Atom** générique : Instagram, TikTok, X, Reddit, blogs… via [RSSHub](https://docs.rsshub.app/) ou un flux natif. Voir [§Instagram/TikTok/X](#instagram-tiktok-x-via-rss). |
-| `/notif liste` / `supprimer id:int` | — | Lister / retirer une notification. |
+| `/notif liste` / `supprimer id:int` | - | Lister / retirer une notification. |
 
 L'option `[role]` ajoute une mention de rôle en tête de chaque annonce (utile pour ping `@Communauté`, `@News`, etc.).
 
 #### Instagram, TikTok, X via RSS
 
-Les plateformes Instagram / TikTok / X (Twitter) n'ont pas d'API publique gratuite stable. La solution : un **intermédiaire qui génère un flux RSS** à partir d'un profil. Le plus courant est **[RSSHub](https://docs.rsshub.app/)** (open-source, self-hostable, instance publique gratuite à `rsshub.app` — pour de la prod, héberge ta propre instance).
+Les plateformes Instagram / TikTok / X (Twitter) n'ont pas d'API publique gratuite stable. Solution choisie : **intermédiaire qui génère un flux RSS** à partir d'un profil. Le plus courant est **[RSSHub](https://docs.rsshub.app/)** (open-source, self-hostable, instance publique gratuite à `rsshub.app` - pour de la prod, héberge ta propre instance).
 
 Exemples d'URL à passer à `/notif ajouter-rss` :
 
@@ -444,30 +445,30 @@ Exemples d'URL à passer à `/notif ajouter-rss` :
 | Podcast | URL du flux RSS du podcast *(natif)* |
 
 ⚠️ **Limites** :
-- L'instance publique `rsshub.app` est rate-limitée et peut être bloquée par Instagram/TikTok par moments — pour un usage sérieux, **héberge ta propre instance** (Docker, 1 ligne).
-- Le poll du bot tourne toutes les **5 min** — une annonce peut donc avoir jusqu'à 5 min de retard.
-- À la première lecture, le bot mémorise l'état actuel **sans annoncer** (évite de flooder à la mise en place). Les publications **suivantes** déclenchent l'annonce.
+- L'instance publique `rsshub.app` est rate-limitée et peut être bloquée par Instagram/TikTok par moments. Pour un usage "sérieux", **héberger sa propre instance** (Docker, 1 ligne...).
+- Le poll du bot tourne toutes les **5 min**, une annonce peut donc avoir jusqu'à 5 min de retard.
+- À la première lecture, le bot mémorise l'état **sans l'annoncer** (évite de flooder à la mise en place). Les publications **suivantes** déclenchent quant à elles une annonce.
 
 #### Suivi GitHub (`/git`)
 
-Suit l'activité de dépôts (commits, PR/merges, **CI/CD GitHub Actions**, releases, issues, reviews). **Hybride** : webhooks temps réel (`GITHUB_WEBHOOK_SECRET`) et/ou polling de secours (`GITHUB_TOKEN`) — une déduplication interne évite tout doublon. Le module reste désactivé tant qu'aucune des deux variables n'est remplie. Pour des dépôts **privés**, les deux approches marchent :
+Suit l'activité de dépôts (commits, PR/merges, GitHub Actions**, releases, issues et reviews). **Hybride** : webhooks temps réel (`GITHUB_WEBHOOK_SECRET`) et/ou polling de secours (`GITHUB_TOKEN`). Une déduplication interne évite les doublons. Le module reste désactivé tant qu'aucune des deux variables n'est remplie. Pour des dépôts **privés**, les deux approches fonctionnent aussi bien :
 
-**Option A — Polling (recommandé, zéro infra réseau, marche derrière un NAT/box maison)**
-1. Crée un *fine-grained PAT* sur https://github.com/settings/tokens (Tokens → Fine-grained), accès aux dépôts voulus, en **lecture seule** : *Metadata*, *Contents*, *Pull requests*, *Actions*, *Issues*.
+**Option A - Polling (recommandé, zéro infra réseau car marche derrière un NAT/box maison)**
+1. Créer un *fine-grained PAT* sur https://github.com/settings/tokens (Tokens → Fine-grained), accès aux dépôts voulus, en **lecture seule** : *Metadata*, *Contents*, *Pull requests*, *Actions*, *Issues*.
 2. `.env` : `GITHUB_TOKEN=github_pat_...` → redémarrer.
-3. Le bot interroge l'API toutes les ~2 min. Premier passage : état mémorisé **sans annoncer** (évite le flood) ; les events suivants déclenchent les messages.
+3. Le bot interroge l'API toutes les ~2 min. Premier passage : état mémorisé **sans annoncer**, les events suivants déclenchent les messages.
 
-**Option B — Webhooks (temps réel, exige que le bot soit joignable depuis Internet)**
+**Option B - Webhooks (temps réel, exige que le bot soit joignable depuis Internet)**
 1. `.env` : `GITHUB_WEBHOOK_SECRET=<chaîne aléatoire>` (+ éventuellement `GITHUB_WEBHOOK_PORT`, défaut 3000) → redémarrer. Le bot expose `POST <hôte>:<port>/github/webhook` (signatures vérifiées en HMAC-SHA256).
-2. Dépôt → *Settings → Webhooks → Add webhook* : Payload URL = `http(s)://<hôte>:<port>/github/webhook`, Content type = `application/json`, Secret = la même valeur, « Send me everything » (ou push / pull_request / workflow_run / release / issues / pull_request_review).
-3. Derrière un NAT/box maison : expose le port via un tunnel (`cloudflared tunnel`, `smee.io`) — ou reste en **Option A** (aucune ouverture de port).
+2. Dépôt → *Settings → Webhooks → Add webhook* : Payload URL = `http(s)://<hôte>:<port>/github/webhook`, Content type = `application/json`, Secret = la même valeur, "Send me everything" (ou push / pull_request / workflow_run / release / issues / pull_request_review).
+3. Derrière un NAT/box maison : exposer le port via un tunnel (`cloudflared tunnel`, `smee.io`) - ou reste en **Option A** (aucune ouverture de port).
 
-> Renseigner **les deux** = mode hybride : webhooks pour le temps réel + polling lent en filet de sécurité (réconciliation ~10 min). Pense à `npm run deploy` après avoir activé le module (les commandes `/git` ne s'enregistrent que si `GITHUB_TOKEN`/`GITHUB_WEBHOOK_SECRET` est défini).
+> Renseigner **les deux** = mode hybride : webhooks pour le temps réel + polling lent en filet de sécurité (réconciliation ~10 min). Penser à `npm run deploy`, après avoir activé le module (les commandes `/git` ne s'enregistrent que si `GITHUB_TOKEN`/`GITHUB_WEBHOOK_SECRET` est défini...).
 
 | Commande | Paramètres | Effet |
 |---|---|---|
-| `/git suivre` | `depot:owner/repo` `salon:chan` `[branches]` `[role]` `[salon-statut]` `[events]` | Suit un dépôt. `role` pingué sur **échec CI**, `salon-statut` = embed « pipeline » édité en place. |
-| `/git liste` / `retirer id:int` / `config id:int [..]` | — | Lister / retirer / reconfigurer un dépôt suivi. |
+| `/git suivre` | `depot:owner/repo` `salon:chan` `[branches]` `[role]` `[salon-statut]` `[events]` | Suit un dépôt. `role` pingué sur **échec CI**, `salon-statut` = embed "pipeline" édité en place. |
+| `/git liste` / `retirer id:int` / `config id:int [..]` | - | Lister / retirer / reconfigurer un dépôt suivi. |
 | `/git statut` | `depot:owner/repo` | État instantané : dernier commit, PR ouvertes, dernière CI *(nécessite `GITHUB_TOKEN`)*. |
 | `/git lier-membre` | `membre:user` `pseudo-github:string` | Lie un membre Discord à un pseudo GitHub (mention auto dans les annonces). |
 | `/git digest` / `digest-off` | `salon:chan` `[frequence]` `[heure]` | Récap périodique (commits, PR mergées, releases, état CI). |
@@ -480,15 +481,15 @@ Suit l'activité de dépôts (commits, PR/merges, **CI/CD GitHub Actions**, rele
 | `/stats creer` | `nom:string` `role:role` `[etiquette]` | Crée la catégorie statistique avec un premier compteur. |
 | `/stats ajouter` | `role:role` `[etiquette]` | Ajoute un compteur à la catégorie existante. |
 | `/stats retirer` | `role:role` | Retire un compteur. |
-| `/stats liste` / `supprimer` | — | Lister / tout supprimer (avec confirmation). |
+| `/stats liste` / `supprimer` | - | Lister / tout supprimer (avec confirmation). |
 
-> Discord limite les renommages de salon à ~2 par 10 min — un compteur se met à jour au mieux toutes les ~6 min.
+> Discord limite les renommages de salon à ~2 par 10 min - un compteur se met à jour au mieux toutes les ~6 min.
 
 ### 8.7 Sauvegarde / restauration
 
 | Commande | Paramètres | Effet |
 |---|---|---|
-| `/backup export` | — | Exporte tout `guild_config` + stats + mc_watchers + notifications + tags + reaction-roles en JSON. |
+| `/backup export` | - | Exporte tout `guild_config` + stats + mc_watchers + notifications + tags + reaction-roles en JSON. |
 | `/backup import` | `fichier:.json` | Restaure une configuration. Volatiles non couverts : tickets, sanctions, giveaways, rappels, polls, suggestions, vocaux-temp. |
 
 ---
@@ -586,11 +587,11 @@ Suit l'activité de dépôts (commits, PR/merges, **CI/CD GitHub Actions**, rele
 | `/git digest\|digest-off` | admin | Active / désactive le récap périodique d'activité. |
 | `/gitlink lier\|statut\|delier` | staff | Liaison auto-déclarée pseudo GitHub ↔ compte Discord. |
 
-> **Hybride** webhooks + polling de secours — voir [§5](#5-variables-denvironnement-env) (`GITHUB_*`) et [§8.5 Suivi GitHub](#suivi-github-git). Sans `GITHUB_TOKEN` ni `GITHUB_WEBHOOK_SECRET`, le module est désactivé (commandes non déployées).
+> **Hybride** webhooks + polling de secours - voir [§5](#5-variables-denvironnement-env) (`GITHUB_*`) et [§8.5 Suivi GitHub](#suivi-github-git). Sans `GITHUB_TOKEN` ni `GITHUB_WEBHOOK_SECRET`, le module est désactivé (commandes non déployées).
 
 ### 🎵 Musique
 
-> Nécessite un serveur **Lavalink** — voir [`LAVALINK.md`](LAVALINK.md). Sans `LAVALINK_PASSWORD`, le module est désactivé.
+> Nécessite un serveur **Lavalink** - voir [`LAVALINK.md`](LAVALINK.md). Sans `LAVALINK_PASSWORD`, le module est désactivé.
 
 | Commande | Description |
 |---|---|
@@ -627,7 +628,7 @@ src/
 ├── components/           Boutons / menus / modales (routage par customId)
 ├── features/             Logique métier (logger, automod, giveaways, mcwatch, github/…)
 ├── utils/                Helpers (durations, permissions, sanctions, configCache, logger)
-├── workers/              Workers Node (welcomecard.worker.ts — rend la PNG hors event loop)
+├── workers/              Workers Node (welcomecard.worker.ts - rend la PNG hors event loop)
 └── data/                 Contenus éditables (reglement.ts, help.ts)
 data/                     Base SQLite (créée automatiquement)
 prisma/
@@ -669,7 +670,7 @@ sudo journalctl -u unknown_variable -f      # surveille le redémarrage
 
 ### Re-déployer les slash-commands
 
-Les slash-commands sont enregistrées par **`npm run deploy`** (sur `GUILD_ID`, immédiat) — **pas** automatiquement au boot du bot. À relancer après avoir **ajouté ou modifié** une commande. Pour les pousser **globalement** (tous serveurs, propagation ~1 h) : `npm run deploy:global`.
+Les slash-commands sont enregistrées par **`npm run deploy`** (sur `GUILD_ID`, immédiat) - **pas** automatiquement au boot du bot. À relancer après avoir **ajouté ou modifié** une commande. Pour les pousser **globalement** (tous serveurs, propagation ~1 h) : `npm run deploy:global`.
 
 ### Mettre à jour les dépendances npm
 
@@ -680,19 +681,19 @@ npm audit && npm audit fix
 npm start             # teste en local avant systemctl restart
 ```
 
-**Mise à jour majeure** (`discord.js` v14→v15, Prisma 7→8…) — risquée : lire le CHANGELOG, bumper manuellement, `npm install` en test, `npx tsc --noEmit`, tester en local contre un serveur de test, puis déployer.
+**Mise à jour majeure** (`discord.js` v14→v15, Prisma 7→8…) - risquée : lire le CHANGELOG, bumper manuellement, `npm install` en test, `npx tsc --noEmit`, tester en local contre un serveur de test, puis déployer.
 
 **Dépendances natives à surveiller :**
 
 | Dépendance | Point d'attention |
 |---|---|
-| `better-sqlite3` | Compilation native — peut nécessiter `apt install build-essential python3`. Échec → `npm rebuild better-sqlite3 --build-from-source`. |
+| `better-sqlite3` | Compilation native - peut nécessiter `apt install build-essential python3`. Échec → `npm rebuild better-sqlite3 --build-from-source`. |
 | `@napi-rs/canvas` | Binding Rust pré-buildé ; sur ARM/Alpine, vérifier le bon binaire. |
 | `@prisma/adapter-better-sqlite3` | Doit être de la **même version majeure** que `@prisma/client` (les deux en 7.x). |
 
 ### Mettre à jour Lavalink (musique)
 
-YouTube change ses protections régulièrement — cause #1 des pannes de musique. Détails dans [`LAVALINK.md`](LAVALINK.md). En résumé : arrêter Lavalink, sauvegarder `Lavalink.jar` + `application.yml`, télécharger la dernière v4 ([releases](https://github.com/lavalink-devs/Lavalink/releases)), et surtout **bumper le plugin YouTube** dans `application.yml` (`dev.lavalink.youtube:youtube-plugin:X.Y.Z`) quand `/play` ne renvoie plus rien. Lavalink v4 exige **Java 17+**.
+YouTube change ses protections régulièrement - cause #1 des pannes de musique. Détails dans [`LAVALINK.md`](LAVALINK.md). En résumé : arrêter Lavalink, sauvegarder `Lavalink.jar` + `application.yml`, télécharger la dernière v4 ([releases](https://github.com/lavalink-devs/Lavalink/releases)), et surtout **bumper le plugin YouTube** dans `application.yml` (`dev.lavalink.youtube:youtube-plugin:X.Y.Z`) quand `/play` ne renvoie plus rien. Lavalink v4 exige **Java 17+**.
 
 ### Mettre à jour l'hôte
 
@@ -731,7 +732,7 @@ En cas de fuite (commit accidentel du `.env`, partage) : Developer Portal → **
 | `giveaways` / `giveaway_entries` | Giveaways en cours | Volatile |
 | `suggestions`, `temp_voice`, `afk`, `captcha_pending` | États transitoires | Volatile |
 
-**`/backup export` n'exporte que les tables durables** (config + stats + mc_watchers + notifications + tags + reaction-roles) — c'est pour migrer une config vers un autre serveur, pas du disaster recovery. Pour ce dernier, copie le fichier `.db` complet.
+**`/backup export` n'exporte que les tables durables** (config + stats + mc_watchers + notifications + tags + reaction-roles) - c'est pour migrer une config vers un autre serveur, pas du disaster recovery. Pour ce dernier, copie le fichier `.db` complet.
 
 ### Sauvegardes
 
@@ -775,7 +776,7 @@ npx prisma db push --dry-run     # liste les changements sans les appliquer
 ```
 Si tu vois `⚠️ data loss warning`, **sauvegarde la base avant**.
 
-> Multi-instance / versionnement : passe aux vraies migrations — `npx prisma migrate dev --name <nom>` puis `npx prisma migrate deploy` en prod (baseline d'une base existante avec `prisma migrate resolve --applied <init>`).
+> Multi-instance / versionnement : passe aux vraies migrations - `npx prisma migrate dev --name <nom>` puis `npx prisma migrate deploy` en prod (baseline d'une base existante avec `prisma migrate resolve --applied <init>`).
 
 ### Inspection / debug
 
@@ -817,30 +818,30 @@ sudo systemctl enable --now unknown_variable
 | `Cannot find module '.prisma/client/default'` | Client Prisma non généré : `npx prisma generate`, puis `npx prisma db push`. (Généré aussi par le hook `postinstall` au `npm install`.) |
 | `tsx: not found` | Dépendances non installées : `npm install` dans le dossier du bot. |
 | `The table main.X does not exist` au boot | `db push` a visé un autre fichier que le runtime (chemins désalignés). Le chemin se dérive de `BOT_NAME` des deux côtés ; relance `npx prisma db push` puis `npm start`. Sinon, fixe `DATABASE_PATH` dans `.env` (même valeur pour le CLI et le runtime). |
-| Aucune slash-command dans Discord (jamais apparues) | Tu n'as pas lancé **`npm run deploy`** — les commandes **ne se déploient pas au boot**. Lance-le (sur `GUILD_ID`, immédiat). |
-| Slash-commands déployées mais invisibles pour un rôle | `/permissions check` → bouton « Tout corriger » (Discord n'affiche une commande qu'aux rôles ayant la perm requise). Cache rafraîchi après quelques secondes. |
-| `❌ Erreur de configuration dans le fichier .env` (le bot quitte) | Une variable obligatoire manque/est invalide (`DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`) — le message liste précisément laquelle. |
+| Aucune slash-command dans Discord (jamais apparues) | Tu n'as pas lancé **`npm run deploy`** - les commandes **ne se déploient pas au boot**. Lance-le (sur `GUILD_ID`, immédiat). |
+| Slash-commands déployées mais invisibles pour un rôle | `/permissions check` → bouton "Tout corriger" (Discord n'affiche une commande qu'aux rôles ayant la perm requise). Cache rafraîchi après quelques secondes. |
+| `❌ Erreur de configuration dans le fichier .env` (le bot quitte) | Une variable obligatoire manque/est invalide (`DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`) - le message liste précisément laquelle. |
 | `Unable to open the database file` (au `db push`) | Dossier `data/` absent ; il est normalement créé par `prisma.config.ts`. Si l'erreur persiste : `mkdir -p data` puis relance `npx prisma db push`. |
 | Le bot ne crée pas les salons | Place son rôle au-dessus du rôle Staff + vérifie la permission `Manage Channels`. |
-| `Missing Permissions` | Le bot n'a pas accès à la catégorie cible — ajuste les permissions de la catégorie. |
-| Ticket : « catégorie n'a pas de rôle responsable » | Édite [`src/config.ts`](src/config.ts) → remplis `staffRoleId` de la catégorie concernée, redémarre, relance `/setup-tickets`. |
-| Welcome card noire / vide | Le worker `welcomecard.worker.ts` a planté — vérifie les logs. Désactive avec `/config accueil carte-image:false`. |
+| `Missing Permissions` | Le bot n'a pas accès à la catégorie cible - ajuste les permissions de la catégorie. |
+| Ticket : "catégorie n'a pas de rôle responsable" | Édite [`src/config.ts`](src/config.ts) → remplis `staffRoleId` de la catégorie concernée, redémarre, relance `/setup-tickets`. |
+| Welcome card noire / vide | Le worker `welcomecard.worker.ts` a planté - vérifie les logs. Désactive avec `/config accueil carte-image:false`. |
 | Image de fond ne s'affiche pas | L'URL doit être en `https://...` et pointer directement vers un fichier image (PNG/JPG/WebP). Discord CDN OK. Si la requête échoue, la carte retombe sur le dégradé sans erreur. |
 | Musique ne joue rien | Vérifie `LAVALINK_PASSWORD` et que le serveur Lavalink tourne (voir [`LAVALINK.md`](LAVALINK.md)). |
-| RCON échoue | `/config minecraft-rcon` — l'IP/port/mot de passe doivent correspondre à `enable-rcon=true` dans `server.properties`. |
+| RCON échoue | `/config minecraft-rcon` - l'IP/port/mot de passe doivent correspondre à `enable-rcon=true` dans `server.properties`. |
 | Twitch désactivé | `TWITCH_CLIENT_ID` + `TWITCH_CLIENT_SECRET` requis dans `.env`. |
 | Notifications YouTube vides | L'ID doit commencer par `UC…` (Paramètres avancés → Identifiant de chaîne, pas le pseudo). |
-| `/git` invisible dans Discord | Le module GitHub n'est déployé que si `GITHUB_TOKEN` **ou** `GITHUB_WEBHOOK_SECRET` est défini — ajoute-le puis `npm run deploy`. |
+| `/git` invisible dans Discord | Le module GitHub n'est déployé que si `GITHUB_TOKEN` **ou** `GITHUB_WEBHOOK_SECRET` est défini - ajoute-le puis `npm run deploy`. |
 | Aucune annonce GitHub | Vérifie le token/secret. En polling, le 1ᵉʳ passage mémorise l'état **sans annoncer** ; pousse un nouveau commit pour tester. |
 | Webhook GitHub renvoie 401 | Le *Secret* du webhook (Settings du dépôt) doit être **identique** à `GITHUB_WEBHOOK_SECRET`. |
-| « Une catégorie statistique existe déjà » | `/stats supprimer` puis `/stats creer`. |
+| "Une catégorie statistique existe déjà" | `/stats supprimer` puis `/stats creer`. |
 | Token Discord exposé sur GitHub | **Régénère immédiatement** dans Developer Portal → Bot → Reset Token. |
 
 ---
 
 ## 14. Checklist post-installation
 
-- [ ] `/permissions check` → bouton « Tout corriger » → tous les rôles ✅
+- [ ] `/permissions check` → bouton "Tout corriger" → tous les rôles ✅
 - [ ] `/logs voir` → 8 catégories configurées
 - [ ] Un membre lambda **ne voit pas** `/help` (réservé staff/ticket-staff) ; un membre du staff **le voit**
 - [ ] Test : ouvrir un ticket → le bon rôle est pingué, et seuls lui + l'auteur voient le salon

@@ -4,7 +4,7 @@ import {
   type ButtonInteraction, type ModalSubmitInteraction, type Client
 } from 'discord.js';
 import { prisma } from '../database';
-import { sendLog } from '../features/logger';
+import config from '../config';
 import * as embeds from '../utils/embeds';
 import { categoryLabel } from '../utils/ticketScope';
 import type { ComponentInteraction } from '../types';
@@ -87,19 +87,23 @@ async function saveComment(
     data: { comment }
   });
 
-  // Log dans le salon de modération — embed simple avec citation tronquée.
-  const guild = client.guilds.cache.get(ticket.guild_id);
-  if (guild) {
-    const quoted = comment.slice(0, 900).replace(/\n/g, '\n> ');
-    const truncatedNote = comment.length > 900 ? '\n*(tronqué — texte complet via `/ticket-reviews`)*' : '';
-    await sendLog(guild, 'moderation', embeds.primary()
-      .setAuthor({ name: '💬 Commentaire de ticket' })
-      .setDescription(
-        `Ticket **#${ticket.number ?? '?'}** — ${categoryLabel(ticket.category)} · ` +
-        `par <@${ticket.user_id}>\n\n> ${quoted}${truncatedNote}`
-      )
-      .setTimestamp()
-    ).catch(() => {});
+  // Log dans le salon des logs tickets — embed simple avec citation tronquée.
+  if (config.tickets.logsChannelId) {
+    const logs = await client.channels.fetch(config.tickets.logsChannelId).catch(() => null);
+    if (logs && logs.isTextBased() && 'send' in logs) {
+      const quoted = comment.slice(0, 900).replace(/\n/g, '\n> ');
+      const truncatedNote = comment.length > 900 ? '\n*(tronqué — texte complet via `/ticket-reviews`)*' : '';
+      await logs.send({
+        embeds: [embeds.primary()
+          .setAuthor({ name: '💬 Commentaire de ticket' })
+          .setDescription(
+            `Ticket **#${ticket.number ?? '?'}** — ${categoryLabel(ticket.category)} · ` +
+            `par <@${ticket.user_id}>\n\n> ${quoted}${truncatedNote}`
+          )
+          .setTimestamp()],
+        allowedMentions: { parse: [] }
+      }).catch(() => {});
+    }
   }
 
   return interaction.reply({
