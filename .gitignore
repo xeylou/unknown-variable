@@ -24,3 +24,7 @@ to_send/
 
 # Divers
 .DS_Store
+
+src/data/welcome.ts
+src/data/help.ts
+src/data/reglement.ts
