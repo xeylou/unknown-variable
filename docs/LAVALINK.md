@@ -1,5 +1,7 @@
 # 🎵 Installer Lavalink (module musique)
 
+> 🇬🇧 **English version → [LAVALINK_en.md](LAVALINK_en.md)** · ⬅️ [Retour au README](../README.md)
+
 Le module musique du bot ne lit pas l'audio lui-même : il pilote un **serveur
 Lavalink**, un programme séparé qui se charge de récupérer et diffuser le son.
 C'est l'approche utilisée par les vrais bots musique (robuste et de bonne qualité).
@@ -32,7 +34,7 @@ server:
 lavalink:
   plugins:
     # YouTube n'est plus intégré à Lavalink v4 : il faut ce plugin.
-    - dependency: "dev.lavalink.youtube:youtube-plugin:1.13.5"
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.1"
       repository: "https://maven.lavalink.dev/releases"
   server:
     password: "change-moi-ce-mot-de-passe"   # ⚠️ à recopier dans le .env du bot
@@ -77,14 +79,15 @@ Laisse ce programme **tourner en permanence**, en parallèle du bot.
 
 > Sur un VPS, crée un service systemd dédié (comme pour le bot), ou lance-le
 > dans un `screen` / `tmux`. Sur un panel type Pterodactyl, beaucoup proposent
-> un « egg » Lavalink prêt à l'emploi.
+> un « egg » Lavalink prêt à l'emploi. Avec le [docker-compose](../docker-compose.yml)
+> du dépôt, le profil `music` lance Lavalink à côté du bot (monte `lavalink/application.yml`).
 
 ## 5. Configurer le bot
 
 Dans le fichier `.env` du bot, renseigne les mêmes informations :
 
 ```bash
-LAVALINK_HOST=localhost            # ou l'IP du serveur Lavalink
+LAVALINK_HOST=localhost            # ou l'IP / le nom de service Lavalink (ex. "lavalink" en compose)
 LAVALINK_PORT=2333
 LAVALINK_PASSWORD=change-moi-ce-mot-de-passe   # identique à application.yml
 # LAVALINK_SECURE=true             # uniquement si Lavalink est derrière du https/wss
