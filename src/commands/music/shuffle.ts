@@ -2,11 +2,13 @@ import { SlashCommandBuilder, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { getActivePlayer } from '../../features/music';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('shuffle')
-    .setDescription("Mélanger l'ordre de la file d'attente"),
+    .setDescription(base('shuffle.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('shuffle.cmd.desc')),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const player = await getActivePlayer(interaction);

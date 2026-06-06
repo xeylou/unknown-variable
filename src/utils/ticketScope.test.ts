@@ -4,6 +4,7 @@ import { PermissionFlagsBits, type GuildMember } from 'discord.js';
 // Mock du module config pour fixer les catégories de tickets.
 vi.mock('../config', () => ({
   default: {
+    guildId: 'GUILD',
     staffRoleId: 'STAFF',
     adminRoleId: 'ADMIN',
     tickets: {
@@ -17,6 +18,9 @@ vi.mock('../config', () => ({
     colors: { primary: 0, neutral: 0, success: 0, danger: 0, warning: 0 }
   }
 }));
+
+// `guildSettings` (via ticketScope) importe `prisma` ; on l'évite ici.
+vi.mock('../database', () => ({ prisma: {} }));
 
 import { categoriesVisibleTo, categoryLabel } from './ticketScope';
 
@@ -34,7 +38,7 @@ function mockMember(opts: Opts): GuildMember {
   const roles = new Set(opts.roleIds ?? []);
   return {
     id,
-    guild: { ownerId },
+    guild: { ownerId, id: 'GUILD' },
     permissions: {
       has: (flag: bigint) => perms.includes(flag),
       any: (flags: bigint[]) => flags.some((f) => perms.includes(f))

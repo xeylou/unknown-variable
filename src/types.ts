@@ -1,8 +1,8 @@
 import type {
   ChatInputCommandInteraction, ButtonInteraction, ModalSubmitInteraction,
-  AnySelectMenuInteraction, Client, Collection, SlashCommandBuilder,
-  SlashCommandSubcommandsOnlyBuilder, SlashCommandOptionsOnlyBuilder,
-  ClientEvents
+  AnySelectMenuInteraction, AutocompleteInteraction, Client, Collection,
+  SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder,
+  SlashCommandOptionsOnlyBuilder, ClientEvents
 } from 'discord.js';
 
 /**
@@ -16,6 +16,13 @@ export interface CommandModule {
     | SlashCommandOptionsOnlyBuilder
     | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
   cooldown?: number;
+  /**
+   * Optionnel : alimente l'autocomplétion d'une ou plusieurs options déclarées
+   * avec `.setAutocomplete(true)`. Le routeur d'interactions l'appelle pour les
+   * `AutocompleteInteraction`. Doit répondre en < 3 s et ≤ 25 choix (voir
+   * `utils/autocomplete.respondChoices`).
+   */
+  autocomplete?(interaction: AutocompleteInteraction, client: Client<true>): unknown;
   execute(interaction: ChatInputCommandInteraction<'cached'>, client: Client<true>): unknown;
 }
 

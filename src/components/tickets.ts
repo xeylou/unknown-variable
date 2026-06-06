@@ -17,6 +17,7 @@ import config from '../config';
 import { prisma } from '../database';
 import type { ComponentInteraction } from '../types';
 import { getConfig } from '../utils/configCache';
+import { getAdminRole, getTicketRole, getTicketCategory, getTicketLogsChannel } from '../utils/guildSettings';
 import * as embeds from '../utils/embeds';
 import { createLogger } from '../utils/logger';
 
@@ -82,27 +83,28 @@ export default {
 function canManageTicket(member: GuildMember | null, ticketCategoryStaffRoleId: string | null = null): boolean {
   if (!member) return false;
   if (member.permissions.has(PermissionFlagsBits.ManageMessages)) return true;
-  if (config.adminRoleId && member.roles.cache.has(config.adminRoleId)) return true;
+  const adminRole = getAdminRole(member.guild.id);
+  if (adminRole && member.roles.cache.has(adminRole)) return true;
   if (ticketCategoryStaffRoleId && member.roles.cache.has(ticketCategoryStaffRoleId)) return true;
   return false;
 }
 
 /**
  * Construit les permission overwrites d'un salon de ticket pour une catégorie
- * donnée. Renvoie `null` si la catégorie n'a pas de `staffRoleId` configuré
- * (la création doit alors être refusée avec un message clair pour l'admin).
+ * donnée.
  *
  * Politique d'accès :
  * - `@everyone` : ViewChannel refusé.
  * - Auteur du ticket : ViewChannel + SendMessages + ReadMessageHistory + AttachFiles.
- * - Rôle staff de la catégorie : accès complet (ping reçu à l'ouverture).
- * - `ADMIN_ROLE_ID` (s'il est configuré) : accès complet, mais PAS pingué.
- * - `STAFF_ROLE_ID` global : volontairement non ajouté.
+ * - Rôle responsable de la catégorie : accès complet (ping reçu à l'ouverture).
+ * - Rôle admin du serveur (s'il est configuré) : accès complet, mais PAS pingué.
+ * - Rôle staff global : volontairement non ajouté.
  */
 function buildTicketOverwrites(
   everyoneId: string,
   userId: string,
-  categoryStaffRoleId: string
+  categoryStaffRoleId: string,
+  adminRoleId: string | null
 ): { id: string; allow?: bigint[]; deny?: bigint[] }[] {
   const fullAccess = [
     PermissionFlagsBits.ViewChannel,
@@ -122,8 +124,8 @@ function buildTicketOverwrites(
     ] },
     { id: categoryStaffRoleId, allow: fullAccess }
   ];
-  if (config.adminRoleId && config.adminRoleId !== categoryStaffRoleId) {
-    overwrites.push({ id: config.adminRoleId, allow: fullAccess });
+  if (adminRoleId && adminRoleId !== categoryStaffRoleId) {
+    overwrites.push({ id: adminRoleId, allow: fullAccess });
   }
   return overwrites;
 }
@@ -171,11 +173,12 @@ async function createTicket(interaction: StringSelectMenuInteraction<'cached'>) 
     });
   }
 
-  // La catégorie doit avoir un rôle dédié défini dans `src/config.ts`.
-  if (!category.staffRoleId || category.staffRoleId.trim() === '') {
+  // La catégorie doit avoir un rôle responsable défini (`/config ticket-role`).
+  const categoryRoleId = getTicketRole(interaction.guild.id, category.value);
+  if (!categoryRoleId) {
     return interaction.editReply({
       content: `❌ La catégorie **${category.label}** n'a pas de rôle responsable configuré. ` +
-               'Un administrateur doit éditer `src/config.ts` pour définir `staffRoleId` sur cette catégorie.'
+               'Un administrateur doit l\'attribuer avec `/config ticket-role`.'
     });
   }
 
@@ -185,13 +188,14 @@ async function createTicket(interaction: StringSelectMenuInteraction<'cached'>) 
   const overwrites = buildTicketOverwrites(
     interaction.guild.roles.everyone.id,
     interaction.user.id,
-    category.staffRoleId
+    categoryRoleId,
+    getAdminRole(interaction.guild.id)
   );
 
   const channel = await interaction.guild.channels.create({
     name: channelName,
     type: ChannelType.GuildText,
-    parent: config.tickets.categoryId || null,
+    parent: getTicketCategory(interaction.guild.id) || null,
     topic: `Ticket #${ticketNumber} de ${interaction.user.tag} | Catégorie : ${category.label}`,
     permissionOverwrites: overwrites
   }).catch((e: unknown) => { log.error('create channel failed', e); return null; });
@@ -240,12 +244,12 @@ async function createTicket(interaction: StringSelectMenuInteraction<'cached'>) 
 
   const opener = `${interaction.user}`;
   await channel.send({
-    content: `${opener} • <@&${category.staffRoleId}>`,
+    content: `${opener} • <@&${categoryRoleId}>`,
     embeds: [ticketEmbed],
     components: [new ActionRowBuilder<ButtonBuilder>().addComponents(claimBtn, closeBtn)],
     allowedMentions: {
       users: [interaction.user.id],
-      roles: [category.staffRoleId]
+      roles: [categoryRoleId]
     }
   });
 
@@ -264,8 +268,8 @@ async function claimTicket(interaction: ButtonInteraction<'cached'>) {
     return interaction.reply({ content: '❌ Salon introuvable.', flags: MessageFlags.Ephemeral });
   }
   const ticketRow = await prisma.tickets.findUnique({ where: { channel_id: interaction.channel.id } });
-  const cat = ticketRow ? config.tickets.categories.find((c) => c.value === ticketRow.category) : undefined;
-  if (!canManageTicket(interaction.member, cat?.staffRoleId ?? null)) {
+  const catRoleId = ticketRow?.category ? getTicketRole(interaction.guild.id, ticketRow.category) : null;
+  if (!canManageTicket(interaction.member, catRoleId)) {
     return interaction.reply({ content: '❌ Réservé au staff responsable de cette catégorie ou à l\'administration.', flags: MessageFlags.Ephemeral });
   }
   await prisma.tickets.update({
@@ -344,8 +348,12 @@ async function doCloseTicket(interaction: ButtonInteraction<'cached'>, client: C
     { name: `${channel.name}.txt` }
   );
 
-  if (config.tickets.logsChannelId) {
-    const logs = await client.channels.fetch(config.tickets.logsChannelId).catch(() => null);
+  // Résolution du salon de logs DANS le serveur du ticket (jamais via
+  // `client.channels.fetch`, qui résout globalement et fuiterait le transcript
+  // d'un serveur dans le salon d'un autre).
+  const logsChannelId = getTicketLogsChannel(interaction.guild.id);
+  if (logsChannelId) {
+    const logs = await interaction.guild.channels.fetch(logsChannelId).catch(() => null);
     if (logs && logs.isTextBased() && 'send' in logs) {
       await logs.send({
         content: `📁 **Ticket fermé** : \`${channel.name}\` par ${interaction.user.tag} ` +
@@ -428,7 +436,8 @@ async function reopenTicket(interaction: ButtonInteraction, client: Client<true>
   // (null en DM) : on récupère le membre depuis le serveur cible.
   const member = await guild.members.fetch(interaction.user.id).catch(() => null);
   const cat = config.tickets.categories.find((c) => c.value === ticket.category);
-  if (ticket.user_id !== interaction.user.id && !canManageTicket(member, cat?.staffRoleId ?? null)) {
+  const categoryRoleId = ticket.category ? getTicketRole(guild.id, ticket.category) : null;
+  if (ticket.user_id !== interaction.user.id && !canManageTicket(member, categoryRoleId)) {
     return interaction.editReply({ content: '❌ Seul le créateur du ticket, le staff responsable ou l\'administration peut le rouvrir.' });
   }
   if (ticket.closed_at && Date.now() - ticket.closed_at > REOPEN_WINDOW_MS) {
@@ -451,21 +460,21 @@ async function reopenTicket(interaction: ButtonInteraction, client: Client<true>
     });
   }
 
-  // La catégorie doit toujours avoir un rôle dédié pour pouvoir rouvrir.
-  if (!cat || !cat.staffRoleId || cat.staffRoleId.trim() === '') {
+  // La catégorie doit toujours avoir un rôle responsable pour pouvoir rouvrir.
+  if (!cat || !categoryRoleId) {
     return interaction.editReply({
-      content: `❌ La catégorie d'origine (${ticket.category}) n'a plus de rôle responsable configuré. Demande à un administrateur de réactiver la catégorie dans \`src/config.ts\` avant de rouvrir.`
+      content: `❌ La catégorie d'origine (${ticket.category}) n'a plus de rôle responsable configuré. Demande à un administrateur de la réactiver avec \`/config ticket-role\` avant de rouvrir.`
     });
   }
   const category = cat;
 
-  const overwrites = buildTicketOverwrites(guild.roles.everyone.id, ticket.user_id, category.staffRoleId);
+  const overwrites = buildTicketOverwrites(guild.roles.everyone.id, ticket.user_id, categoryRoleId, getAdminRole(guild.id));
 
   const channelName = `${category.value}-${(await client.users.fetch(ticket.user_id).catch(() => null))?.username ?? 'inconnu'}-${ticket.number ?? 0}`;
   const channel = await guild.channels.create({
     name: channelName,
     type: ChannelType.GuildText,
-    parent: config.tickets.categoryId || null,
+    parent: getTicketCategory(guild.id) || null,
     topic: `Ticket #${ticket.number} rouvert | Catégorie : ${category.label}`,
     permissionOverwrites: overwrites
   }).catch((e: unknown) => { log.error('reopen create channel failed', e); return null; });
@@ -493,7 +502,7 @@ async function reopenTicket(interaction: ButtonInteraction, client: Client<true>
     .setCustomId('ticket:close').setLabel('Fermer le ticket').setEmoji('🔒').setStyle(ButtonStyle.Danger);
 
   await channel.send({
-    content: `<@${ticket.user_id}> • <@&${category.staffRoleId}>`,
+    content: `<@${ticket.user_id}> • <@&${categoryRoleId}>`,
     embeds: [embeds.primary()
       .setTitle(`Ticket #${ticket.number} — rouvert`)
       .setDescription('Le ticket a été rouvert. Reprends la discussion ici.')
@@ -501,7 +510,7 @@ async function reopenTicket(interaction: ButtonInteraction, client: Client<true>
     components: [new ActionRowBuilder<ButtonBuilder>().addComponents(claimBtn, closeBtn)],
     allowedMentions: {
       users: [ticket.user_id],
-      roles: [category.staffRoleId]
+      roles: [categoryRoleId]
     }
   });
 

@@ -4,17 +4,21 @@ import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags,
 import { sendLog } from '../../features/logger';
 import { requireStaff } from '../../utils/permissions';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('clear')
-    .setDescription('Supprimer en masse des messages du salon')
+    .setDescription(base('clear.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('clear.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addIntegerOption((o) =>
-      o.setName('nombre').setDescription('Nombre de messages à supprimer (1-100)')
+      o.setName('nombre').setDescription(base('clear.opt.nombre.desc'))
+      .setDescriptionLocalizations(frLoc('clear.opt.nombre.desc'))
         .setRequired(true).setMinValue(1).setMaxValue(100))
     .addUserOption((o) =>
-      o.setName('membre').setDescription('Ne supprimer que les messages de ce membre')),
+      o.setName('membre').setDescription(base('clear.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('clear.opt.member.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     // Gate runtime : ManageMessages est aussi accordé au ticket-staff (via

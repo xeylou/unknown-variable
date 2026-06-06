@@ -62,6 +62,17 @@ export default {
         return;
       }
 
+      // --- Autocomplétion ---
+      // Ne se déclenche que pour les options déclarées `.setAutocomplete(true)`.
+      // Best-effort, jamais journalisé (l'utilisateur tape encore sa commande).
+      if (interaction.isAutocomplete()) {
+        const command = client.commands.get(interaction.commandName);
+        if (command?.autocomplete) {
+          await command.autocomplete(interaction, client);
+        }
+        return;
+      }
+
       // --- Composants : boutons, menus déroulants, modales ---
       if (interaction.isButton() || interaction.isAnySelectMenu() || interaction.isModalSubmit()) {
         // customId au format « prefix:action:arg1:arg2... »

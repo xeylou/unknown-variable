@@ -2,14 +2,18 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { notifyAndRecord } from '../../utils/moderation';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('warn')
-    .setDescription('Avertir un membre')
+    .setDescription(base('warn.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('warn.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addUserOption((o) => o.setName('membre').setDescription('Membre à avertir').setRequired(true))
-    .addStringOption((o) => o.setName('raison').setDescription("Raison de l'avertissement")),
+    .addUserOption((o) => o.setName('membre').setDescription(base('warn.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('warn.opt.member.desc')).setRequired(true))
+    .addStringOption((o) => o.setName('raison').setDescription(base('warn.opt.reason.desc'))
+      .setDescriptionLocalizations(frLoc('warn.opt.reason.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const target = interaction.options.getUser('membre', true);

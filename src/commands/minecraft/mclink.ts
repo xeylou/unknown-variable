@@ -4,6 +4,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags,
 import { prisma } from '../../database';
 import { isConfigured } from '../../features/mcrcon';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 const LINK_TTL_MS = 30 * 60 * 1000;
 
@@ -16,12 +17,17 @@ const LINK_TTL_MS = 30 * 60 * 1000;
 export default {
   data: new SlashCommandBuilder()
     .setName('mclink')
-    .setDescription('Lier ton compte Discord à ton pseudo Minecraft')
+    .setDescription(base('mclink.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('mclink.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addSubcommand((s) => s.setName('demande').setDescription('Demande de liaison à valider en se connectant au serveur')
-      .addStringOption((o) => o.setName('pseudo').setDescription('Ton pseudo Minecraft exact').setRequired(true)))
-    .addSubcommand((s) => s.setName('statut').setDescription('Vérifier ta liaison'))
-    .addSubcommand((s) => s.setName('delier').setDescription('Supprimer ta liaison')),
+    .addSubcommand((s) => s.setName('demande').setDescription(base('mclink.sub.demande.desc'))
+      .setDescriptionLocalizations(frLoc('mclink.sub.demande.desc'))
+      .addStringOption((o) => o.setName('pseudo').setDescription(base('mclink.opt.pseudo.desc'))
+      .setDescriptionLocalizations(frLoc('mclink.opt.pseudo.desc')).setRequired(true)))
+    .addSubcommand((s) => s.setName('statut').setDescription(base('mclink.sub.statut.desc'))
+      .setDescriptionLocalizations(frLoc('mclink.sub.statut.desc')))
+    .addSubcommand((s) => s.setName('delier').setDescription(base('mclink.sub.delier.desc'))
+      .setDescriptionLocalizations(frLoc('mclink.sub.delier.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const sub = interaction.options.getSubcommand();

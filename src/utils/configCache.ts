@@ -1,4 +1,5 @@
 import { getConfig as dbGetConfig, setConfig as dbSetConfig } from '../database';
+import { onConfigWrite } from './guildSettings';
 
 /**
  * Cache mémoire pour `guild_config` : évite d'aller chercher Prisma à chaque
@@ -37,11 +38,14 @@ export async function setConfig(
   k: string,
   value: string | number | null
 ): Promise<void> {
-  await dbSetConfig(guildId, k, value === null || value === undefined ? null : String(value));
+  const normalized = value === null || value === undefined ? null : String(value);
+  await dbSetConfig(guildId, k, normalized);
   cache.set(key(guildId, k), {
-    value: value === null || value === undefined ? null : String(value),
+    value: normalized,
     expiresAt: Date.now() + TTL_MS
   });
+  // Tient à jour le cache synchrone des rôles/salons (no-op pour les autres clés).
+  onConfigWrite(guildId, k, normalized);
 }
 
 /** Invalide entièrement le cache d'une guilde (utile pour les tests). */

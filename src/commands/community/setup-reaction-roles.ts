@@ -4,12 +4,15 @@ import {
 } from 'discord.js';
 import { prisma } from '../../database';
 import { emojiKey } from '../../features/reactionroles';
+import { countPanels, buildDeleteConfirm } from '../../utils/panels';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 /**
- * Crée un panneau « reaction roles » : un message embed avec une liste de
- * paires emoji → rôle. Le bot pose les réactions, et tout clic ajoute /
- * retire le rôle correspondant chez l'utilisateur.
+ * Panneau « reaction roles » : un message embed avec une liste de paires
+ * emoji → rôle. Le bot pose les réactions, et tout clic ajoute / retire le rôle
+ * correspondant. `supprimer` retire tous les panneaux du serveur (messages +
+ * entrées en base).
  *
  * Format attendu pour `paires` : « <emoji1> <@&roleId1>, <emoji2> <@&roleId2>, … »
  * (jusqu'à 10 paires, on supporte emojis Unicode et custom serveur).
@@ -17,16 +20,38 @@ import config from '../../config';
 export default {
   data: new SlashCommandBuilder()
     .setName('setup-reaction-roles')
-    .setDescription('Déployer un panneau emoji → rôle (style classique)')
+    .setDescription(base('setuprr.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('setuprr.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
-    .addStringOption((o) => o.setName('titre').setDescription('Titre du panneau').setRequired(true))
-    .addStringOption((o) => o.setName('description').setDescription('Description du panneau').setRequired(true))
-    .addStringOption((o) => o.setName('paires')
-      .setDescription("Paires emoji rôle, séparées par des virgules — ex. « 🟦 @Bleu, 🔴 @Rouge »").setRequired(true))
-    .addBooleanOption((o) => o.setName('exclusif')
-      .setDescription('Un seul rôle parmi la liste à la fois (défaut : non)')),
+    .addSubcommand((s) => s.setName('deployer')
+      .setDescription(base('setuprr.sub.deployer.desc'))
+      .setDescriptionLocalizations(frLoc('setuprr.sub.deployer.desc'))
+      .addStringOption((o) => o.setName('titre').setDescription(base('setuprr.opt.titre.desc'))
+      .setDescriptionLocalizations(frLoc('setuprr.opt.titre.desc')).setRequired(true))
+      .addStringOption((o) => o.setName('description').setDescription(base('setuprr.opt.description.desc'))
+      .setDescriptionLocalizations(frLoc('setuprr.opt.description.desc')).setRequired(true))
+      .addStringOption((o) => o.setName('paires')
+        .setDescription(base('setuprr.opt.paires.desc'))
+      .setDescriptionLocalizations(frLoc('setuprr.opt.paires.desc')).setRequired(true))
+      .addBooleanOption((o) => o.setName('exclusif')
+        .setDescription('Un seul rôle parmi la liste à la fois (défaut : non)')))
+    .addSubcommand((s) => s.setName('supprimer')
+      .setDescription(base('setuprr.sub.supprimer.desc'))
+      .setDescriptionLocalizations(frLoc('setuprr.sub.supprimer.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
+    const sub = interaction.options.getSubcommand();
+
+    // --- Supprimer (confirmation) ---
+    if (sub === 'supprimer') {
+      const count = await countPanels(interaction.guild, 'reaction-roles');
+      if (!count) {
+        return interaction.reply({ content: 'ℹ️ Aucun panneau reaction-roles à supprimer.', flags: MessageFlags.Ephemeral });
+      }
+      return interaction.reply(buildDeleteConfirm('reaction-roles'));
+    }
+
+    // --- Déployer ---
     const titre = interaction.options.getString('titre', true);
     const description = interaction.options.getString('description', true);
     const pairesRaw = interaction.options.getString('paires', true);

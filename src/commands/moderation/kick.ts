@@ -2,14 +2,18 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { notifyAndRecord } from '../../utils/moderation';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('kick')
-    .setDescription('Expulser un membre du serveur')
+    .setDescription(base('kick.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('kick.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers)
-    .addUserOption((o) => o.setName('membre').setDescription('Membre à expulser').setRequired(true))
-    .addStringOption((o) => o.setName('raison').setDescription('Raison')),
+    .addUserOption((o) => o.setName('membre').setDescription(base('kick.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('kick.opt.member.desc')).setRequired(true))
+    .addStringOption((o) => o.setName('raison').setDescription(base('kick.opt.reason.desc'))
+      .setDescriptionLocalizations(frLoc('kick.opt.reason.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const user = interaction.options.getUser('membre', true);

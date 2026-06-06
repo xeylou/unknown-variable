@@ -140,6 +140,35 @@ export async function tallyVotes(messageId: string): Promise<TallyEntry[]> {
   return rows.map((r) => ({ option_idx: r.option_idx, count: r._count.option_idx }));
 }
 
+/**
+ * Annule un sondage : déprogramme la fin, supprime le message et efface les
+ * données (votes + sondage). Renvoie false si le sondage est introuvable.
+ */
+export async function cancelPoll(messageId: string): Promise<boolean> {
+  const p = await prisma.polls.findUnique({ where: { message_id: messageId } });
+  if (!p) return false;
+
+  const t = scheduled.get(messageId);
+  if (t) { clearTimeout(t); scheduled.delete(messageId); }
+
+  const channel = clientRef ? await clientRef.channels.fetch(p.channel_id).catch(() => null) : null;
+  if (channel?.isTextBased() && 'messages' in channel) {
+    await channel.messages.delete(messageId).catch(() => {});
+  }
+  await prisma.poll_votes.deleteMany({ where: { message_id: messageId } });
+  await prisma.polls.delete({ where: { message_id: messageId } }).catch(() => {});
+  return true;
+}
+
+/** Sondage en cours le plus récent d'un serveur (pour `/poll annuler` sans id). */
+export async function latestActivePoll(guildId: string): Promise<string | null> {
+  const p = await prisma.polls.findFirst({
+    where: { guild_id: guildId, ended: 0 },
+    orderBy: { created_at: 'desc' }
+  });
+  return p?.message_id ?? null;
+}
+
 /** Termine un sondage : édite le message, annonce les résultats. */
 export async function endPoll(messageId: string): Promise<void> {
   if (!clientRef) return;

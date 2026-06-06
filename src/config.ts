@@ -6,7 +6,10 @@ import { z } from 'zod';
 const envSchema = z.object({
   DISCORD_TOKEN: z.string().min(1, 'DISCORD_TOKEN is required'),
   CLIENT_ID: z.string().min(1, 'CLIENT_ID is required'),
-  GUILD_ID: z.string().min(1, 'GUILD_ID is required'),
+  // Optionnel : sert au déploiement instantané des commandes en dev
+  // (`npm run deploy:guild`) et de « serveur principal » pour les défauts .env
+  // (STAFF_ROLE_ID, ADMIN_ROLE_ID, TICKET_*). Inutile pour un bot multi-serveur.
+  GUILD_ID: z.string().optional(),
   STAFF_ROLE_ID: z.string().optional(),
   ADMIN_ROLE_ID: z.string().optional(),
   // Nom du bot — sert au branding (logs, User-Agent, statut, nom du fichier BDD).
@@ -28,7 +31,10 @@ const envSchema = z.object({
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   GITHUB_WEBHOOK_PORT: z.coerce.number().default(3000),
   GITHUB_WEBHOOK_HOST: z.string().default('0.0.0.0'),
-  GITHUB_WEBHOOK_PATH: z.string().default('/github/webhook')
+  GITHUB_WEBHOOK_PATH: z.string().default('/github/webhook'),
+  // Sonde de santé HTTP (GET /health). 0 = désactivée. Sert au HEALTHCHECK
+  // Docker et au monitoring d'uptime externe.
+  HEALTH_PORT: z.coerce.number().default(3001)
 });
 
 const envParsed = envSchema.safeParse(process.env);
@@ -80,6 +86,8 @@ export default {
   // --- Identifiants Discord (.env) ---
   token: env.DISCORD_TOKEN,
   clientId: env.CLIENT_ID,
+  // Optionnel (string | undefined) : serveur principal pour le deploy de dev et
+  // les défauts .env. Le bot fonctionne sur n'importe quel serveur sans lui.
   guildId: env.GUILD_ID,
   staffRoleId: env.STAFF_ROLE_ID,
   adminRoleId: env.ADMIN_ROLE_ID,
@@ -88,6 +96,10 @@ export default {
   database: {
     path: databasePath
   },
+
+  // --- Sonde de santé HTTP (GET /health) ---
+  // Port d'écoute ; 0 = désactivée. Indépendante du serveur webhook GitHub.
+  healthPort: env.HEALTH_PORT,
 
   // --- Notifications Twitch (optionnel — laisser vide désactive Twitch) ---
   twitch: {
@@ -127,18 +139,17 @@ export default {
   tickets: {
     categoryId: env.TICKET_CATEGORY_ID || null, // catégorie Discord où ranger les tickets
     logsChannelId: env.LOGS_CHANNEL_ID || null, // salon où envoyer les transcripts
-    // Modifie librement les catégories du menu déroulant
-    // Chaque catégorie cible UN rôle Discord (l'équipe responsable). Seuls ce
-    // rôle + `ADMIN_ROLE_ID` voient le ticket — pas le rôle staff global. Seul
-    // le rôle spécifique est pingué à l'ouverture.
-    // ⚠️ Remplis chaque `staffRoleId` par l'ID du rôle Discord correspondant
-    // (clic droit sur le rôle → Copier l'identifiant, en mode développeur).
-    // Une catégorie sans `staffRoleId` valide refusera la création de tickets.
+    // Catalogue des catégories du menu déroulant (structure/branding partagés
+    // par tous les serveurs). Le RÔLE responsable de chaque catégorie se
+    // définit PAR SERVEUR avec `/config ticket-role` — c'est ce qui rend le
+    // bot multi-serveur. Le champ `staffRoleId` ci-dessous n'est qu'un défaut
+    // global optionnel (laisser vide en usage normal) ; une catégorie sans
+    // rôle (ni par serveur ni ici) refuse la création de tickets.
     categories: [
       { value: 'support', label: 'Support général',  description: 'Question ou aide',           emoji: '🛠️', staffRoleId: '' },
       { value: 'bug',     label: 'Signaler un bug',  description: 'Rapporter un problème',      emoji: '🐛', staffRoleId: '' },
       { value: 'build',   label: 'Demande de build', description: 'Commander une construction', emoji: '🏗️', staffRoleId: '' },
-      { value: 'staff',   label: 'Contact staff',    description: 'Demande privée au staff',    emoji: '👤', staffRoleId: '1507070171158941816' },
+      { value: 'staff',   label: 'Contact staff',    description: 'Demande privée au staff',    emoji: '👤', staffRoleId: '' },
       { value: 'other',   label: 'Autre',            description: 'Autre demande',              emoji: '❓', staffRoleId: '' }
     ] as Array<{
       value: string;
@@ -146,10 +157,10 @@ export default {
       description: string;
       emoji: string;
       /**
-       * Rôle Discord responsable de cette catégorie. Obligatoire : ce rôle est
-       * le seul à voir/recevoir le ping (avec `ADMIN_ROLE_ID` qui voit tout
-       * mais n'est pas pingué). Mets la chaîne vide pour désactiver la
-       * catégorie tant qu'aucun rôle n'est attribué.
+       * Défaut global optionnel pour le rôle responsable de cette catégorie.
+       * Normalement vide : le rôle se configure par serveur via
+       * `/config ticket-role`. S'il est renseigné ici, il s'applique à TOUS les
+       * serveurs comme dernier recours (déconseillé en multi-serveur).
        */
       staffRoleId: string;
     }>

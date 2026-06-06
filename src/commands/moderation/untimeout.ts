@@ -2,14 +2,18 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { notifyAndRecord } from '../../utils/moderation';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('untimeout')
-    .setDescription("Lever l'exclusion temporaire d'un membre")
+    .setDescription(base('untimeout.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('untimeout.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addUserOption((o) => o.setName('membre').setDescription('Membre').setRequired(true))
-    .addStringOption((o) => o.setName('raison').setDescription('Raison')),
+    .addUserOption((o) => o.setName('membre').setDescription(base('untimeout.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('untimeout.opt.member.desc')).setRequired(true))
+    .addStringOption((o) => o.setName('raison').setDescription(base('untimeout.opt.reason.desc'))
+      .setDescriptionLocalizations(frLoc('untimeout.opt.reason.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const user = interaction.options.getUser('membre', true);

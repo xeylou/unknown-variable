@@ -4,25 +4,9 @@ import {
 } from 'discord.js';
 import { pendingEmbeds } from '../commands/utility/embed';
 import { safeMentionAllowed } from '../utils/mentions';
+import { parseColor } from '../utils/colors';
 import config from '../config';
 import type { ComponentInteraction } from '../types';
-
-/** Couleurs nommées acceptées en plus du format hexadécimal. */
-const NAMED_COLORS: Record<string, number> = {
-  rouge: 0xed4245, vert: 0x57f287, bleu: 0x5865f2, jaune: 0xfee75c,
-  orange: 0xe67e22, violet: 0x9b59b6, rose: 0xeb459e,
-  blanc: 0xffffff, noir: 0x2b2d31, gris: 0x95a5a6
-};
-
-/** Convertit « #5865F2 » ou « bleu » en nombre, ou null si invalide. */
-function parseColor(input: string): number | null {
-  if (!input) return null;
-  const v = input.trim().toLowerCase();
-  if (v in NAMED_COLORS) return NAMED_COLORS[v];
-  const hex = v.replace(/^#/, '');
-  if (/^[0-9a-f]{6}$/.test(hex)) return parseInt(hex, 16);
-  return null;
-}
 
 /** Texte de mention construit depuis une liste d'identifiants de rôle. */
 function mentionText(roleIds: string[], guildId: string) {

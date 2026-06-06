@@ -1,0 +1,51 @@
+# Compose pour _unknown_variable.
+#
+#   docker compose up -d                                  → le bot seul
+#   docker compose --profile music up -d                  → bot + Lavalink (musique)
+#   docker compose --profile rss up -d                    → bot + RSSHub (Instagram/TikTok/X)
+#   docker compose --profile music --profile rss up -d    → tout
+#
+# ⚠️ Après le PREMIER démarrage, enregistre les slash-commands (une seule fois) :
+#   docker compose exec bot npm run deploy
+#
+# Pour la musique : dans .env, mets LAVALINK_HOST=lavalink et LAVALINK_PASSWORD
+# (identique à lavalink/application.yml). Pour RSSHub : passe l'URL interne
+# http://rsshub:1200/... à /notif ajouter-rss.
+
+services:
+  bot:
+    build: .
+    image: unknown_variable
+    container_name: unknown_variable
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - data:/app/data
+    # Décommente si tu exposes les webhooks GitHub et/ou la sonde de santé à l'extérieur :
+    # ports:
+    #   - "3000:3000"   # webhook GitHub (GITHUB_WEBHOOK_PORT)
+    #   - "3001:3001"   # sonde de santé (HEALTH_PORT)
+
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    container_name: unknown_variable_lavalink
+    profiles: ["music"]
+    restart: unless-stopped
+    environment:
+      - SERVER_PORT=2333
+    volumes:
+      # Crée ce fichier d'abord — voir docs/LAVALINK.md (mot de passe + plugin YouTube).
+      - ./lavalink/application.yml:/opt/Lavalink/application.yml:ro
+    expose:
+      - "2333"
+
+  rsshub:
+    image: diygod/rsshub
+    container_name: unknown_variable_rsshub
+    profiles: ["rss"]
+    restart: unless-stopped
+    expose:
+      - "1200"
+
+volumes:
+  data:

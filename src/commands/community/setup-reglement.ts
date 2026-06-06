@@ -4,18 +4,40 @@ import {
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { getConfig, setConfig } from '../../utils/configCache';
+import { base, frLoc, resolveLang, t } from '../../i18n';
 import { requireAdmin } from '../../utils/permissions';
+import { recordPanel, countPanels, buildDeleteConfirm } from '../../utils/panels';
 import reglement from '../../data/reglement';
 import * as embeds from '../../utils/embeds';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('setup-reglement')
-    .setDescription('Déployer le règlement officiel avec validation par bouton')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDescription(base('setupreglement.cmd.desc'))
+    .setDescriptionLocalizations(frLoc('setupreglement.cmd.desc'))
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .addSubcommand((s) => s.setName('deployer')
+      .setDescription(base('setupreglement.sub.deployer.desc'))
+      .setDescriptionLocalizations(frLoc('setupreglement.sub.deployer.desc')))
+    .addSubcommand((s) => s.setName('supprimer')
+      .setDescription(base('setupreglement.sub.supprimer.desc'))
+      .setDescriptionLocalizations(frLoc('setupreglement.sub.supprimer.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!await requireAdmin(interaction)) return;
+    const lang = resolveLang(interaction.locale);
+    const sub = interaction.options.getSubcommand();
+
+    // --- Supprimer (confirmation) ---
+    if (sub === 'supprimer') {
+      const count = await countPanels(interaction.guild, 'reglement');
+      if (!count) {
+        return interaction.reply({ content: t(lang, 'setupreglement.no_panel'), flags: MessageFlags.Ephemeral });
+      }
+      return interaction.reply(buildDeleteConfirm('reglement'));
+    }
+
+    // --- Déployer ---
     // Découpe les articles en deux embeds pour rester sous les limites Discord
     const articles = reglement.articles.map((a, i) => ({
       name: `${a.emoji}  Article ${i + 1} — ${a.titre}`,
@@ -58,19 +80,16 @@ export default {
       allowedMentions: { parse: [] }
     }).catch(() => null);
     if (!sent) {
-      return interaction.reply({ content: "❌ Échec de l'envoi du règlement.", flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: t(lang, 'setupreglement.failed'), flags: MessageFlags.Ephemeral });
     }
+    await recordPanel('reglement', sent);
 
     // Mémorise l'emplacement pour que les DM de sanction puissent y renvoyer.
     await setConfig(interaction.guild.id, 'rules_channel_id', channel.id).catch(() => {});
 
     const verifiedRole = await getConfig(interaction.guild.id, 'verified_role');
-    const warning = verifiedRole
-      ? ''
-      : '\n⚠️ Aucun rôle de validation configuré — fais `/config reglement role:<rôle>` ' +
-        'sinon le bouton ne donnera aucun accès.';
     return interaction.reply({
-      content: `✅ Règlement déployé.${warning}`,
+      content: verifiedRole ? t(lang, 'setupreglement.ok') : t(lang, 'setupreglement.ok_no_role'),
       flags: MessageFlags.Ephemeral
     });
   }

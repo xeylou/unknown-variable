@@ -7,6 +7,7 @@ import { categoriesVisibleTo, categoryLabel } from '../../utils/ticketScope';
 import * as embeds from '../../utils/embeds';
 import config from '../../config';
 import type { tickets as TicketRow } from '@prisma/client';
+import { base, frLoc } from '../../i18n';
 
 /** Cap dur de récupération — au-delà, le serveur a un problème de fond. */
 const QUERY_CAP = 250;
@@ -20,16 +21,20 @@ const categoryChoices = config.tickets.categories.map((c) => ({ name: c.label, v
 export default {
   data: new SlashCommandBuilder()
     .setName('tickets-ouverts')
-    .setDescription('Lister les tickets ouverts groupés par catégorie')
+    .setDescription(base('ticketsouverts.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('ticketsouverts.cmd.desc'))
     // ManageMessages rend la commande visible par staff + ticket-staff
     // (qui obtiennent cette perm via `/permissions grant-ticket-staff`).
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addStringOption((o) => o.setName('categorie')
-      .setDescription('Filtrer sur une catégorie (parmi celles auxquelles tu as accès)')
+      .setDescription(base('ticketsouverts.opt.categorie.desc'))
+      .setDescriptionLocalizations(frLoc('ticketsouverts.opt.categorie.desc'))
       .addChoices(...categoryChoices))
-    .addUserOption((o) => o.setName('membre').setDescription("Filtrer sur l'auteur du ticket"))
+    .addUserOption((o) => o.setName('membre').setDescription(base('ticketsouverts.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('ticketsouverts.opt.member.desc')))
     .addBooleanOption((o) => o.setName('pris-en-charge')
-      .setDescription('false = uniquement les tickets non-claim ; true = uniquement les claim')),
+      .setDescription(base('ticketsouverts.opt.claimed.desc'))
+      .setDescriptionLocalizations(frLoc('ticketsouverts.opt.claimed.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     // Filtrage par rôle : un staff général voit tout, un ticket-staff voit

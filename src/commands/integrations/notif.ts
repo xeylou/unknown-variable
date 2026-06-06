@@ -1,38 +1,58 @@
 import {
   SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ChannelType, MessageFlags,
-  type ChatInputCommandInteraction
+  type ChatInputCommandInteraction, type AutocompleteInteraction
 } from 'discord.js';
 import { prisma } from '../../database';
 import config from '../../config';
+import { respondChoices } from '../../utils/autocomplete';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('notif')
-    .setDescription('Gérer les notifications YouTube / Twitch')
+    .setDescription(base('notif.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('notif.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .addSubcommand((s) => s.setName('ajouter-youtube').setDescription('Suivre une chaîne YouTube')
+    .addSubcommand((s) => s.setName('ajouter-youtube').setDescription(base('notif.sub.youtube.desc'))
+      .setDescriptionLocalizations(frLoc('notif.sub.youtube.desc'))
       .addStringOption((o) => o.setName('identifiant-chaine')
         .setDescription('ID de la chaîne (commence par UC..., voir Paramètres avancés YouTube)').setRequired(true))
-      .addChannelOption((o) => o.setName('salon').setDescription('Salon des annonces')
+      .addChannelOption((o) => o.setName('salon').setDescription(base('notif.opt.salon.desc'))
+      .setDescriptionLocalizations(frLoc('notif.opt.salon.desc'))
         .addChannelTypes(ChannelType.GuildText).setRequired(true))
       .addStringOption((o) => o.setName('nom').setDescription('Nom affiché de la chaîne'))
       .addRoleOption((o) => o.setName('role').setDescription('Rôle à mentionner à chaque annonce')))
-    .addSubcommand((s) => s.setName('ajouter-twitch').setDescription('Suivre une chaîne Twitch')
-      .addStringOption((o) => o.setName('pseudo').setDescription("Pseudo Twitch du streamer").setRequired(true))
+    .addSubcommand((s) => s.setName('ajouter-twitch').setDescription(base('notif.sub.twitch.desc'))
+      .setDescriptionLocalizations(frLoc('notif.sub.twitch.desc'))
+      .addStringOption((o) => o.setName('pseudo').setDescription(base('notif.opt.pseudo.desc'))
+      .setDescriptionLocalizations(frLoc('notif.opt.pseudo.desc')).setRequired(true))
       .addChannelOption((o) => o.setName('salon').setDescription('Salon des annonces')
         .addChannelTypes(ChannelType.GuildText).setRequired(true))
       .addRoleOption((o) => o.setName('role').setDescription('Rôle à mentionner à chaque annonce')))
     .addSubcommand((s) => s.setName('ajouter-rss')
-      .setDescription('Suivre un flux RSS / Atom (Instagram, TikTok, X, blog… via RSSHub ou natif)')
+      .setDescription(base('notif.sub.rss.desc'))
+      .setDescriptionLocalizations(frLoc('notif.sub.rss.desc'))
       .addStringOption((o) => o.setName('url')
         .setDescription("URL du flux RSS / Atom (https://...)").setRequired(true))
       .addChannelOption((o) => o.setName('salon').setDescription('Salon des annonces')
         .addChannelTypes(ChannelType.GuildText).setRequired(true))
       .addStringOption((o) => o.setName('nom').setDescription('Nom affiché de la source (ex: « Instagram @builders »)'))
       .addRoleOption((o) => o.setName('role').setDescription('Rôle à mentionner à chaque annonce')))
-    .addSubcommand((s) => s.setName('liste').setDescription('Lister les notifications configurées'))
-    .addSubcommand((s) => s.setName('supprimer').setDescription('Supprimer une notification')
-      .addIntegerOption((o) => o.setName('id').setDescription('ID de la notification (voir /notif liste)').setRequired(true))),
+    .addSubcommand((s) => s.setName('liste').setDescription(base('notif.sub.liste.desc'))
+      .setDescriptionLocalizations(frLoc('notif.sub.liste.desc')))
+    .addSubcommand((s) => s.setName('supprimer').setDescription(base('notif.sub.supprimer.desc'))
+      .setDescriptionLocalizations(frLoc('notif.sub.supprimer.desc'))
+      .addIntegerOption((o) => o.setName('id').setDescription('ID de la notification (voir /notif liste)').setRequired(true).setAutocomplete(true))),
+
+  async autocomplete(interaction: AutocompleteInteraction) {
+    if (!interaction.guildId) return;
+    const rows = await prisma.notifications.findMany({ where: { guild_id: interaction.guildId }, take: 25 });
+    const icon: Record<string, string> = { youtube: '📺', twitch: '🔴', rss: '📰' };
+    await respondChoices(interaction, rows.map((n) => ({
+      name: `#${n.id} ${icon[n.platform] ?? ''} ${n.target_name || n.target}`.replace(/\s+/g, ' ').trim(),
+      value: n.id
+    })));
+  },
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const sub = interaction.options.getSubcommand();
@@ -62,7 +82,9 @@ export default {
     if (sub === 'ajouter-twitch') {
       if (!config.twitch.clientId || !config.twitch.clientSecret) {
         return interaction.reply({
-          content: '⚠️ Twitch non configuré : ajoute `TWITCH_CLIENT_ID` et `TWITCH_CLIENT_SECRET` dans le `.env`.',
+          content: '⚠️ Les notifications Twitch ne sont pas disponibles sur ce bot : ' +
+                   'l\'hébergeur doit configurer une application Twitch. ' +
+                   'YouTube et RSS restent disponibles via `/notif`.',
           flags: MessageFlags.Ephemeral
         });
       }

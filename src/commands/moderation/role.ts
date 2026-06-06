@@ -1,10 +1,12 @@
 import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags,
-  type ChatInputCommandInteraction
+  type ChatInputCommandInteraction, type AutocompleteInteraction
 } from 'discord.js';
 import { prisma } from '../../database';
 import { addTempRole, cancelTempRole } from '../../features/temproles';
 import { parseDuration, formatDuration } from '../../utils/duration';
+import { respondChoices } from '../../utils/autocomplete';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 /**
  * Gestion des rôles temporaires (différents du timeout, qui est natif Discord
@@ -13,16 +15,37 @@ import config from '../../config';
 export default {
   data: new SlashCommandBuilder()
     .setName('role')
-    .setDescription('Gestion des rôles temporaires')
+    .setDescription(base('role.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('role.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
-    .addSubcommand((s) => s.setName('temp').setDescription('Attribue un rôle pour une durée limitée')
-      .addUserOption((o) => o.setName('membre').setDescription('Membre').setRequired(true))
-      .addRoleOption((o) => o.setName('role').setDescription('Rôle à attribuer').setRequired(true))
+    .addSubcommand((s) => s.setName('temp').setDescription(base('role.sub.temp.desc'))
+      .setDescriptionLocalizations(frLoc('role.sub.temp.desc'))
+      .addUserOption((o) => o.setName('membre').setDescription(base('role.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('role.opt.member.desc')).setRequired(true))
+      .addRoleOption((o) => o.setName('role').setDescription(base('role.opt.role.desc'))
+      .setDescriptionLocalizations(frLoc('role.opt.role.desc')).setRequired(true))
       .addStringOption((o) => o.setName('duree').setDescription('Ex 10m, 2h, 1d, 7d').setRequired(true))
-      .addStringOption((o) => o.setName('raison').setDescription('Raison')))
-    .addSubcommand((s) => s.setName('temp-liste').setDescription('Liste les rôles temporaires actifs'))
-    .addSubcommand((s) => s.setName('temp-annuler').setDescription('Annule un rôle temporaire')
-      .addIntegerOption((o) => o.setName('id').setDescription("ID de l'attribution (voir temp-liste)").setRequired(true))),
+      .addStringOption((o) => o.setName('raison').setDescription(base('role.opt.reason.desc'))
+      .setDescriptionLocalizations(frLoc('role.opt.reason.desc'))))
+    .addSubcommand((s) => s.setName('temp-liste').setDescription(base('role.sub.templiste.desc'))
+      .setDescriptionLocalizations(frLoc('role.sub.templiste.desc')))
+    .addSubcommand((s) => s.setName('temp-annuler').setDescription(base('role.sub.tempannuler.desc'))
+      .setDescriptionLocalizations(frLoc('role.sub.tempannuler.desc'))
+      .addIntegerOption((o) => o.setName('id').setDescription(base('role.opt.id.desc'))
+      .setDescriptionLocalizations(frLoc('role.opt.id.desc')).setRequired(true).setAutocomplete(true))),
+
+  async autocomplete(interaction: AutocompleteInteraction) {
+    if (!interaction.guildId) return;
+    const rows = await prisma.temp_roles.findMany({
+      where: { guild_id: interaction.guildId },
+      orderBy: { expires_at: 'asc' },
+      take: 25
+    });
+    await respondChoices(interaction, rows.map((r) => {
+      const roleName = interaction.guild?.roles.cache.get(r.role_id)?.name ?? `rôle ${r.role_id}`;
+      return { name: `#${r.id} — @${roleName}`, value: r.id };
+    }));
+  },
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const sub = interaction.options.getSubcommand();

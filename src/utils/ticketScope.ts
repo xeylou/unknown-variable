@@ -1,11 +1,12 @@
 import type { GuildMember } from 'discord.js';
 import config from '../config';
 import { isStaff } from './permissions';
+import { getTicketRole } from './guildSettings';
 
 /**
  * Catégories de tickets visibles par un membre :
  *  - Staff général / admin : toutes les catégories configurées.
- *  - Ticket-staff (porteur d'un `staffRoleId` de catégorie) : uniquement
+ *  - Ticket-staff (porteur du rôle responsable d'une catégorie) : uniquement
  *    les catégories qu'il modère.
  *  - Membre lambda : liste vide.
  *
@@ -18,8 +19,8 @@ export function categoriesVisibleTo(member: GuildMember | null | undefined): str
   }
   const out: string[] = [];
   for (const cat of config.tickets.categories) {
-    const rid = cat.staffRoleId;
-    if (rid && rid.trim() !== '' && member.roles.cache.has(rid)) {
+    const rid = getTicketRole(member.guild.id, cat.value);
+    if (rid && member.roles.cache.has(rid)) {
       out.push(cat.value);
     }
   }

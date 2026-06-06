@@ -1,6 +1,7 @@
 import { Events, type GuildMember } from 'discord.js';
 import { checkRaid } from '../features/antiraid';
 import { onMemberJoin as captchaOnJoin } from '../features/captcha';
+import { onMemberJoin as trackInviteJoin } from '../features/invitetracker';
 import { getConfig } from '../utils/configCache';
 import { logMemberAdd } from '../features/serverlog';
 import { createLogger } from '../utils/logger';
@@ -18,6 +19,9 @@ export default {
 
     // --- CAPTCHA d'entrée (si activé) ---
     await captchaOnJoin(member).catch((e) => log.warn('captcha', e));
+
+    // --- Suivi des invitations (classement) ---
+    await trackInviteJoin(member).catch((e) => log.warn('invitetracker join', e));
 
     // --- Autorôle ---
     const autorole = await getConfig(member.guild.id, 'autorole');

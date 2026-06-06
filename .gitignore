@@ -9,7 +9,7 @@ node_modules/
 # (qui contient du code source : help.ts, reglement.ts).
 /data/
 
-# Serveur Lavalink — binaires lourds & config (reconstructibles via LAVALINK.md)
+# Serveur Lavalink — binaires lourds & config (reconstructibles via docs/LAVALINK.md)
 lavalink/
 
 # Outillage Claude Code — interne, non destiné au dépôt

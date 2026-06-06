@@ -3,13 +3,16 @@ import {
   type ChatInputCommandInteraction
 } from 'discord.js';
 import * as music from '../../features/music';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('recherche')
-    .setDescription('Rechercher un titre YouTube et le choisir dans une liste')
+    .setDescription(base('recherche.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('recherche.cmd.desc'))
     .addStringOption((o) => o.setName('termes')
-      .setDescription('Mots-clés de recherche').setRequired(true)),
+      .setDescription(base('recherche.opt.terms.desc'))
+      .setDescriptionLocalizations(frLoc('recherche.opt.terms.desc')).setRequired(true)),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!music.isEnabled()) {

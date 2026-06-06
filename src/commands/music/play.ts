@@ -2,13 +2,16 @@ import { SlashCommandBuilder, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import * as music from '../../features/music';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('play')
-    .setDescription('Jouer un titre ou une playlist YouTube (lien ou mots-clés)')
+    .setDescription(base('play.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('play.cmd.desc'))
     .addStringOption((o) => o.setName('recherche')
-      .setDescription('Titre à rechercher, lien YouTube ou lien de playlist').setRequired(true)),
+      .setDescription(base('play.opt.query.desc'))
+      .setDescriptionLocalizations(frLoc('play.opt.query.desc')).setRequired(true)),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!music.isEnabled()) {

@@ -4,6 +4,7 @@ import { PermissionFlagsBits, type GuildMember } from 'discord.js';
 // Mock du module config pour contrôler les rôles utilisés par les helpers.
 vi.mock('../config', () => ({
   default: {
+    guildId: 'GUILD',
     staffRoleId: 'STAFF',
     adminRoleId: 'ADMIN',
     tickets: {
@@ -16,6 +17,10 @@ vi.mock('../config', () => ({
     colors: { primary: 0, neutral: 0, success: 0, danger: 0, warning: 0 }
   }
 }));
+
+// `guildSettings` importe `prisma` ; on l'évite ici (init() n'est jamais appelé,
+// le cache reste vide et les helpers retombent sur le défaut « serveur principal »).
+vi.mock('../database', () => ({ prisma: {} }));
 
 import {
   isAdmin, isStaff, isTicketStaff, ticketStaffRoleIds,
@@ -36,7 +41,7 @@ function mockMember(opts: Opts): GuildMember {
   const roles = new Set(opts.roleIds ?? []);
   return {
     id,
-    guild: { ownerId },
+    guild: { ownerId, id: 'GUILD' },
     permissions: {
       has: (flag: bigint) => perms.includes(flag),
       any: (flags: bigint[]) => flags.some((f) => perms.includes(f))
@@ -97,7 +102,7 @@ describe('isStaff', () => {
 
 describe('ticketStaffRoleIds', () => {
   it('returns deduplicated, non-empty staffRoleId values', () => {
-    const ids = ticketStaffRoleIds();
+    const ids = ticketStaffRoleIds('GUILD');
     expect(ids).toContain('TS_SUPPORT');
     expect(ids).toContain('TS_BUG');
     expect(ids).not.toContain('');

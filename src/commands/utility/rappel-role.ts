@@ -3,6 +3,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
 } from 'discord.js';
 import { parseDuration, formatDuration } from '../../utils/duration';
 import { addReminder, addRecurringReminder, nextOccurrence } from '../../features/reminders';
+import { base, frLoc, resolveLang, t } from '../../i18n';
 
 const FREQUENCIES = [
   { name: 'Une fois (one-shot)', value: 'once' },
@@ -19,32 +20,37 @@ const FREQUENCIES = [
 export default {
   data: new SlashCommandBuilder()
     .setName('rappel-role')
-    .setDescription('Programmer un rappel pour un rôle entier (admin)')
+    .setDescription(base('rappelrole.cmd.desc'))
+    .setDescriptionLocalizations(frLoc('rappelrole.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .addRoleOption((o) => o.setName('role').setDescription('Rôle à mentionner').setRequired(true))
-    .addStringOption((o) => o.setName('message').setDescription('Message du rappel').setRequired(true))
-    .addStringOption((o) => o.setName('frequence').setDescription('Fréquence (one-shot par défaut)').addChoices(...FREQUENCIES))
-    .addStringOption((o) => o.setName('delai').setDescription('Délai si « une fois » : 10m, 2h, 1d')),
+    .addRoleOption((o) => o.setName('role')
+      .setDescription(base('rappelrole.opt.role.desc'))
+      .setDescriptionLocalizations(frLoc('rappelrole.opt.role.desc'))
+      .setRequired(true))
+    .addStringOption((o) => o.setName('message')
+      .setDescription(base('rappelrole.opt.message.desc'))
+      .setDescriptionLocalizations(frLoc('rappelrole.opt.message.desc'))
+      .setRequired(true))
+    .addStringOption((o) => o.setName('frequence')
+      .setDescription(base('rappelrole.opt.frequence.desc'))
+      .setDescriptionLocalizations(frLoc('rappelrole.opt.frequence.desc'))
+      .addChoices(...FREQUENCIES))
+    .addStringOption((o) => o.setName('delai')
+      .setDescription(base('rappelrole.opt.delai.desc'))
+      .setDescriptionLocalizations(frLoc('rappelrole.opt.delai.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
+    const lang = resolveLang(interaction.locale);
     const role = interaction.options.getRole('role', true);
     const text = interaction.options.getString('message', true);
-    const freq = (interaction.options.getString('frequence', true) ?? 'once') as 'once' | 'daily' | 'weekly' | 'monthly';
-    const delayStr = interaction.options.getString('delai', true);
+    const freq = (interaction.options.getString('frequence') ?? 'once') as 'once' | 'daily' | 'weekly' | 'monthly';
+    const delayStr = interaction.options.getString('delai');
 
     if (freq === 'once') {
       const ms = delayStr ? parseDuration(delayStr) : null;
       if (!ms || ms < 10_000) {
-        return interaction.reply({
-          content: '❌ Pour un rappel ponctuel, fournis un délai valide (`10m`, `2h`, `1d`).',
-          flags: MessageFlags.Ephemeral
-        });
+        return interaction.reply({ content: t(lang, 'rappelrole.once.invalid'), flags: MessageFlags.Ephemeral });
       }
-      // Pour le one-shot d'un rôle, on insère dans recurring_reminders avec role_id
-      // mais avec next_at = unique et on supprime au lieu d'avancer.
-      // Plus simple : on utilise la table reminders mais en stockant le role dans le texte.
-      // Solution propre : insertion directe avec un wrapper qui n'avance pas.
-      // Ici on simplifie : on utilise reminders + on insère un préfixe spécial.
       await addReminder({
         userId: interaction.user.id,
         channelId: interaction.channelId,
@@ -53,12 +59,11 @@ export default {
         remindAt: Date.now() + ms
       });
       return interaction.reply({
-        content: `⏰ Rappel ponctuel programmé pour ${role} dans **${formatDuration(ms)}**.`,
+        content: t(lang, 'rappelrole.once.ok', { role: role.toString(), dur: formatDuration(ms) }),
         flags: MessageFlags.Ephemeral
       });
     }
 
-    // Récurrent : pousse dans recurring_reminders avec role_id
     const firstAt = nextOccurrence(Date.now(), freq);
     const id = await addRecurringReminder({
       userId: interaction.user.id,
@@ -70,7 +75,7 @@ export default {
       roleId: role.id
     });
     return interaction.reply({
-      content: `🔁 Rappel récurrent #${id} pour ${role} (${freq}). Prochain <t:${Math.floor(firstAt / 1000)}:R>.`,
+      content: t(lang, 'rappelrole.rec.ok', { id, role: role.toString(), freq, ts: Math.floor(firstAt / 1000) }),
       flags: MessageFlags.Ephemeral
     });
   }

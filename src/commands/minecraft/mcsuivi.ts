@@ -1,34 +1,48 @@
 import {
   SlashCommandBuilder, PermissionFlagsBits, ChannelType, EmbedBuilder, MessageFlags,
-  type ChatInputCommandInteraction, type Client
+  type ChatInputCommandInteraction, type AutocompleteInteraction, type Client
 } from 'discord.js';
 import { prisma } from '../../database';
 import config from '../../config';
 import { runWatcherNow } from '../../features/mcwatch';
+import { respondChoices } from '../../utils/autocomplete';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('mcsuivi')
-    .setDescription('Suivre un serveur Minecraft en continu et alerter un rôle')
+    .setDescription(base('mcsuivi.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('mcsuivi.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((s) => s.setName('ajouter')
-      .setDescription('Ajouter un suivi de serveur Minecraft')
+      .setDescription(base('mcsuivi.sub.ajouter.desc'))
+      .setDescriptionLocalizations(frLoc('mcsuivi.sub.ajouter.desc'))
       .addStringOption((o) => o.setName('ip')
-        .setDescription('Adresse du serveur').setRequired(true))
+        .setDescription(base('mcsuivi.opt.ip.desc'))
+      .setDescriptionLocalizations(frLoc('mcsuivi.opt.ip.desc')).setRequired(true))
       .addChannelOption((o) => o.setName('salon')
         .setDescription('Salon où afficher le panneau de statut')
         .addChannelTypes(ChannelType.GuildText).setRequired(true))
       .addRoleOption((o) => o.setName('role')
         .setDescription('Rôle mentionné à chaque changement de statut').setRequired(true))
       .addIntegerOption((o) => o.setName('intervalle')
-        .setDescription('Rafraîchissement en minutes (2-60, défaut 5)')
+        .setDescription(base('mcsuivi.opt.intervalle.desc'))
+      .setDescriptionLocalizations(frLoc('mcsuivi.opt.intervalle.desc'))
         .setMinValue(2).setMaxValue(60)))
     .addSubcommand((s) => s.setName('liste')
-      .setDescription('Lister les suivis Minecraft configurés'))
+      .setDescription(base('mcsuivi.sub.liste.desc'))
+      .setDescriptionLocalizations(frLoc('mcsuivi.sub.liste.desc')))
     .addSubcommand((s) => s.setName('supprimer')
-      .setDescription('Supprimer un suivi Minecraft')
+      .setDescription(base('mcsuivi.sub.supprimer.desc'))
+      .setDescriptionLocalizations(frLoc('mcsuivi.sub.supprimer.desc'))
       .addIntegerOption((o) => o.setName('id')
-        .setDescription('ID du suivi (voir /mcsuivi liste)').setRequired(true))),
+        .setDescription('ID du suivi (voir /mcsuivi liste)').setRequired(true).setAutocomplete(true))),
+
+  async autocomplete(interaction: AutocompleteInteraction) {
+    if (!interaction.guildId) return;
+    const rows = await prisma.mc_watchers.findMany({ where: { guild_id: interaction.guildId }, take: 25 });
+    await respondChoices(interaction, rows.map((w) => ({ name: `#${w.id} — ${w.ip}`, value: w.id })));
+  },
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>, client: Client<true>) {
     const sub = interaction.options.getSubcommand();

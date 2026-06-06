@@ -1,11 +1,21 @@
 import { MessageFlags, type ButtonInteraction, type Client } from 'discord.js';
 import { prisma } from '../database';
-import { buildEmbed, buildRows, tallyVotes } from '../features/polls';
+import { buildEmbed, buildRows, tallyVotes, cancelPoll } from '../features/polls';
 
 export default {
   prefix: 'poll',
 
   async execute(interaction: ButtonInteraction<'cached'>, _client: Client<true>, args: string[]) {
+    // --- Annulation d'un sondage (confirmation depuis /poll annuler) ---
+    if (args[0] === 'cancel-abort') {
+      return interaction.update({ content: '✅ Sondage conservé.', components: [] });
+    }
+    if (args[0] === 'cancel-confirm') {
+      await interaction.update({ content: '🗑️ Annulation du sondage…', components: [] });
+      const ok = await cancelPoll(args[1]);
+      return interaction.editReply(ok ? '🗑️ Sondage annulé et supprimé.' : '❌ Sondage introuvable.');
+    }
+
     if (args[0] !== 'vote') return;
     const idx = Number(args[1]);
     if (!Number.isInteger(idx) || idx < 0) return;

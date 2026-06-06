@@ -2,16 +2,21 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { notifyAndRecord } from '../../utils/moderation';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('ban')
-    .setDescription('Bannir un membre du serveur')
+    .setDescription(base('ban.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('ban.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
-    .addUserOption((o) => o.setName('membre').setDescription('Membre à bannir').setRequired(true))
-    .addStringOption((o) => o.setName('raison').setDescription('Raison'))
+    .addUserOption((o) => o.setName('membre').setDescription(base('ban.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('ban.opt.member.desc')).setRequired(true))
+    .addStringOption((o) => o.setName('raison').setDescription(base('ban.opt.reason.desc'))
+      .setDescriptionLocalizations(frLoc('ban.opt.reason.desc')))
     .addIntegerOption((o) =>
-      o.setName('purge-jours').setDescription('Supprimer les messages des N derniers jours (0-7)')
+      o.setName('purge-jours').setDescription(base('ban.opt.purge.desc'))
+      .setDescriptionLocalizations(frLoc('ban.opt.purge.desc'))
         .setMinValue(0).setMaxValue(7)),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {

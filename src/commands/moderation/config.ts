@@ -4,6 +4,9 @@ import {
 } from 'discord.js';
 import { getConfig, setConfig } from '../../utils/configCache';
 import { requireAdmin } from '../../utils/permissions';
+import {
+  getStaffRole, getAdminRole, getTicketCategory, getTicketLogsChannel, getTicketRole
+} from '../../utils/guildSettings';
 import config from '../../config';
 
 const ticketCategoryChoices = config.tickets.categories.map((c) => ({ name: c.label, value: c.value }));
@@ -14,6 +17,22 @@ export default {
     .setDescription('Configurer les modules du bot')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((s) => s.setName('voir').setDescription('Afficher la configuration actuelle'))
+    .addSubcommand((s) => s.setName('staff').setDescription('Rôle modérateur (staff) du serveur')
+      .addRoleOption((o) => o.setName('role').setDescription('Rôle staff — laisser vide pour retirer')))
+    .addSubcommand((s) => s.setName('admin').setDescription("Rôle administration (commandes sensibles : backup, lockdown serveur, setup-*)")
+      .addRoleOption((o) => o.setName('role').setDescription('Rôle admin — laisser vide pour retirer')))
+    .addSubcommand((s) => s.setName('tickets').setDescription('Catégorie Discord et salon de logs des tickets')
+      .addChannelOption((o) => o.setName('categorie')
+        .setDescription('Catégorie Discord où créer les salons de tickets')
+        .addChannelTypes(ChannelType.GuildCategory))
+      .addChannelOption((o) => o.setName('salon-logs')
+        .setDescription('Salon où archiver les transcripts à la fermeture')
+        .addChannelTypes(ChannelType.GuildText)))
+    .addSubcommand((s) => s.setName('ticket-role').setDescription("Rôle responsable d'une catégorie de ticket")
+      .addStringOption((o) => o.setName('categorie').setDescription('Catégorie de ticket').setRequired(true)
+        .addChoices(...ticketCategoryChoices))
+      .addRoleOption((o) => o.setName('role')
+        .setDescription('Rôle responsable — laisser vide pour désactiver la catégorie')))
     .addSubcommand((s) => s.setName('automod').setDescription("Activer/désactiver l'auto-modération")
       .addBooleanOption((o) => o.setName('actif').setDescription('Activer ?').setRequired(true))
       .addBooleanOption((o) => o.setName('phishing').setDescription('Bloquer liens de phishing (défaut on)'))
@@ -98,6 +117,34 @@ export default {
     const sub = interaction.options.getSubcommand();
     const gid = interaction.guild.id;
     const ok = (msg: string) => interaction.reply({ content: msg, flags: MessageFlags.Ephemeral });
+
+    if (sub === 'staff') {
+      const role = interaction.options.getRole('role');
+      await setConfig(gid, 'staff_role', role ? role.id : null);
+      return ok(role ? `✅ Rôle staff (modération) : ${role}` : '✅ Rôle staff retiré.');
+    }
+    if (sub === 'admin') {
+      const role = interaction.options.getRole('role');
+      await setConfig(gid, 'admin_role', role ? role.id : null);
+      return ok(role ? `✅ Rôle administration : ${role}` : '✅ Rôle administration retiré.');
+    }
+    if (sub === 'tickets') {
+      const cat = interaction.options.getChannel('categorie');
+      const logs = interaction.options.getChannel('salon-logs');
+      if (!cat && !logs) return ok('ℹ️ Fournis au moins une catégorie ou un salon de logs.');
+      if (cat) await setConfig(gid, 'ticket_category', cat.id);
+      if (logs) await setConfig(gid, 'ticket_logs_channel', logs.id);
+      return ok(`✅ Tickets${cat ? ` · catégorie ${cat}` : ''}${logs ? ` · transcripts → ${logs}` : ''}`);
+    }
+    if (sub === 'ticket-role') {
+      const catValue = interaction.options.getString('categorie', true);
+      const role = interaction.options.getRole('role');
+      await setConfig(gid, `ticket_role:${catValue}`, role ? role.id : null);
+      const label = config.tickets.categories.find((c) => c.value === catValue)?.label ?? catValue;
+      return ok(role
+        ? `✅ Catégorie de ticket **${label}** → ${role} (ce rôle voit les tickets et est pingué à l'ouverture).`
+        : `✅ Catégorie de ticket **${label}** désactivée (aucun rôle — création refusée).`);
+    }
 
     if (sub === 'automod') {
       const a = interaction.options.getBoolean('actif');
@@ -310,10 +357,19 @@ export default {
       (ticketGlobal ? '✅ Personnalisé' : '🔹 Défaut') +
       (ticketOverrides.length ? ` · overrides : ${ticketOverrides.join(', ')}` : '');
 
+    const ticketRolesSummary = config.tickets.categories.map((c) => {
+      const rid = getTicketRole(gid, c.value);
+      return `${c.emoji} ${c.label} → ${rid ? `<@&${rid}>` : '*désactivée*'}`;
+    }).join('\n');
+
     const embed = new EmbedBuilder()
       .setColor(config.colors.primary)
       .setTitle('⚙️ Configuration du serveur')
       .addFields(
+        { name: '🛡️ Rôle staff', value: showRole(getStaffRole(gid)), inline: true },
+        { name: '👑 Rôle admin', value: showRole(getAdminRole(gid)), inline: true },
+        { name: '🎫 Catégorie tickets', value: showChan(getTicketCategory(gid)), inline: true },
+        { name: '🗂️ Transcripts tickets', value: showChan(getTicketLogsChannel(gid)), inline: true },
         { name: '🛡️ Auto-modération', value: await bool('automod_enabled'), inline: true },
         { name: '🚨 Anti-raid', value: `${await bool('antiraid_enabled')}\nÂge min. : ${await getConfig(gid, 'antiraid_min_age_days', '0')} j`, inline: true },
         { name: '👋 Bienvenue', value: `MP ✅ · salon ${showChan(await getConfig(gid, 'welcome_channel'))} · carte ${(await getConfig(gid, 'welcome_card_enabled', '0')) === '1' ? 'on' : 'off'}`, inline: true },
@@ -324,6 +380,7 @@ export default {
         { name: '🔊 Vocaux temporaires', value: showChan(await getConfig(gid, 'jtc_channel')), inline: true },
         { name: '⛏️ Serveur Minecraft', value: (await getConfig(gid, 'mc_server_ip')) || '*Non défini*', inline: true },
         { name: '🚫 Mots interdits', value: `${words.length} mot(s)`, inline: true },
+        { name: '👥 Rôles par catégorie de ticket', value: ticketRolesSummary, inline: false },
         { name: '📁 Message tickets', value: ticketSummary, inline: false },
         { name: '🔗 Invitation publique', value: (await getConfig(gid, 'public_invite_url')) || '*Non définie*', inline: false }
       );

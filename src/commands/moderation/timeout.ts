@@ -3,18 +3,22 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
 } from 'discord.js';
 import { notifyAndRecord } from '../../utils/moderation';
 import { parseDuration, formatDuration } from '../../utils/duration';
+import { base, frLoc } from '../../i18n';
 
 const MAX_TIMEOUT = 28 * 86400000; // limite Discord : 28 jours
 
 export default {
   data: new SlashCommandBuilder()
     .setName('timeout')
-    .setDescription('Exclure temporairement un membre (réduction au silence)')
+    .setDescription(base('timeout.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('timeout.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addUserOption((o) => o.setName('membre').setDescription('Membre à exclure').setRequired(true))
+    .addUserOption((o) => o.setName('membre').setDescription(base('timeout.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('timeout.opt.member.desc')).setRequired(true))
     .addStringOption((o) =>
       o.setName('duree').setDescription('Ex : 10m, 2h, 1d (maximum 28d)').setRequired(true))
-    .addStringOption((o) => o.setName('raison').setDescription('Raison')),
+    .addStringOption((o) => o.setName('raison').setDescription(base('timeout.opt.reason.desc'))
+      .setDescriptionLocalizations(frLoc('timeout.opt.reason.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const user = interaction.options.getUser('membre', true);

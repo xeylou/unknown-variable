@@ -7,6 +7,7 @@ import { prisma } from '../../database';
 import { invalidateGuild } from '../../utils/configCache';
 import { createLogger } from '../../utils/logger';
 import { requireAdmin } from '../../utils/permissions';
+import { base, frLoc } from '../../i18n';
 
 const log = createLogger('backup');
 
@@ -26,11 +27,15 @@ const BACKUP_VERSION = 1;
 export default {
   data: new SlashCommandBuilder()
     .setName('backup')
-    .setDescription('Sauvegarde / restauration de la configuration du serveur')
+    .setDescription(base('backup.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('backup.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .addSubcommand((s) => s.setName('export').setDescription('Exporter la configuration en JSON'))
-    .addSubcommand((s) => s.setName('import').setDescription('Importer une configuration (joindre le fichier JSON)')
-      .addAttachmentOption((o) => o.setName('fichier').setDescription('Fichier .json produit par /backup export').setRequired(true))),
+    .addSubcommand((s) => s.setName('export').setDescription(base('backup.sub.export.desc'))
+      .setDescriptionLocalizations(frLoc('backup.sub.export.desc')))
+    .addSubcommand((s) => s.setName('import').setDescription(base('backup.sub.import.desc'))
+      .setDescriptionLocalizations(frLoc('backup.sub.import.desc'))
+      .addAttachmentOption((o) => o.setName('fichier').setDescription(base('backup.opt.fichier.desc'))
+      .setDescriptionLocalizations(frLoc('backup.opt.fichier.desc')).setRequired(true))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!await requireAdmin(interaction)) return;

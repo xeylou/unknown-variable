@@ -3,18 +3,22 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
 } from 'discord.js';
 import { prisma } from '../../database';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 const categoryChoices = config.tickets.categories.map((c) => ({ name: c.label, value: c.value }));
 
 export default {
   data: new SlashCommandBuilder()
     .setName('ticket')
-    .setDescription('Gestion avancée du ticket courant')
+    .setDescription(base('ticket.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('ticket.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addSubcommand((s) => s.setName('move')
-      .setDescription('Changer la catégorie de ce ticket')
+      .setDescription(base('ticket.sub.move.desc'))
+      .setDescriptionLocalizations(frLoc('ticket.sub.move.desc'))
       .addStringOption((o) => o.setName('categorie')
-        .setDescription('Nouvelle catégorie').setRequired(true).addChoices(...categoryChoices))),
+        .setDescription(base('ticket.opt.categorie.desc'))
+      .setDescriptionLocalizations(frLoc('ticket.opt.categorie.desc')).setRequired(true).addChoices(...categoryChoices))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const sub = interaction.options.getSubcommand();

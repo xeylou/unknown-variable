@@ -3,11 +3,13 @@ import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags,
 } from 'discord.js';
 import { prisma } from '../../database';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('ticket-stats')
-    .setDescription('Afficher les statistiques des tickets du serveur')
+    .setDescription(base('ticketstats.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('ticketstats.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {

@@ -2,11 +2,13 @@ import { SlashCommandBuilder, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { getActivePlayer } from '../../features/music';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('pause')
-    .setDescription('Mettre la lecture en pause'),
+    .setDescription(base('pause.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('pause.cmd.desc')),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const player = await getActivePlayer(interaction);

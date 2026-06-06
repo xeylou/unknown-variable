@@ -4,6 +4,7 @@ import {
   type ChatInputCommandInteraction, type Role, type PermissionResolvable, type Guild
 } from 'discord.js';
 import { requireAdmin, ticketStaffRoleIds } from '../../utils/permissions';
+import { getStaffRole, getAdminRole, getTicketRole } from '../../utils/guildSettings';
 import config from '../../config';
 
 interface PermSpec { flag: bigint; label: string; rationale: string }
@@ -47,13 +48,13 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((s) => s.setName('check').setDescription('Affiche l\'état des permissions des rôles configurés'))
     .addSubcommand((s) => s.setName('grant-staff')
-      .setDescription("Accorde au rôle STAFF_ROLE_ID les permissions Discord recommandées pour la modération"))
+      .setDescription("Accorde au rôle staff (/config staff) les permissions Discord de modération"))
     .addSubcommand((s) => s.setName('grant-admin')
-      .setDescription("Accorde au rôle ADMIN_ROLE_ID les permissions Discord recommandées pour l'administration"))
+      .setDescription("Accorde au rôle admin (/config admin) les permissions Discord d'administration"))
     .addSubcommand((s) => s.setName('grant-ticket-staff')
       .setDescription("Accorde les perms ticket-staff à TOUS les rôles de catégories — ou à un rôle ponctuel si fourni")
       .addRoleOption((o) => o.setName('role')
-        .setDescription("Rôle à cibler. Sans argument, traite tous les category.staffRoleId."))),
+        .setDescription("Rôle à cibler. Sans argument, traite tous les rôles de catégories de tickets."))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!await requireAdmin(interaction)) return;
@@ -76,23 +77,26 @@ async function resolveRole(guild: Guild, id: string | undefined): Promise<Role |
 }
 
 async function doCheck(interaction: ChatInputCommandInteraction<'cached'>) {
-  const staffRole = await resolveRole(interaction.guild, config.staffRoleId);
-  const adminRole = await resolveRole(interaction.guild, config.adminRoleId);
+  const gid = interaction.guild.id;
+  const staffRoleId = getStaffRole(gid);
+  const adminRoleId = getAdminRole(gid);
+  const staffRole = await resolveRole(interaction.guild, staffRoleId ?? undefined);
+  const adminRole = await resolveRole(interaction.guild, adminRoleId ?? undefined);
 
   const fields: { name: string; value: string }[] = [
-    { name: 'STAFF_ROLE_ID', value: rolePermsLine(staffRole, config.staffRoleId, STAFF_PERMS) },
-    { name: 'ADMIN_ROLE_ID', value: rolePermsLine(adminRole, config.adminRoleId, ADMIN_PERMS) }
+    { name: '🛡️ Rôle staff', value: rolePermsLine(staffRole, staffRoleId ?? undefined, STAFF_PERMS) },
+    { name: '👑 Rôle admin', value: rolePermsLine(adminRole, adminRoleId ?? undefined, ADMIN_PERMS) }
   ];
 
   // Statut de chaque rôle de catégorie de ticket
-  const ticketIds = ticketStaffRoleIds();
+  const ticketIds = ticketStaffRoleIds(gid);
   if (ticketIds.length === 0) {
-    fields.push({ name: 'Rôles de catégories de tickets', value: '*(aucune catégorie ne définit `staffRoleId` dans `src/config.ts`)*' });
+    fields.push({ name: 'Rôles de catégories de tickets', value: '*(aucune catégorie n\'a de rôle responsable — `/config ticket-role`)*' });
   } else {
     const lines: string[] = [];
     for (const id of ticketIds) {
       const role = await resolveRole(interaction.guild, id);
-      const cats = config.tickets.categories.filter((c) => c.staffRoleId === id).map((c) => c.label).join(', ');
+      const cats = config.tickets.categories.filter((c) => getTicketRole(gid, c.value) === id).map((c) => c.label).join(', ');
       lines.push(`**${cats}**\n${rolePermsLine(role, id, TICKET_STAFF_PERMS)}`);
     }
     fields.push({ name: 'Rôles ticket-staff (catégories)', value: lines.join('\n\n') });
@@ -112,8 +116,8 @@ async function doCheck(interaction: ChatInputCommandInteraction<'cached'>) {
     .setFooter({ text: `Alternative manuelle : Paramètres serveur → Intégrations → ${interaction.client.user.username} → permissions par commande.` });
 
   const needsAnything =
-    (config.staffRoleId && STAFF_PERMS.some((p) => !staffRole?.permissions.has(p.flag as PermissionResolvable))) ||
-    (config.adminRoleId && ADMIN_PERMS.some((p) => !adminRole?.permissions.has(p.flag as PermissionResolvable))) ||
+    (staffRoleId && STAFF_PERMS.some((p) => !staffRole?.permissions.has(p.flag as PermissionResolvable))) ||
+    (adminRoleId && ADMIN_PERMS.some((p) => !adminRole?.permissions.has(p.flag as PermissionResolvable))) ||
     (await needsTicketStaffGrant(interaction.guild));
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -129,7 +133,7 @@ async function doCheck(interaction: ChatInputCommandInteraction<'cached'>) {
 }
 
 async function needsTicketStaffGrant(guild: Guild): Promise<boolean> {
-  for (const id of ticketStaffRoleIds()) {
+  for (const id of ticketStaffRoleIds(guild.id)) {
     const role = await resolveRole(guild, id);
     if (!role) continue;
     if (TICKET_STAFF_PERMS.some((p) => !role.permissions.has(p.flag as PermissionResolvable))) return true;
@@ -138,7 +142,7 @@ async function needsTicketStaffGrant(guild: Guild): Promise<boolean> {
 }
 
 function rolePermsLine(role: Role | null, id: string | undefined, expected: PermSpec[]): string {
-  if (!id) return '*(non configuré dans `.env`)*';
+  if (!id) return '*(rôle non configuré — `/config staff` / `/config admin`)*';
   if (!role) return `⚠️ Rôle introuvable (ID \`${id}\`)`;
   const have = expected.filter((p) => role.permissions.has(p.flag as PermissionResolvable));
   const miss = expected.filter((p) => !role.permissions.has(p.flag as PermissionResolvable));
@@ -164,9 +168,9 @@ async function doGrantTicketStaff(interaction: ChatInputCommandInteraction<'cach
   const reason = `/permissions grant-ticket-staff par ${interaction.user.tag}`;
   const specified = interaction.options.getRole('role');
 
-  const targetIds = specified ? [specified.id] : ticketStaffRoleIds();
+  const targetIds = specified ? [specified.id] : ticketStaffRoleIds(interaction.guild.id);
   if (targetIds.length === 0) {
-    return interaction.editReply('❌ Aucun rôle de catégorie de ticket configuré dans `src/config.ts`. Édite-le pour définir au moins un `staffRoleId`.');
+    return interaction.editReply('❌ Aucun rôle de catégorie de ticket configuré. Attribue-en avec `/config ticket-role`.');
   }
 
   const results = await Promise.all(targetIds.map((id) => grantRolePerms(interaction.guild, id, TICKET_STAFF_PERMS, reason)));
@@ -192,9 +196,8 @@ type GrantResult =
  * et par le bouton « Tout corriger » du composant.
  */
 export async function grantTo(guild: Guild, kind: 'staff' | 'admin', reason: string): Promise<GrantResult> {
-  const id = kind === 'staff' ? config.staffRoleId : config.adminRoleId;
-  const envKey = kind === 'staff' ? 'STAFF_ROLE_ID' : 'ADMIN_ROLE_ID';
-  if (!id) return { kind: 'error', message: `❌ \`${envKey}\` n'est pas défini dans \`.env\`.` };
+  const id = kind === 'staff' ? getStaffRole(guild.id) : getAdminRole(guild.id);
+  if (!id) return { kind: 'error', message: `❌ Aucun rôle ${kind} configuré. Définis-le avec \`/config ${kind}\`.` };
 
   const list = kind === 'staff' ? STAFF_PERMS : ADMIN_PERMS;
   return grantRolePerms(guild, id, list, reason);
@@ -238,6 +241,6 @@ export function grantSuccessEmbed(roleName: string, added: PermSpec[]): EmbedBui
 
 /** Helper exporté pour le bouton « Tout corriger » : grant pour ticket-staff. */
 export async function grantAllTicketStaff(guild: Guild, reason: string): Promise<GrantResult[]> {
-  const ids = ticketStaffRoleIds();
+  const ids = ticketStaffRoleIds(guild.id);
   return Promise.all(ids.map((id) => grantRolePerms(guild, id, TICKET_STAFF_PERMS, reason)));
 }

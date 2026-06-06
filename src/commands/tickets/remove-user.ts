@@ -2,14 +2,17 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
   type ChatInputCommandInteraction, type TextChannel
 } from 'discord.js';
 import { prisma } from '../../database';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('remove-user')
-    .setDescription('Retirer un utilisateur du ticket courant')
+    .setDescription(base('removeuser.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('removeuser.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addUserOption((o) =>
-      o.setName('utilisateur').setDescription('Membre à retirer').setRequired(true)),
+      o.setName('utilisateur').setDescription(base('removeuser.opt.user.desc'))
+      .setDescriptionLocalizations(frLoc('removeuser.opt.user.desc')).setRequired(true)),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const channel = interaction.channel as TextChannel | null;

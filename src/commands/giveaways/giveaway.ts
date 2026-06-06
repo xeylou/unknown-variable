@@ -1,43 +1,75 @@
 import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags,
-  type ChatInputCommandInteraction
+  type ChatInputCommandInteraction, type AutocompleteInteraction
 } from 'discord.js';
 import { prisma } from '../../database';
 import { parseDuration, formatDuration } from '../../utils/duration';
 import * as giveaways from '../../features/giveaways';
+import { respondChoices } from '../../utils/autocomplete';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('giveaway')
-    .setDescription('Gérer les giveaways')
+    .setDescription(base('giveaway.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .addSubcommand((s) => s.setName('lancer').setDescription('Lancer un giveaway')
-      .addStringOption((o) => o.setName('lot').setDescription('Ce qui est à gagner').setRequired(true))
+    .addSubcommand((s) => s.setName('lancer').setDescription(base('giveaway.sub.lancer.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.sub.lancer.desc'))
+      .addStringOption((o) => o.setName('lot').setDescription(base('giveaway.opt.lot.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.opt.lot.desc')).setRequired(true))
       .addStringOption((o) => o.setName('duree').setDescription('Ex : 30m, 6h, 2d').setRequired(true))
-      .addIntegerOption((o) => o.setName('gagnants').setDescription('Nombre de gagnants (défaut 1)')
+      .addIntegerOption((o) => o.setName('gagnants').setDescription(base('giveaway.opt.gagnants.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.opt.gagnants.desc'))
         .setMinValue(1).setMaxValue(20))
       .addIntegerOption((o) => o.setName('age-min')
-        .setDescription("Ancienneté minimum sur le serveur en jours").setMinValue(0).setMaxValue(365))
-      .addRoleOption((o) => o.setName('role-requis').setDescription('Rôle obligatoire pour participer'))
-      .addRoleOption((o) => o.setName('role-bonus').setDescription('Rôle avec entrées multipliées'))
-      .addIntegerOption((o) => o.setName('multiplicateur').setDescription('Multiplicateur du rôle bonus (1-10)')
+        .setDescription(base('giveaway.opt.age.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.opt.age.desc')).setMinValue(0).setMaxValue(365))
+      .addRoleOption((o) => o.setName('role-requis').setDescription(base('giveaway.opt.role_requis.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.opt.role_requis.desc')))
+      .addRoleOption((o) => o.setName('role-bonus').setDescription(base('giveaway.opt.role_bonus.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.opt.role_bonus.desc')))
+      .addIntegerOption((o) => o.setName('multiplicateur').setDescription(base('giveaway.opt.mult.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.opt.mult.desc'))
         .setMinValue(1).setMaxValue(10)))
-    .addSubcommand((s) => s.setName('terminer').setDescription('Terminer un giveaway immédiatement')
-      .addStringOption((o) => o.setName('message-id').setDescription('ID du message du giveaway').setRequired(true)))
-    .addSubcommand((s) => s.setName('relancer').setDescription('Retirer de nouveaux gagnants')
-      .addStringOption((o) => o.setName('message-id').setDescription('ID du message du giveaway').setRequired(true)))
-    .addSubcommand((s) => s.setName('pause').setDescription('Met en pause un giveaway en cours')
-      .addStringOption((o) => o.setName('message-id').setDescription('ID du message').setRequired(true)))
-    .addSubcommand((s) => s.setName('reprendre').setDescription('Reprend un giveaway en pause')
-      .addStringOption((o) => o.setName('message-id').setDescription('ID du message').setRequired(true)))
-    .addSubcommand((s) => s.setName('edit').setDescription('Édite un giveaway en cours')
-      .addStringOption((o) => o.setName('message-id').setDescription('ID du message').setRequired(true))
-      .addStringOption((o) => o.setName('lot').setDescription('Nouveau lot'))
+    .addSubcommand((s) => s.setName('terminer').setDescription(base('giveaway.sub.terminer.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.sub.terminer.desc'))
+      .addStringOption((o) => o.setName('message-id').setDescription('ID du message du giveaway').setRequired(true).setAutocomplete(true)))
+    .addSubcommand((s) => s.setName('relancer').setDescription(base('giveaway.sub.relancer.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.sub.relancer.desc'))
+      .addStringOption((o) => o.setName('message-id').setDescription('ID du message du giveaway').setRequired(true).setAutocomplete(true)))
+    .addSubcommand((s) => s.setName('pause').setDescription(base('giveaway.sub.pause.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.sub.pause.desc'))
+      .addStringOption((o) => o.setName('message-id').setDescription('ID du message').setRequired(true).setAutocomplete(true)))
+    .addSubcommand((s) => s.setName('reprendre').setDescription(base('giveaway.sub.reprendre.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.sub.reprendre.desc'))
+      .addStringOption((o) => o.setName('message-id').setDescription('ID du message').setRequired(true).setAutocomplete(true)))
+    .addSubcommand((s) => s.setName('edit').setDescription(base('giveaway.sub.edit.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.sub.edit.desc'))
+      .addStringOption((o) => o.setName('message-id').setDescription('ID du message').setRequired(true).setAutocomplete(true))
+      .addStringOption((o) => o.setName('lot').setDescription(base('giveaway.opt.new_lot.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.opt.new_lot.desc')))
       .addStringOption((o) => o.setName('duree').setDescription('Nouvelle durée — recalcule la fin'))
-      .addIntegerOption((o) => o.setName('gagnants').setDescription('Nouveau nombre de gagnants').setMinValue(1).setMaxValue(20)))
-    .addSubcommand((s) => s.setName('liste').setDescription('Liste les giveaways en cours du serveur'))
-    .addSubcommand((s) => s.setName('info').setDescription("Détails d'un giveaway")
-      .addStringOption((o) => o.setName('message-id').setDescription('ID du message').setRequired(true))),
+      .addIntegerOption((o) => o.setName('gagnants').setDescription(base('giveaway.opt.new_winners.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.opt.new_winners.desc')).setMinValue(1).setMaxValue(20)))
+    .addSubcommand((s) => s.setName('liste').setDescription(base('giveaway.sub.liste.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.sub.liste.desc')))
+    .addSubcommand((s) => s.setName('info').setDescription(base('giveaway.sub.info.desc'))
+      .setDescriptionLocalizations(frLoc('giveaway.sub.info.desc'))
+      .addStringOption((o) => o.setName('message-id').setDescription('ID du message').setRequired(true).setAutocomplete(true))),
+
+  async autocomplete(interaction: AutocompleteInteraction) {
+    if (!interaction.guildId) return;
+    const rows = await prisma.giveaways.findMany({
+      where: { guild_id: interaction.guildId, ended: 0 },
+      orderBy: { ends_at: 'asc' },
+      take: 25
+    });
+    await respondChoices(interaction, rows.map((g) => ({
+      name: `🎉 ${g.prize} (${g.winners} gagnant${g.winners > 1 ? 's' : ''})`,
+      value: g.message_id
+    })));
+  },
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const sub = interaction.options.getSubcommand();

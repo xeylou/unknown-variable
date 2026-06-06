@@ -6,6 +6,7 @@ import {
 import { getSanctions } from '../../utils/sanctions';
 import { LABELS } from '../../utils/moderation';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 const EMOJIS: Record<string, string> = {
   warn: '⚠️', kick: '👢', ban: '🔨', unban: '♻️', timeout: '⏳', untimeout: '✅'
@@ -51,9 +52,11 @@ export function casierRow(userId: string, page: number, totalPages: number) {
 export default {
   data: new SlashCommandBuilder()
     .setName('casier')
-    .setDescription("Afficher le casier de modération d'un membre")
+    .setDescription(base('casier.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('casier.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addUserOption((o) => o.setName('membre').setDescription('Membre').setRequired(true)),
+    .addUserOption((o) => o.setName('membre').setDescription(base('casier.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('casier.opt.member.desc')).setRequired(true)),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const user = interaction.options.getUser('membre', true);

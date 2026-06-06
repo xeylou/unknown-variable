@@ -2,6 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { rconCommand, isConfigured } from '../../features/mcrcon';
+import { base, frLoc } from '../../i18n';
 
 /**
  * Gestion de la whitelist du serveur Minecraft via RCON.
@@ -10,13 +11,17 @@ import { rconCommand, isConfigured } from '../../features/mcrcon';
 export default {
   data: new SlashCommandBuilder()
     .setName('mcwhitelist')
-    .setDescription('Whitelist Minecraft (via RCON)')
+    .setDescription(base('mcwhitelist.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('mcwhitelist.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .addSubcommand((s) => s.setName('add').setDescription('Ajouter un pseudo à la whitelist')
+    .addSubcommand((s) => s.setName('add').setDescription(base('mcwhitelist.sub.add.desc'))
+      .setDescriptionLocalizations(frLoc('mcwhitelist.sub.add.desc'))
       .addStringOption((o) => o.setName('pseudo').setDescription('Pseudo Minecraft').setRequired(true)))
-    .addSubcommand((s) => s.setName('remove').setDescription('Retirer un pseudo de la whitelist')
+    .addSubcommand((s) => s.setName('remove').setDescription(base('mcwhitelist.sub.remove.desc'))
+      .setDescriptionLocalizations(frLoc('mcwhitelist.sub.remove.desc'))
       .addStringOption((o) => o.setName('pseudo').setDescription('Pseudo Minecraft').setRequired(true)))
-    .addSubcommand((s) => s.setName('list').setDescription('Afficher la whitelist actuelle')),
+    .addSubcommand((s) => s.setName('list').setDescription(base('mcwhitelist.sub.list.desc'))
+      .setDescriptionLocalizations(frLoc('mcwhitelist.sub.list.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!(await isConfigured(interaction.guild.id))) {

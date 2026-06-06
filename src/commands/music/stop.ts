@@ -2,11 +2,13 @@ import { SlashCommandBuilder,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { getActivePlayer } from '../../features/music';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('stop')
-    .setDescription("Arrêter la lecture, vider la file et quitter le salon vocal"),
+    .setDescription(base('stop.cmd.desc'))
+    .setDescriptionLocalizations(frLoc('stop.cmd.desc')),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const player = await getActivePlayer(interaction);

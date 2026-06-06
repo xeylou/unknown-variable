@@ -3,14 +3,17 @@ import { SlashCommandBuilder, PermissionFlagsBits,
 } from 'discord.js';
 import { getConfig } from '../../utils/configCache';
 import { buildStatusEmbed } from '../../features/mcstatus';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('mcstatus')
-    .setDescription("Afficher le statut d'un serveur Minecraft")
+    .setDescription(base('mcstatus.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('mcstatus.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
     .addStringOption((o) =>
-      o.setName('ip').setDescription('Adresse du serveur (par défaut : celui configuré)')),
+      o.setName('ip').setDescription(base('mcstatus.opt.ip.desc'))
+      .setDescriptionLocalizations(frLoc('mcstatus.opt.ip.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     await interaction.deferReply();

@@ -1,5 +1,6 @@
 import { Events, type Message } from 'discord.js';
 import { runAutomod } from '../features/automod';
+import { bump as bumpMessageCount } from '../features/messagestats';
 import { prisma } from '../database';
 import { createLogger } from '../utils/logger';
 
@@ -13,6 +14,9 @@ export default {
       await runAutomod(message).catch((e) => log.warn('automod', e));
       return;
     }
+
+    // --- Classement messages : incrémente le compteur (tampon en mémoire) ---
+    bumpMessageCount(message.guild.id, message.author.id);
 
     // --- AFK : retire le statut si l'auteur revient parler ---
     const ownAfk = await prisma.afk.findUnique({

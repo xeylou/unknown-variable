@@ -1,10 +1,11 @@
 import {
   SlashCommandBuilder, PermissionFlagsBits, ChannelType, EmbedBuilder, MessageFlags,
-  type ChatInputCommandInteraction
+  type ChatInputCommandInteraction, type AutocompleteInteraction
 } from 'discord.js';
 import { prisma } from '../../database';
 import config from '../../config';
 import { requireAdmin } from '../../utils/permissions';
+import { respondChoices } from '../../utils/autocomplete';
 import { setConfig } from '../../utils/configCache';
 import { parseRepoSlug, slug, shortSha, commitTitle, truncate, runIcon, conclusionLabel } from '../../features/github/format';
 import { ghGet } from '../../features/github/api';
@@ -40,9 +41,9 @@ export default {
         .setDescription('Types suivis : push,pull_request,workflow_run,release,issues,review (vide = tous)')))
     .addSubcommand((s) => s.setName('liste').setDescription('Lister les dépôts suivis'))
     .addSubcommand((s) => s.setName('retirer').setDescription('Arrêter de suivre un dépôt')
-      .addIntegerOption((o) => o.setName('id').setDescription('ID (voir /git liste)').setRequired(true)))
+      .addIntegerOption((o) => o.setName('id').setDescription('ID (voir /git liste)').setRequired(true).setAutocomplete(true)))
     .addSubcommand((s) => s.setName('config').setDescription('Modifier un dépôt suivi')
-      .addIntegerOption((o) => o.setName('id').setDescription('ID (voir /git liste)').setRequired(true))
+      .addIntegerOption((o) => o.setName('id').setDescription('ID (voir /git liste)').setRequired(true).setAutocomplete(true))
       .addChannelOption((o) => o.setName('salon').setDescription('Nouveau salon des annonces')
         .addChannelTypes(ChannelType.GuildText))
       .addRoleOption((o) => o.setName('role').setDescription('Rôle pingué sur échec CI'))
@@ -51,7 +52,7 @@ export default {
         .addChannelTypes(ChannelType.GuildText))
       .addStringOption((o) => o.setName('events').setDescription('Types suivis (virgules ; « * » = tous)')))
     .addSubcommand((s) => s.setName('statut').setDescription('État instantané d\'un dépôt (dernier commit, PR, CI)')
-      .addStringOption((o) => o.setName('depot').setDescription('owner/repo ou URL GitHub').setRequired(true)))
+      .addStringOption((o) => o.setName('depot').setDescription('owner/repo ou URL GitHub').setRequired(true).setAutocomplete(true)))
     .addSubcommand((s) => s.setName('lier-membre').setDescription('Lier un membre à un pseudo GitHub')
       .addUserOption((o) => o.setName('membre').setDescription('Membre Discord').setRequired(true))
       .addStringOption((o) => o.setName('pseudo-github').setDescription('Pseudo GitHub').setRequired(true)))
@@ -62,6 +63,22 @@ export default {
         .addChoices({ name: 'Quotidien', value: 'daily' }, { name: 'Hebdomadaire (lundi)', value: 'weekly' }))
       .addIntegerOption((o) => o.setName('heure').setDescription('Heure d\'envoi (0-23)').setMinValue(0).setMaxValue(23)))
     .addSubcommand((s) => s.setName('digest-off').setDescription('Désactiver le digest périodique')),
+
+  async autocomplete(interaction: AutocompleteInteraction) {
+    if (!interaction.guildId) return;
+    const focused = interaction.options.getFocused(true);
+    const rows = await prisma.github_repos.findMany({ where: { guild_id: interaction.guildId }, take: 25 });
+    if (focused.name === 'depot') {
+      await respondChoices(interaction, rows.map((r) => ({
+        name: `${r.owner}/${r.repo}`, value: `${r.owner}/${r.repo}`
+      })));
+      return;
+    }
+    // option `id` (retirer / config)
+    await respondChoices(interaction, rows.map((r) => ({
+      name: `#${r.id} — ${r.owner}/${r.repo}`, value: r.id
+    })));
+  },
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!await requireAdmin(interaction)) return;

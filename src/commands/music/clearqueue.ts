@@ -2,11 +2,13 @@ import { SlashCommandBuilder, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { getActivePlayer } from '../../features/music';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('clearqueue')
-    .setDescription("Vider la file d'attente (le titre en cours continue)"),
+    .setDescription(base('clearqueue.cmd.desc'))
+    .setDescriptionLocalizations(frLoc('clearqueue.cmd.desc')),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const player = await getActivePlayer(interaction);

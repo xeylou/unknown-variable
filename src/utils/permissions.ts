@@ -2,13 +2,17 @@ import { MessageFlags, PermissionFlagsBits,
   type GuildMember, type ChatInputCommandInteraction, type ButtonInteraction,
   type InteractionReplyOptions
 } from 'discord.js';
-import config from '../config';
+import { getStaffRole, getAdminRole, ticketStaffRoleIds } from './guildSettings';
+
+// Réexporté pour les appelants historiques (commande `/permissions`).
+export { ticketStaffRoleIds };
 
 /**
  * Vrai si le membre est « super-staff » : propriétaire du serveur,
- * permission Discord Administrateur, ou détenteur du rôle `ADMIN_ROLE_ID`.
+ * permission Discord Administrateur, ou détenteur du rôle admin configuré
+ * (`/config admin`, défaut `.env` ADMIN_ROLE_ID pour le serveur principal).
  *
- * Le STAFF_ROLE_ID seul ne suffit PAS — c'est précisément ce qui distingue
+ * Le rôle staff seul ne suffit PAS — c'est précisément ce qui distingue
  * un modérateur (qui peut warn/kick/ban) d'un administrateur (qui peut
  * lockdown serveur, importer un backup, etc.).
  */
@@ -16,20 +20,22 @@ export function isAdmin(member: GuildMember | null | undefined): boolean {
   if (!member) return false;
   if (member.guild.ownerId === member.id) return true;
   if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
-  if (config.adminRoleId && member.roles.cache.has(config.adminRoleId)) return true;
+  const adminRole = getAdminRole(member.guild.id);
+  if (adminRole && member.roles.cache.has(adminRole)) return true;
   return false;
 }
 
 /**
- * Vrai si le membre est modérateur : rôle `STAFF_ROLE_ID` global OU
- * permission Discord typique d'un modérateur. Les rôles spécifiques aux
+ * Vrai si le membre est modérateur : rôle staff configuré (`/config staff`)
+ * OU permission Discord typique d'un modérateur. Les rôles spécifiques aux
  * catégories de tickets ne comptent PAS comme staff — pour ceux-là, voir
  * `isTicketStaff`.
  */
 export function isStaff(member: GuildMember | null | undefined): boolean {
   if (!member) return false;
   if (isAdmin(member)) return true;
-  if (config.staffRoleId && member.roles.cache.has(config.staffRoleId)) return true;
+  const staffRole = getStaffRole(member.guild.id);
+  if (staffRole && member.roles.cache.has(staffRole)) return true;
   return member.permissions.any([
     PermissionFlagsBits.KickMembers,
     PermissionFlagsBits.BanMembers,
@@ -39,27 +45,13 @@ export function isStaff(member: GuildMember | null | undefined): boolean {
 }
 
 /**
- * Liste dédupliquée des rôles responsables de catégories de tickets
- * (`category.staffRoleId` non vide). Ces rôles ne sont PAS staff au sens
- * modération — ce sont des équipes spécialisées (builders, devs…) qui
- * voient leurs tickets et reçoivent un ping ciblé.
- */
-export function ticketStaffRoleIds(): string[] {
-  const ids = new Set<string>();
-  for (const cat of config.tickets.categories) {
-    if (cat.staffRoleId && cat.staffRoleId.trim() !== '') ids.add(cat.staffRoleId);
-  }
-  return [...ids];
-}
-
-/**
  * Vrai si le membre est porteur d'au moins un rôle responsable d'une
  * catégorie de ticket. Un staff (mod) ou admin ne l'est pas implicitement —
  * `viewerTier` traite les priorités (admin > staff > ticket-staff > public).
  */
 export function isTicketStaff(member: GuildMember | null | undefined): boolean {
   if (!member) return false;
-  for (const id of ticketStaffRoleIds()) {
+  for (const id of ticketStaffRoleIds(member.guild.id)) {
     if (member.roles.cache.has(id)) return true;
   }
   return false;
@@ -119,15 +111,17 @@ export async function requireTier(
   if (tier === 'admin' && isAdmin(interaction.member)) return true;
   if (tier === 'staff' && isStaff(interaction.member)) return true;
 
+  const adminRole = getAdminRole(interaction.guild.id);
+  const staffRole = getStaffRole(interaction.guild.id);
   const msg = tier === 'admin'
     ? '⛔ Commande réservée à l\'administration ' +
-      (config.adminRoleId
-        ? `(rôle <@&${config.adminRoleId}> ou permission *Administrateur*).`
-        : '(permission *Administrateur* requise — aucun `ADMIN_ROLE_ID` configuré).')
+      (adminRole
+        ? `(rôle <@&${adminRole}> ou permission *Administrateur*).`
+        : '(permission *Administrateur* requise — aucun rôle admin configuré ; voir `/config admin`).')
     : '⛔ Commande réservée au staff ' +
-      (config.staffRoleId
-        ? `(rôle <@&${config.staffRoleId}>, administration ou permission de modération).`
-        : '(aucun `STAFF_ROLE_ID` configuré — il faut une permission Discord de modération).');
+      (staffRole
+        ? `(rôle <@&${staffRole}>, administration ou permission de modération).`
+        : '(aucun rôle staff configuré — voir `/config staff` — ou une permission Discord de modération).');
   await denyReply(interaction, msg);
   return false;
 }

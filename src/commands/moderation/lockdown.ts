@@ -7,6 +7,7 @@ import { sendLog } from '../../features/logger';
 import { createLogger } from '../../utils/logger';
 import { requireAdmin } from '../../utils/permissions';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 const log = createLogger('cmd:lockdown');
 
@@ -21,7 +22,8 @@ const LOCKABLE_TYPES = [
 export default {
   data: new SlashCommandBuilder()
     .setName('lockdown')
-    .setDescription('Verrouille / déverrouille un salon ou tout le serveur')
+    .setDescription(base('lockdown.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('lockdown.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
     .addSubcommand((s) => s.setName('salon')
       .setDescription('Verrouille un salon (retire SendMessages à @everyone)')

@@ -1,7 +1,8 @@
-import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
+import { SlashCommandBuilder, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { prisma } from '../../database';
+import { base, frLoc, resolveLang, t } from '../../i18n';
 
 /**
  * /afk : marque le membre comme AFK. Le bot répond aux pings et signale le
@@ -10,11 +11,15 @@ import { prisma } from '../../database';
 export default {
   data: new SlashCommandBuilder()
     .setName('afk')
-    .setDescription('Te marque comme AFK (le bot répondra à ceux qui te pinguent)')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addStringOption((o) => o.setName('raison').setDescription('Raison affichée').setMaxLength(200)),
+    .setDescription(base('afk.cmd.desc'))
+    .setDescriptionLocalizations(frLoc('afk.cmd.desc'))
+    .addStringOption((o) => o.setName('raison')
+      .setDescription(base('afk.opt.reason.desc'))
+      .setDescriptionLocalizations(frLoc('afk.opt.reason.desc'))
+      .setMaxLength(200)),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
+    const lang = resolveLang(interaction.locale);
     const reason = interaction.options.getString('raison') ?? null;
     await prisma.afk.upsert({
       where: { guild_id_user_id: { guild_id: interaction.guild.id, user_id: interaction.user.id } },
@@ -27,7 +32,9 @@ export default {
       }
     });
     return interaction.reply({
-      content: `💤 Tu es maintenant AFK${reason ? ` : *${reason}*` : ''}. Envoie un message ici pour retirer ton statut.`,
+      content: reason
+        ? t(lang, 'afk.set.reason', { reason })
+        : t(lang, 'afk.set.noreason'),
       flags: MessageFlags.Ephemeral
     });
   }

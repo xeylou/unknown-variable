@@ -2,37 +2,10 @@ import { Collection, type Client } from 'discord.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createLogger } from '../utils/logger';
+import { walk, shouldSkip } from '../utils/commandFiles';
 import type { CommandModule } from '../types';
-import config from '../config';
 
 const log = createLogger('handlers:commands');
-
-/** Vrai pour un fichier de module exécutable (.ts ou .js compilé), hors typings. */
-function isModuleFile(name: string): boolean {
-  if (name.endsWith('.d.ts')) return false;
-  return name.endsWith('.ts') || name.endsWith('.js');
-}
-
-/** Parcours récursif d'un dossier, renvoie tous les fichiers de module. */
-function* walk(dir: string): Generator<string> {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) yield* walk(full);
-    else if (isModuleFile(entry.name)) yield full;
-  }
-}
-
-/**
- * Vrai si le fichier doit être ignoré au chargement parce que la feature qu'il
- * implémente n'est pas configurée. Évite de charger 13 commandes musique
- * inutiles quand `LAVALINK_PASSWORD` est absent.
- */
-function shouldSkip(file: string): boolean {
-  const normalized = file.replace(/\\/g, '/');
-  if (normalized.includes('/commands/music/') && !config.lavalink.password) return true;
-  if (normalized.includes('/commands/git/') && !config.github.token && !config.github.webhookSecret) return true;
-  return false;
-}
 
 /**
  * Charge toutes les commandes slash depuis src/commands/**.

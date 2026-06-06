@@ -5,6 +5,8 @@ import { createLogger } from './utils/logger';
 import { closeAll as closeRcon } from './features/mcrcon';
 import { closeWorker as closeWelcomeCard } from './features/welcomecard';
 import { close as closeGithub } from './features/github';
+import { close as closeHealth } from './features/health';
+import { flush as flushMessageStats } from './features/messagestats';
 
 const log = createLogger('main');
 
@@ -39,8 +41,16 @@ loadComponents(client);
 loadEvents(client);
 
 // --- Filets de sécurité globaux ---
+// Une promesse rejetée isolée (souvent une interaction) ne doit PAS tuer le bot :
+// on logue seulement. En revanche une exception non capturée laisse le process
+// dans un état potentiellement corrompu — on tente un arrêt propre puis on quitte
+// avec un code d'erreur pour laisser systemd (`Restart=always`) / Docker
+// (`restart: unless-stopped`) relancer un process sain.
 process.on('unhandledRejection', (err) => log.error('unhandledRejection', err));
-process.on('uncaughtException', (err) => log.error('uncaughtException', err));
+process.on('uncaughtException', (err) => {
+  log.error('uncaughtException', err);
+  shutdown('uncaughtException').then(() => process.exit(1));
+});
 
 // --- Arrêt propre : ferme le client Discord et déconnecte Prisma. ---
 let shuttingDown = false;
@@ -67,6 +77,17 @@ async function shutdown(signal: string) {
     await closeGithub();
   } catch (e) {
     log.warn('github close failed', e);
+  }
+  try {
+    await closeHealth();
+  } catch (e) {
+    log.warn('health close failed', e);
+  }
+  try {
+    // Vide le tampon de compteurs de messages avant de fermer Prisma.
+    await flushMessageStats();
+  } catch (e) {
+    log.warn('messagestats flush failed', e);
   }
   try {
     await prisma.$disconnect();

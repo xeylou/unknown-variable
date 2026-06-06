@@ -325,3 +325,74 @@ model github_links {
   @@id([guild_id, user_id])
   @@index([guild_id, github_login], map: "idx_github_links_login")
 }
+
+/// Panneaux de rôles à boutons créés par /setup-roles. Persistés pour pouvoir
+/// les supprimer en masse (/setup-roles supprimer). L'attribution elle-même
+/// reste gérée sans état par le composant `selfrole:<roleId>`.
+model button_role_panels {
+  message_id String @id
+  guild_id   String
+  channel_id String
+  created_at Int
+
+  @@index([guild_id], map: "idx_button_role_panels_guild")
+}
+
+/// Compteur de messages par membre (classement messages). Alimenté par un
+/// tampon en mémoire vidé périodiquement — voir features/messagestats.ts.
+model message_counts {
+  guild_id String
+  user_id  String
+  count    Int    @default(0)
+
+  @@id([guild_id, user_id])
+  @@index([guild_id, count], map: "idx_message_counts_rank")
+}
+
+/// Compteur d'invitations NETTES par membre (classement invitations) :
+/// incrémenté à l'arrivée d'un invité, décrémenté à son départ.
+model invite_counts {
+  guild_id String
+  user_id  String
+  count    Int    @default(0)
+
+  @@id([guild_id, user_id])
+  @@index([guild_id, count], map: "idx_invite_counts_rank")
+}
+
+/// Attribution arrivée → inviteur, conservée pour décrémenter le bon compteur
+/// quand l'invité quitte le serveur (invitations nettes).
+model invite_joins {
+  guild_id   String
+  user_id    String
+  inviter_id String
+  joined_at  Int
+
+  @@id([guild_id, user_id])
+}
+
+/// Messages « classement » auto-actualisés : le bot édite ce message
+/// périodiquement avec le top courant — voir features/leaderboards.ts.
+model leaderboard_panels {
+  message_id String @id
+  guild_id   String
+  channel_id String
+  type       String // 'messages' | 'invites'
+  top        Int    @default(10)
+  created_at Int
+
+  @@index([guild_id], map: "idx_leaderboard_panels_guild")
+}
+
+/// Panneaux déployés par les commandes setup-* (règlement, tickets, captcha),
+/// enregistrés pour pouvoir les retirer via la sous-commande « supprimer ».
+/// (Les reaction-roles ont leur propre table reaction_role_panels.)
+model deployed_panels {
+  message_id String @id
+  guild_id   String
+  channel_id String
+  kind       String // 'reglement' | 'tickets' | 'captcha'
+  created_at Int
+
+  @@index([guild_id, kind], map: "idx_deployed_panels_guild_kind")
+}

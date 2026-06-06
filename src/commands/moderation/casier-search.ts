@@ -4,6 +4,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags,
 import { prisma } from '../../database';
 import { LABELS, type SanctionType } from '../../utils/moderation';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 const SANCTION_TYPES = (Object.keys(LABELS) as SanctionType[]).map((t) => ({ name: LABELS[t], value: t }));
 
@@ -14,11 +15,15 @@ const SANCTION_TYPES = (Object.keys(LABELS) as SanctionType[]).map((t) => ({ nam
 export default {
   data: new SlashCommandBuilder()
     .setName('casier-search')
-    .setDescription('Rechercher dans les sanctions du serveur')
+    .setDescription(base('casiersearch.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('casiersearch.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addUserOption((o) => o.setName('moderateur').setDescription('Filtrer par modérateur'))
-    .addStringOption((o) => o.setName('type').setDescription('Filtrer par type de sanction').addChoices(...SANCTION_TYPES))
-    .addStringOption((o) => o.setName('mot-cle').setDescription('Mot contenu dans la raison')),
+    .addUserOption((o) => o.setName('moderateur').setDescription(base('casiersearch.opt.mod.desc'))
+      .setDescriptionLocalizations(frLoc('casiersearch.opt.mod.desc')))
+    .addStringOption((o) => o.setName('type').setDescription(base('casiersearch.opt.type.desc'))
+      .setDescriptionLocalizations(frLoc('casiersearch.opt.type.desc')).addChoices(...SANCTION_TYPES))
+    .addStringOption((o) => o.setName('mot-cle').setDescription(base('casiersearch.opt.keyword.desc'))
+      .setDescriptionLocalizations(frLoc('casiersearch.opt.keyword.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const gid = interaction.guild.id;

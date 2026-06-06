@@ -4,6 +4,7 @@ import {
 } from 'discord.js';
 import { prisma } from '../../database';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 /**
  * Notes privées staff sur un membre. Invisibles au membre concerné.
@@ -12,15 +13,22 @@ import config from '../../config';
 export default {
   data: new SlashCommandBuilder()
     .setName('note')
-    .setDescription('Notes privées staff sur un membre')
+    .setDescription(base('note.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('note.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addSubcommand((s) => s.setName('ajouter').setDescription('Ajoute une note sur un membre')
-      .addUserOption((o) => o.setName('membre').setDescription('Membre concerné').setRequired(true))
-      .addStringOption((o) => o.setName('texte').setDescription('Contenu de la note').setRequired(true).setMaxLength(1500)))
-    .addSubcommand((s) => s.setName('liste').setDescription("Lister les notes d'un membre")
+    .addSubcommand((s) => s.setName('ajouter').setDescription(base('note.sub.ajouter.desc'))
+      .setDescriptionLocalizations(frLoc('note.sub.ajouter.desc'))
+      .addUserOption((o) => o.setName('membre').setDescription(base('note.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('note.opt.member.desc')).setRequired(true))
+      .addStringOption((o) => o.setName('texte').setDescription(base('note.opt.text.desc'))
+      .setDescriptionLocalizations(frLoc('note.opt.text.desc')).setRequired(true).setMaxLength(1500)))
+    .addSubcommand((s) => s.setName('liste').setDescription(base('note.sub.liste.desc'))
+      .setDescriptionLocalizations(frLoc('note.sub.liste.desc'))
       .addUserOption((o) => o.setName('membre').setDescription('Membre').setRequired(true)))
-    .addSubcommand((s) => s.setName('retirer').setDescription('Retire une note par son id')
-      .addIntegerOption((o) => o.setName('id').setDescription('ID de la note').setRequired(true))),
+    .addSubcommand((s) => s.setName('retirer').setDescription(base('note.sub.retirer.desc'))
+      .setDescriptionLocalizations(frLoc('note.sub.retirer.desc'))
+      .addIntegerOption((o) => o.setName('id').setDescription(base('note.opt.id.desc'))
+      .setDescriptionLocalizations(frLoc('note.opt.id.desc')).setRequired(true))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const sub = interaction.options.getSubcommand();

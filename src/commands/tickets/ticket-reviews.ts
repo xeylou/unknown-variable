@@ -9,6 +9,7 @@ import { categoryLabel } from '../../utils/ticketScope';
 import * as embeds from '../../utils/embeds';
 import config from '../../config';
 import type { tickets as TicketRow } from '@prisma/client';
+import { base, frLoc } from '../../i18n';
 
 /** Nombre de tickets affichés par page (équilibre densité / lisibilité). */
 const PAGE_SIZE = 5;
@@ -41,13 +42,17 @@ const categoryChoices = config.tickets.categories.map((c) => ({ name: c.label, v
 export default {
   data: new SlashCommandBuilder()
     .setName('ticket-reviews')
-    .setDescription('Avis et commentaires laissés à la fermeture des tickets')
+    .setDescription(base('ticketreviews.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('ticketreviews.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addUserOption((o) => o.setName('membre').setDescription("Filtrer sur l'auteur du ticket"))
-    .addStringOption((o) => o.setName('categorie').setDescription('Filtrer sur une catégorie')
+    .addUserOption((o) => o.setName('membre').setDescription(base('ticketreviews.opt.member.desc'))
+      .setDescriptionLocalizations(frLoc('ticketreviews.opt.member.desc')))
+    .addStringOption((o) => o.setName('categorie').setDescription(base('ticketreviews.opt.categorie.desc'))
+      .setDescriptionLocalizations(frLoc('ticketreviews.opt.categorie.desc'))
       .addChoices(...categoryChoices))
     .addIntegerOption((o) => o.setName('rating-min')
-      .setDescription('Note minimale (1-5)').setMinValue(1).setMaxValue(5)),
+      .setDescription(base('ticketreviews.opt.ratingmin.desc'))
+      .setDescriptionLocalizations(frLoc('ticketreviews.opt.ratingmin.desc')).setMinValue(1).setMaxValue(5)),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!await requireStaff(interaction)) return;

@@ -4,16 +4,38 @@ import {
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { requireAdmin } from '../../utils/permissions';
+import { ticketStaffRoleIds } from '../../utils/guildSettings';
+import { recordPanel, countPanels, buildDeleteConfirm } from '../../utils/panels';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('setup-tickets')
-    .setDescription('Déployer le panneau de tickets dans ce salon')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDescription(base('setuptickets.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('setuptickets.cmd.desc'))
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .addSubcommand((s) => s.setName('deployer')
+      .setDescription(base('setuptickets.sub.deployer.desc'))
+      .setDescriptionLocalizations(frLoc('setuptickets.sub.deployer.desc')))
+    .addSubcommand((s) => s.setName('supprimer')
+      .setDescription(base('setuptickets.sub.supprimer.desc'))
+      .setDescriptionLocalizations(frLoc('setuptickets.sub.supprimer.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!await requireAdmin(interaction)) return;
+    const sub = interaction.options.getSubcommand();
+
+    // --- Supprimer (confirmation) ---
+    if (sub === 'supprimer') {
+      const count = await countPanels(interaction.guild, 'tickets');
+      if (!count) {
+        return interaction.reply({ content: 'ℹ️ Aucun panneau de tickets à supprimer.', flags: MessageFlags.Ephemeral });
+      }
+      return interaction.reply(buildDeleteConfirm('tickets'));
+    }
+
+    // --- Déployer ---
     const channel = interaction.channel;
     if (!channel || !channel.isTextBased() || !('send' in channel) || !('permissionsFor' in channel)) {
       return interaction.reply({ content: '❌ Cette commande doit être lancée dans un salon texte.', flags: MessageFlags.Ephemeral });
@@ -51,6 +73,13 @@ export default {
     if (!sent) {
       return interaction.reply({ content: "❌ Échec de l'envoi du panneau.", flags: MessageFlags.Ephemeral });
     }
-    return interaction.reply({ content: '✅ Panneau déployé.', flags: MessageFlags.Ephemeral });
+    await recordPanel('tickets', sent);
+    const noRoles = ticketStaffRoleIds(interaction.guild.id).length === 0;
+    return interaction.reply({
+      content: '✅ Panneau déployé.' + (noRoles
+        ? '\n⚠️ Aucune catégorie n\'a de rôle responsable : les ouvertures seront refusées tant que tu n\'auras pas configuré `/config ticket-role`.'
+        : ''),
+      flags: MessageFlags.Ephemeral
+    });
   }
 };

@@ -4,6 +4,7 @@ import {
 } from 'discord.js';
 import { prisma } from '../../database';
 import { invalidateLinks } from '../../features/github/announce';
+import { base, frLoc } from '../../i18n';
 
 /**
  * Liaison auto-déclarée pseudo GitHub ↔ compte Discord. Sert uniquement à
@@ -13,12 +14,17 @@ import { invalidateLinks } from '../../features/github/announce';
 export default {
   data: new SlashCommandBuilder()
     .setName('gitlink')
-    .setDescription('Lier ton compte Discord à ton pseudo GitHub (mentions dans les annonces)')
+    .setDescription(base('gitlink.cmd.desc'))
+      .setDescriptionLocalizations(frLoc('gitlink.cmd.desc'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
-    .addSubcommand((s) => s.setName('lier').setDescription('Déclarer ton pseudo GitHub')
-      .addStringOption((o) => o.setName('pseudo-github').setDescription('Ton pseudo GitHub').setRequired(true)))
-    .addSubcommand((s) => s.setName('statut').setDescription('Voir ta liaison'))
-    .addSubcommand((s) => s.setName('delier').setDescription('Supprimer ta liaison')),
+    .addSubcommand((s) => s.setName('lier').setDescription(base('gitlink.sub.lier.desc'))
+      .setDescriptionLocalizations(frLoc('gitlink.sub.lier.desc'))
+      .addStringOption((o) => o.setName('pseudo-github').setDescription(base('gitlink.opt.pseudo.desc'))
+      .setDescriptionLocalizations(frLoc('gitlink.opt.pseudo.desc')).setRequired(true)))
+    .addSubcommand((s) => s.setName('statut').setDescription(base('gitlink.sub.statut.desc'))
+      .setDescriptionLocalizations(frLoc('gitlink.sub.statut.desc')))
+    .addSubcommand((s) => s.setName('delier').setDescription(base('gitlink.sub.delier.desc'))
+      .setDescriptionLocalizations(frLoc('gitlink.sub.delier.desc'))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const sub = interaction.options.getSubcommand();

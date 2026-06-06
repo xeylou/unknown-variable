@@ -4,8 +4,8 @@ import {
   type ButtonInteraction, type ModalSubmitInteraction, type Client
 } from 'discord.js';
 import { prisma } from '../database';
-import config from '../config';
 import * as embeds from '../utils/embeds';
+import { getTicketLogsChannel } from '../utils/guildSettings';
 import { categoryLabel } from '../utils/ticketScope';
 import type { ComponentInteraction } from '../types';
 
@@ -87,9 +87,12 @@ async function saveComment(
     data: { comment }
   });
 
-  // Log dans le salon des logs tickets — embed simple avec citation tronquée.
-  if (config.tickets.logsChannelId) {
-    const logs = await client.channels.fetch(config.tickets.logsChannelId).catch(() => null);
+  // Log dans le salon des logs tickets — résolu DANS le serveur du ticket
+  // (jamais via `client.channels.fetch`, qui résoudrait globalement).
+  const logsChannelId = getTicketLogsChannel(ticket.guild_id);
+  const guild = client.guilds.cache.get(ticket.guild_id);
+  if (logsChannelId && guild) {
+    const logs = await guild.channels.fetch(logsChannelId).catch(() => null);
     if (logs && logs.isTextBased() && 'send' in logs) {
       const quoted = comment.slice(0, 900).replace(/\n/g, '\n> ');
       const truncatedNote = comment.length > 900 ? '\n*(tronqué — texte complet via `/ticket-reviews`)*' : '';

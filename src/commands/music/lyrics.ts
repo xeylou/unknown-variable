@@ -3,11 +3,13 @@ import { SlashCommandBuilder, EmbedBuilder,
 } from 'discord.js';
 import { getActivePlayer } from '../../features/music';
 import config from '../../config';
+import { base, frLoc } from '../../i18n';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('lyrics')
-    .setDescription('Afficher les paroles du titre en cours'),
+    .setDescription(base('lyrics.cmd.desc'))
+    .setDescriptionLocalizations(frLoc('lyrics.cmd.desc')),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const player = await getActivePlayer(interaction, false);

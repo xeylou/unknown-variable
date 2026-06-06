@@ -25,7 +25,7 @@ type MusicInteraction = (ChatInputCommandInteraction<'cached'> | ButtonInteracti
 type AnyTrack = Track | UnresolvedTrack;
 
 /**
- * Module musique — s'appuie sur un serveur Lavalink (voir LAVALINK.md).
+ * Module musique — s'appuie sur un serveur Lavalink (voir docs/LAVALINK.md).
  * Si `LAVALINK_PASSWORD` n'est pas défini, le module reste désactivé :
  * `manager` vaut null et les commandes répondent poliment.
  */
