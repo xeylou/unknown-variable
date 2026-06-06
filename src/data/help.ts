@@ -81,6 +81,13 @@ export const helpCategories: HelpCategory[] = [
         tier: 'ticket-staff'
       },
       {
+        usage: '/ticket create <utilisateur> <categorie>',
+        usageEn: '/ticket create <user> <category>',
+        description: 'Ouvre un ticket au nom d\'un membre dans la catégorie choisie ; le membre est mentionné dans le salon. Réservé aux admins.',
+        descriptionEn: 'Opens a ticket on behalf of a member in the chosen category; the member is pinged in the channel. Admin only.',
+        tier: 'admin'
+      },
+      {
         usage: '/ticket-stats',
         description: 'Affiche les statistiques globales : ouverts, fermés, note moyenne.',
         descriptionEn: 'Shows global statistics: open, closed, average rating.'

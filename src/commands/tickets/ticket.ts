@@ -3,7 +3,10 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
 } from 'discord.js';
 import { prisma } from '../../database';
 import config from '../../config';
-import { base, frLoc } from '../../i18n';
+import { base, frLoc, ti } from '../../i18n';
+import { openTicket } from '../../components/tickets';
+import { requireAdmin } from '../../utils/permissions';
+import { getTicketRole } from '../../utils/guildSettings';
 
 const categoryChoices = config.tickets.categories.map((c) => ({ name: c.label, value: c.value }));
 
@@ -18,11 +21,21 @@ export default {
       .setDescriptionLocalizations(frLoc('ticket.sub.move.desc'))
       .addStringOption((o) => o.setName('categorie')
         .setDescription(base('ticket.opt.categorie.desc'))
-      .setDescriptionLocalizations(frLoc('ticket.opt.categorie.desc')).setRequired(true).addChoices(...categoryChoices))),
+      .setDescriptionLocalizations(frLoc('ticket.opt.categorie.desc')).setRequired(true).addChoices(...categoryChoices)))
+    .addSubcommand((s) => s.setName('create')
+      .setDescription(base('ticket.sub.create.desc'))
+      .setDescriptionLocalizations(frLoc('ticket.sub.create.desc'))
+      .addUserOption((o) => o.setName('utilisateur')
+        .setDescription(base('ticket.create.opt.user.desc'))
+        .setDescriptionLocalizations(frLoc('ticket.create.opt.user.desc')).setRequired(true))
+      .addStringOption((o) => o.setName('categorie')
+        .setDescription(base('ticket.create.opt.categorie.desc'))
+        .setDescriptionLocalizations(frLoc('ticket.create.opt.categorie.desc')).setRequired(true).addChoices(...categoryChoices))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const sub = interaction.options.getSubcommand();
     if (sub === 'move') return move(interaction);
+    if (sub === 'create') return create(interaction);
   }
 };
 
@@ -63,4 +76,50 @@ async function move(interaction: ChatInputCommandInteraction<'cached'>) {
   });
 
   return interaction.editReply(`✅ Ticket déplacé vers **${category.label}**.`);
+}
+
+/**
+ * Ouvre un ticket au nom d'un membre, dans la catégorie choisie. Réservé aux
+ * admins ; la limite anti-spam (3/24 h) du self-service est volontairement
+ * ignorée. Réutilise le cœur `openTicket` partagé avec le menu déroulant.
+ */
+async function create(interaction: ChatInputCommandInteraction<'cached'>) {
+  if (!await requireAdmin(interaction)) return;
+
+  const target = interaction.options.getUser('utilisateur', true);
+  if (target.bot) {
+    return interaction.reply({ content: ti(interaction.locale, 'ticket.create.bot'), flags: MessageFlags.Ephemeral });
+  }
+
+  const category = config.tickets.categories.find((c) => c.value === interaction.options.getString('categorie', true));
+  if (!category) {
+    return interaction.reply({ content: ti(interaction.locale, 'ticket.create.unknown_cat'), flags: MessageFlags.Ephemeral });
+  }
+
+  // La catégorie doit avoir un rôle responsable défini (`/config ticket-role`).
+  const categoryRoleId = getTicketRole(interaction.guild.id, category.value);
+  if (!categoryRoleId) {
+    return interaction.reply({
+      content: ti(interaction.locale, 'ticket.create.no_role', { label: category.label }),
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+  const channel = await openTicket({
+    guild: interaction.guild,
+    owner: target,
+    category,
+    categoryRoleId,
+    openedByTag: interaction.user.tag
+  });
+  if (!channel) {
+    return interaction.editReply({ content: ti(interaction.locale, 'ticket.create.failed') });
+  }
+
+  return interaction.editReply({
+    content: ti(interaction.locale, 'ticket.create.ok', { user: `<@${target.id}>`, channel: channel.toString() }),
+    allowedMentions: { parse: [] }
+  });
 }

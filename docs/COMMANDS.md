@@ -16,6 +16,7 @@ Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` / 
 | `/add-user <utilisateur>` | ticket-staff | Ajoute un membre au ticket courant. |
 | `/remove-user <utilisateur>` | ticket-staff | Retire un membre. |
 | `/ticket move <categorie>` | ticket-staff | Change la catégorie du ticket (renomme le salon). |
+| `/ticket create <utilisateur> <categorie>` | admin | Ouvre un ticket au nom d'un membre dans une catégorie donnée (le membre est mentionné dans le salon). |
 | `/ticket-stats` | staff | Statistiques globales (ouverts, fermés, note moyenne). |
 | `/tickets-ouverts [categorie] [membre] [pris-en-charge]` | ticket-staff | Tickets ouverts groupés par catégorie (un ticket-staff ne voit que ses catégories). |
 | `/ticket-reviews [membre] [categorie] [rating-min]` | staff | Avis & commentaires laissés à la fermeture (paginé). |

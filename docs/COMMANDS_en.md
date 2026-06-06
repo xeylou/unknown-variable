@@ -18,6 +18,7 @@ All slash commands, by module, with their access **tier** (`public` / `ticket-st
 | `/add-user <utilisateur>` | ticket-staff | Adds a member to the current ticket. |
 | `/remove-user <utilisateur>` | ticket-staff | Removes a member. |
 | `/ticket move <categorie>` | ticket-staff | Changes the ticket category (renames the channel). |
+| `/ticket create <utilisateur> <categorie>` | admin | Opens a ticket on behalf of a member in a given category (the member is pinged in the channel). |
 | `/ticket-stats` | staff | Global stats (open, closed, average rating). |
 | `/tickets-ouverts [categorie] [membre] [pris-en-charge]` | ticket-staff | Open tickets grouped by category (ticket-staff sees only their categories). |
 | `/ticket-reviews [membre] [categorie] [rating-min]` | staff | Ratings & comments left on close (paginated). |

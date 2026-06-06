@@ -8,10 +8,12 @@ import {
   StringSelectMenuBuilder,
   type ButtonInteraction,
   type Client,
+  type Guild,
   type GuildMember,
   type Message,
   type StringSelectMenuInteraction,
-  type TextChannel
+  type TextChannel,
+  type User
 } from 'discord.js';
 import config from '../config';
 import { prisma } from '../database';
@@ -150,6 +152,98 @@ async function nextTicketNumber(guildId: string): Promise<number> {
   });
 }
 
+/**
+ * Crée le salon d'un ticket (overwrites, topic, message d'accueil, boutons,
+ * ping) et insère la ligne en base. Cœur partagé entre le menu déroulant du
+ * panneau et la sous-commande `/ticket create` (ouverture par le staff au nom
+ * d'un membre). Ne gère NI le `deferReply` NI la réponse à l'interaction : c'est
+ * au caller de répondre. Renvoie le salon créé, ou `null` si la création du
+ * salon a échoué (l'erreur est déjà loggée).
+ *
+ * `owner` est le destinataire du ticket : il est pingé, propriétaire en base et
+ * apparaît dans le nom du salon. `openedByTag` ne sert qu'au pied de page
+ * « Ouvert par … » — identique à `owner` en self-service, le staff sinon. La
+ * limite anti-spam et la résolution du rôle responsable restent à la charge du
+ * caller (elles diffèrent selon le point d'entrée).
+ */
+export async function openTicket(params: {
+  guild: Guild;
+  owner: User;
+  category: (typeof config.tickets.categories)[number];
+  categoryRoleId: string;
+  openedByTag: string;
+}): Promise<TextChannel | null> {
+  const { guild, owner, category, categoryRoleId, openedByTag } = params;
+
+  const ticketNumber = await nextTicketNumber(guild.id);
+  const channelName = `${category.value}-${owner.username}-${ticketNumber}`;
+
+  const overwrites = buildTicketOverwrites(
+    guild.roles.everyone.id,
+    owner.id,
+    categoryRoleId,
+    getAdminRole(guild.id)
+  );
+
+  const channel = await guild.channels.create({
+    name: channelName,
+    type: ChannelType.GuildText,
+    parent: getTicketCategory(guild.id) || null,
+    topic: `Ticket #${ticketNumber} de ${owner.tag} | Catégorie : ${category.label}`,
+    permissionOverwrites: overwrites
+  }).catch((e: unknown) => { log.error('create channel failed', e); return null; });
+
+  if (!channel) return null;
+
+  await prisma.tickets.create({
+    data: {
+      channel_id: channel.id,
+      guild_id: guild.id,
+      user_id: owner.id,
+      number: ticketNumber,
+      category: category.value,
+      status: 'open',
+      created_at: Date.now()
+    }
+  });
+
+  // Cascade : override par catégorie → valeur globale → défaut codé en dur.
+  const template =
+    (await getConfig(guild.id, `ticket_open_message:${category.value}`)) ??
+    (await getConfig(guild.id, 'ticket_open_message')) ??
+    DEFAULT_TICKET_OPEN_DESCRIPTION;
+  const description = renderTicketMessage(template, {
+    userId: owner.id,
+    username: owner.username,
+    categoryLabel: category.label,
+    ticketNumber,
+    serverName: guild.name
+  });
+
+  const ticketEmbed = embeds.primary()
+    .setTitle(`Ticket #${ticketNumber} — ${category.label}`)
+    .setDescription(description)
+    .setFooter({ text: `Ouvert par ${openedByTag}` })
+    .setTimestamp();
+
+  const claimBtn = new ButtonBuilder()
+    .setCustomId('ticket:claim').setLabel('Prendre en charge').setEmoji('✋').setStyle(ButtonStyle.Primary);
+  const closeBtn = new ButtonBuilder()
+    .setCustomId('ticket:close').setLabel('Fermer le ticket').setEmoji('🔒').setStyle(ButtonStyle.Danger);
+
+  await channel.send({
+    content: `<@${owner.id}> • <@&${categoryRoleId}>`,
+    embeds: [ticketEmbed],
+    components: [new ActionRowBuilder<ButtonBuilder>().addComponents(claimBtn, closeBtn)],
+    allowedMentions: {
+      users: [owner.id],
+      roles: [categoryRoleId]
+    }
+  });
+
+  return channel;
+}
+
 /** Création d'un ticket depuis le menu déroulant du panneau. */
 async function createTicket(interaction: StringSelectMenuInteraction<'cached'>) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -182,76 +276,18 @@ async function createTicket(interaction: StringSelectMenuInteraction<'cached'>) 
     });
   }
 
-  const ticketNumber = await nextTicketNumber(interaction.guild.id);
-  const channelName = `${category.value}-${interaction.user.username}-${ticketNumber}`;
-
-  const overwrites = buildTicketOverwrites(
-    interaction.guild.roles.everyone.id,
-    interaction.user.id,
+  const channel = await openTicket({
+    guild: interaction.guild,
+    owner: interaction.user,
+    category,
     categoryRoleId,
-    getAdminRole(interaction.guild.id)
-  );
-
-  const channel = await interaction.guild.channels.create({
-    name: channelName,
-    type: ChannelType.GuildText,
-    parent: getTicketCategory(interaction.guild.id) || null,
-    topic: `Ticket #${ticketNumber} de ${interaction.user.tag} | Catégorie : ${category.label}`,
-    permissionOverwrites: overwrites
-  }).catch((e: unknown) => { log.error('create channel failed', e); return null; });
-
+    openedByTag: interaction.user.tag
+  });
   if (!channel) {
     return interaction.editReply({
       content: '❌ Impossible de créer le salon (permissions du bot ou catégorie pleine ?).'
     });
   }
-
-  await prisma.tickets.create({
-    data: {
-      channel_id: channel.id,
-      guild_id: interaction.guild.id,
-      user_id: interaction.user.id,
-      number: ticketNumber,
-      category: category.value,
-      status: 'open',
-      created_at: Date.now()
-    }
-  });
-
-  // Cascade : override par catégorie → valeur globale → défaut codé en dur.
-  const template =
-    (await getConfig(interaction.guild.id, `ticket_open_message:${category.value}`)) ??
-    (await getConfig(interaction.guild.id, 'ticket_open_message')) ??
-    DEFAULT_TICKET_OPEN_DESCRIPTION;
-  const description = renderTicketMessage(template, {
-    userId: interaction.user.id,
-    username: interaction.user.username,
-    categoryLabel: category.label,
-    ticketNumber,
-    serverName: interaction.guild.name
-  });
-
-  const ticketEmbed = embeds.primary()
-    .setTitle(`Ticket #${ticketNumber} — ${category.label}`)
-    .setDescription(description)
-    .setFooter({ text: `Ouvert par ${interaction.user.tag}` })
-    .setTimestamp();
-
-  const claimBtn = new ButtonBuilder()
-    .setCustomId('ticket:claim').setLabel('Prendre en charge').setEmoji('✋').setStyle(ButtonStyle.Primary);
-  const closeBtn = new ButtonBuilder()
-    .setCustomId('ticket:close').setLabel('Fermer le ticket').setEmoji('🔒').setStyle(ButtonStyle.Danger);
-
-  const opener = `${interaction.user}`;
-  await channel.send({
-    content: `${opener} • <@&${categoryRoleId}>`,
-    embeds: [ticketEmbed],
-    components: [new ActionRowBuilder<ButtonBuilder>().addComponents(claimBtn, closeBtn)],
-    allowedMentions: {
-      users: [interaction.user.id],
-      roles: [categoryRoleId]
-    }
-  });
 
   await interaction.editReply({ content: `✅ Ticket créé : ${channel}` });
 

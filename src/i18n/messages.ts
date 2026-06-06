@@ -458,6 +458,16 @@ export const messages = {
   'ticket.move.same': { en: 'ℹ️ The ticket is already in this category.', fr: 'ℹ️ Le ticket est déjà dans cette catégorie.' },
   'ticket.move.ok': { en: '✅ Ticket moved to **{label}**.', fr: '✅ Ticket déplacé vers **{label}**.' },
 
+  // --- Tickets: /ticket create ---
+  'ticket.sub.create.desc': { en: 'Open a ticket for a member', fr: 'Ouvrir un ticket pour un membre' },
+  'ticket.create.opt.user.desc': { en: 'Member to open the ticket for', fr: 'Membre pour qui ouvrir le ticket' },
+  'ticket.create.opt.categorie.desc': { en: 'Ticket category', fr: 'Catégorie du ticket' },
+  'ticket.create.bot': { en: '❌ You cannot open a ticket for a bot.', fr: '❌ Impossible d\'ouvrir un ticket pour un bot.' },
+  'ticket.create.unknown_cat': { en: '❌ Unknown category.', fr: '❌ Catégorie inconnue.' },
+  'ticket.create.no_role': { en: '❌ Category **{label}** has no responsible role configured. An admin must set one with `/config ticket-role`.', fr: '❌ La catégorie **{label}** n\'a pas de rôle responsable configuré. Un administrateur doit l\'attribuer avec `/config ticket-role`.' },
+  'ticket.create.failed': { en: '❌ Could not create the channel (bot permissions or category full?).', fr: '❌ Impossible de créer le salon (permissions du bot ou catégorie pleine ?).' },
+  'ticket.create.ok': { en: '✅ Ticket created for {user}: {channel}', fr: '✅ Ticket créé pour {user} : {channel}' },
+
   // --- Tickets: /ticket-stats ---
   'ticketstats.cmd.desc': { en: 'Show server ticket statistics', fr: 'Afficher les statistiques des tickets du serveur' },
   'ticketstats.title': { en: '📊 Ticket statistics', fr: '📊 Statistiques des tickets' },
