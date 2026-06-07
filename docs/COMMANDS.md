@@ -1,8 +1,8 @@
+> 🇬🇧 **English version [COMMANDS_en.md](COMMANDS_en.md)** · [Retour au README](../README.md) ⬅️
+
 # 🧾 Catalogue des commandes
 
-> 🇬🇧 **English version → [COMMANDS_en.md](COMMANDS_en.md)** · ⬅️ [Retour au README](../README.md)
-
-Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` / `ticket-staff` / `staff` / `admin` — voir [Configuration → Permissions](CONFIGURATION.md#système-de-permissions-tiers)). Plusieurs options à identifiant bénéficient de l'**autocomplétion** (notées 💡).
+Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` · `ticket-staff` · `staff` · `admin`, voir [Configuration → Permissions](CONFIGURATION.md#système-de-permissions-tiers)). Plusieurs options à identifiant bénéficient de l'**autocomplétion** (notées 💡).
 
 `/help` est interactif : chaque membre n'y voit **que** les commandes qu'il peut utiliser.
 
@@ -12,15 +12,15 @@ Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` / 
 
 | Commande | Tier | Description |
 |---|---|---|
-| `/setup-tickets` | admin | Déploie le panneau (une fois). |
+| `/setup-tickets deployer [salon:]` | admin | Déploie le panneau dans le salon indiqué (ou le salon courant). |
 | `/add-user <utilisateur>` | ticket-staff | Ajoute un membre au ticket courant. |
 | `/remove-user <utilisateur>` | ticket-staff | Retire un membre. |
-| `/ticket move <categorie>` | ticket-staff | Change la catégorie du ticket (renomme le salon). |
+| `/ticket move <categorie>` | ticket-staff | Change la catégorie du ticket (renomme aussi le salon). |
 | `/ticket create <utilisateur> <categorie>` | admin | Ouvre un ticket au nom d'un membre dans une catégorie donnée (le membre est mentionné dans le salon). |
-| `/ticket-stats` | staff | Statistiques globales (ouverts, fermés, note moyenne). |
+| `/ticket-stats` | staff | Statistiques globales (tickets ouverts, fermés, note moyenne). |
 | `/tickets-ouverts [categorie] [membre] [pris-en-charge]` | ticket-staff | Tickets ouverts groupés par catégorie (un ticket-staff ne voit que ses catégories). |
-| `/ticket-reviews [membre] [categorie] [rating-min]` | staff | Avis & commentaires laissés à la fermeture (paginé). |
-| 🔘 Prendre en charge / Fermer / Rouvrir | staff / membre | Boutons dans le ticket / le DM de fermeture. |
+| `/ticket-reviews [membre] [categorie] [rating-min]` | staff | Avis et commentaires laissés à la fermeture (paginé). |
+| 🔘 Prendre en charge · Fermer · Rouvrir | staff · membre | Boutons dans le ticket · le DM de fermeture. |
 
 ## 🛡️ Modération
 
@@ -32,7 +32,7 @@ Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` / 
 | `/softban <membre> [raison] [purge-jours:0-7]` | staff | Ban + unban immédiat (purge sans bannir durablement). |
 | `/ban <membre> [raison] [purge-jours:0-7]` | staff | Bannir. |
 | `/unban <identifiant> [raison]` | staff | Débannir par ID. |
-| `/timeout <membre> <durée> [raison]` | staff | Exclure temporairement (max 28 j ; `10m`, `2h`, `1d`). |
+| `/timeout <membre> <durée> [raison]` | staff | Exclure temporairement (max 28 j ; `10m`, `2h`, `1d`...). |
 | `/untimeout <membre> [raison]` | staff | Lever un timeout. |
 | `/casier <membre>` | staff | Historique paginé des sanctions. |
 | `/casier-search [moderateur] [type] [mot-cle]` | staff | Recherche dans le casier global. |
@@ -41,14 +41,14 @@ Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` / 
 | `/role temp-liste` · `/role temp-annuler <id>` 💡 | staff | Gestion des rôles temporaires. |
 | `/lockdown salon [salon] [duree] [raison]` | staff | Verrouille un salon (auto-restauration si `duree`). |
 | `/lockdown serveur [duree] [raison]` | admin | Lockdown global. |
-| `/lockdown lift [salon] [serveur:bool]` | staff / admin | Déverrouille. |
+| `/lockdown lift [salon] [serveur:bool]` | staff · admin | Déverrouille. |
 | `/clear <nombre:1-100> [membre]` | staff | Supprime en masse. |
 
 ## 👋 Communauté
 
 | Commande | Tier | Description |
 |---|---|---|
-| `/setup-reglement` | admin | Déploie le règlement + bouton. |
+| `/setup-reglement deployer [salon:]` | admin | Déploie le règlement + bouton dans le salon indiqué (ou le salon courant). |
 | `/setup-captcha` | admin | Déploie le bouton de vérification (défi en éphémère). |
 | `/setup-roles` | admin | Panneau de rôles auto-attribuables (boutons). |
 | `/setup-reaction-roles` | admin | Panneau emoji → rôle (réactions). |
@@ -77,7 +77,7 @@ Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` / 
 | `/rappel-rec set\|liste\|supprimer` | public | Rappels récurrents (daily/weekly/monthly). |
 | `/rappel-role <role> <message> [frequence] [delai]` | admin | Rappel pour un rôle entier. |
 | `/tag show\|liste\|ajouter\|editer\|retirer` 💡 | staff (show/liste = public) | Tags FAQ (autocomplétion sur `nom`). |
-| `/afk [raison]` | public | Marque AFK ; le bot répond aux pings. |
+| `/afk [raison]` | public | Marque AFK. |
 | `/help` | public | Aide interactive filtrée par tier. |
 
 ## ⛏️ Minecraft & intégrations
@@ -88,7 +88,7 @@ Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` / 
 | `/mclink demande\|statut\|delier` | staff | Lier le compte Discord à un pseudo MC (validation RCON). |
 | `/mcsuivi ajouter\|liste\|supprimer` 💡 | admin | Panneau de statut auto-rafraîchi + alerte de rôle (autocomplétion sur `id`). |
 | `/mcwhitelist add\|remove\|list` | admin | Whitelist via RCON. |
-| `/notif ajouter-youtube\|ajouter-twitch\|ajouter-rss\|liste\|supprimer` 💡 | admin | Notifications YouTube / Twitch / RSS (autocomplétion sur `id`). |
+| `/notif ajouter-youtube\|ajouter-twitch\|ajouter-rss\|liste\|supprimer` 💡 | admin | Notifications YouTube · Twitch · RSS (autocomplétion sur `id`). |
 
 ## 🐙 Git / GitHub
 
@@ -98,7 +98,7 @@ Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` / 
 | `/git statut <depot>` 💡 | admin | État instantané d'un dépôt (autocomplétion sur les dépôts suivis). |
 | `/git lier-membre <membre> <pseudo>` | admin | Lie un membre à un pseudo GitHub. |
 | `/git digest\|digest-off` | admin | Récap périodique d'activité. |
-| `/gitlink lier\|statut\|delier` | staff | Liaison auto-déclarée pseudo GitHub ↔ Discord. |
+| `/gitlink lier\|statut\|delier` | staff | Liaison auto-déclarée pseudo GitHub <->> Discord. |
 
 > Sans `GITHUB_TOKEN` ni `GITHUB_WEBHOOK_SECRET`, le module est désactivé (commandes non déployées). Voir [Configuration → Suivi GitHub](CONFIGURATION.md#suivi-github).
 
@@ -114,7 +114,7 @@ Toutes les commandes slash, par module, avec leur **tier** d'accès (`public` / 
 | `/queue` · `/nowplaying` | File · titre en cours. |
 | `/volume <0-150>` · `/seek <secondes>` | Volume · saut temporel. |
 | `/loop <mode>` · `/shuffle` · `/jump <position>` | Boucle, mélange, saut de piste. |
-| `/remove <position>` · `/clearqueue` | Retire un titre / vide la file. |
+| `/remove <position>` · `/clearqueue` | Retire un titre · vide la file. |
 | `/filter <preset>` | Bass boost, nightcore, vaporwave, 8D, karaoké. |
 | `/lyrics` | Paroles du titre en cours. |
 
