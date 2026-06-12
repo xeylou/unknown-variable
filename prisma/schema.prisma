@@ -136,6 +136,8 @@ model tickets {
   rating     Int?
   /// Commentaire libre laissé par l'auteur à la fermeture (modale DM, max 1000 chars).
   comment    String?
+  /// Raison de fermeture saisie par le staff dans la modale de fermeture (obligatoire, max 1000 chars).
+  close_reason String?
 
   @@index([guild_id, user_id, created_at], map: "idx_tickets_user_time")
 }

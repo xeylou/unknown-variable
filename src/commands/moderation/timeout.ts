@@ -2,6 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { notifyAndRecord } from '../../utils/moderation';
+import { confirmSanction } from '../../utils/sanctionConfirm';
 import { parseDuration, formatDuration } from '../../utils/duration';
 import { base, frLoc } from '../../i18n';
 
@@ -47,11 +48,18 @@ export default {
     }
 
     const human = formatDuration(ms);
-    const id = await notifyAndRecord({
-      guild: interaction.guild, target: user, moderator: interaction.user, type: 'timeout',
-      reason, expiresAt: Date.now() + ms, durationText: human, extra: `**Durée :** ${human}`
-    });
-    await member.timeout(ms, reason || undefined);
-    return interaction.reply(`⏳ **${user.tag}** est exclu pour **${human}** (#${id}).${reason ? ` Raison : ${reason}` : ''}`);
+    // Récap + confirmation du staff (avec la photo de profil de la cible).
+    return confirmSanction(
+      interaction,
+      { type: 'timeout', target: user, reason, durationText: human },
+      async () => {
+        const id = await notifyAndRecord({
+          guild: interaction.guild, target: user, moderator: interaction.user, type: 'timeout',
+          reason, expiresAt: Date.now() + ms, durationText: human, extra: `**Durée :** ${human}`
+        });
+        await member.timeout(ms, reason || undefined);
+        return `⏳ **${user.tag}** est exclu pour **${human}** (#${id}).${reason ? ` Raison : ${reason}` : ''}`;
+      }
+    );
   }
 };

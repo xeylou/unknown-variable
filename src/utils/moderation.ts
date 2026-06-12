@@ -221,4 +221,4 @@ async function notifyAndRecord(
   return id;
 }
 
-export { LABELS, dmSanctionRich, recordSanction, notifyAndRecord, getSanctions }
+export { LABELS, ICONS, COLORS, dmSanctionRich, recordSanction, notifyAndRecord, getSanctions }

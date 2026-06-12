@@ -2,6 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { notifyAndRecord } from '../../utils/moderation';
+import { confirmSanction } from '../../utils/sanctionConfirm';
 import { base, frLoc } from '../../i18n';
 
 export default {
@@ -26,11 +27,16 @@ export default {
       return interaction.reply({ content: '❌ Impossible d\'avertir un bot.', flags: MessageFlags.Ephemeral });
     }
 
-    const id = await notifyAndRecord({
-      guild: interaction.guild, target, moderator: interaction.user, type: 'warn', reason
-    });
-    return interaction.reply(
-      `⚠️ ${target} a reçu un avertissement (#${id}).${reason ? ` Raison : ${reason}` : ''}`
+    // Récap + confirmation du staff (avec la photo de profil de la cible).
+    return confirmSanction(
+      interaction,
+      { type: 'warn', target, reason },
+      async () => {
+        const id = await notifyAndRecord({
+          guild: interaction.guild, target, moderator: interaction.user, type: 'warn', reason
+        });
+        return `⚠️ ${target} a reçu un avertissement (#${id}).${reason ? ` Raison : ${reason}` : ''}`;
+      }
     );
   }
 };

@@ -2,6 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { notifyAndRecord } from '../../utils/moderation';
+import { confirmSanction } from '../../utils/sanctionConfirm';
 import { base, frLoc } from '../../i18n';
 
 /**
@@ -43,18 +44,28 @@ export default {
       }
     }
 
-    const id = await notifyAndRecord({
-      guild: interaction.guild, target: user, moderator: interaction.user,
-      type: 'softban',
-      reason: reason ?? null,
-      extra: `**Messages purgés :** ${days} jour(s)`
-    });
-    await interaction.guild.members.ban(user.id, {
-      reason: `[Softban] ${reason || 'Non précisée'}`,
-      deleteMessageSeconds: days * 86400
-    });
-    await interaction.guild.members.unban(user.id, `[Softban] purge auto, ${reason || ''}`).catch(() => {});
+    // Récap + confirmation du staff (avec la photo de profil de la cible).
+    return confirmSanction(
+      interaction,
+      {
+        type: 'softban', target: user, reason: reason ?? null,
+        extraFields: [{ name: 'Messages purgés', value: `${days} jour(s)` }]
+      },
+      async () => {
+        const id = await notifyAndRecord({
+          guild: interaction.guild, target: user, moderator: interaction.user,
+          type: 'softban',
+          reason: reason ?? null,
+          extra: `**Messages purgés :** ${days} jour(s)`
+        });
+        await interaction.guild.members.ban(user.id, {
+          reason: `[Softban] ${reason || 'Non précisée'}`,
+          deleteMessageSeconds: days * 86400
+        });
+        await interaction.guild.members.unban(user.id, `[Softban] purge auto, ${reason || ''}`).catch(() => {});
 
-    return interaction.reply(`🧹 **${user.tag}** softban (#${id}) — messages des ${days} dernier(s) jour(s) supprimés.`);
+        return `🧹 **${user.tag}** softban (#${id}) — messages des ${days} dernier(s) jour(s) supprimés.`;
+      }
+    );
   }
 };

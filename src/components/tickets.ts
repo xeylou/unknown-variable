@@ -4,13 +4,17 @@ import {
   ButtonBuilder, ButtonStyle,
   ChannelType,
   MessageFlags,
+  ModalBuilder,
   PermissionFlagsBits,
   StringSelectMenuBuilder,
+  TextInputBuilder,
+  TextInputStyle,
   type ButtonInteraction,
   type Client,
   type Guild,
   type GuildMember,
   type Message,
+  type ModalSubmitInteraction,
   type StringSelectMenuInteraction,
   type TextChannel,
   type User
@@ -69,9 +73,8 @@ export default {
     const action = args[0];
     if (action === 'category')      return createTicket(interaction as StringSelectMenuInteraction<'cached'>);
     if (action === 'claim')         return claimTicket(interaction as ButtonInteraction<'cached'>);
-    if (action === 'close')         return askCloseConfirm(interaction as ButtonInteraction<'cached'>);
-    if (action === 'close-confirm') return doCloseTicket(interaction as ButtonInteraction<'cached'>, client);
-    if (action === 'close-cancel')  return cancelClose(interaction as ButtonInteraction<'cached'>);
+    if (action === 'close')         return askCloseReason(interaction as ButtonInteraction<'cached'>);
+    if (action === 'close-confirm') return doCloseTicket(interaction as ModalSubmitInteraction<'cached'>, client);
     // « reopen » peut être déclenché depuis un DM : pas d'assertion `'cached'`.
     if (action === 'reopen')        return reopenTicket(interaction as unknown as ButtonInteraction, client, args[1]);
   }
@@ -176,6 +179,7 @@ export async function openTicket(params: {
   const { guild, owner, category, categoryRoleId, openedByTag } = params;
 
   const ticketNumber = await nextTicketNumber(guild.id);
+  const createdAt = Date.now();
   const channelName = `${category.value}-${owner.username}-${ticketNumber}`;
 
   const overwrites = buildTicketOverwrites(
@@ -203,7 +207,7 @@ export async function openTicket(params: {
       number: ticketNumber,
       category: category.value,
       status: 'open',
-      created_at: Date.now()
+      created_at: createdAt
     }
   });
 
@@ -220,9 +224,13 @@ export async function openTicket(params: {
     serverName: guild.name
   });
 
+  // En-tête traçant l'auteur et la date d'ouverture. La mention dans un embed
+  // ne notifie pas — c'est un simple lien cliquable, pas un ping en double.
+  const createdLine = `Ticket créé par <@${owner.id}> le <t:${Math.floor(createdAt / 1000)}:F>`;
+
   const ticketEmbed = embeds.primary()
     .setTitle(`Ticket #${ticketNumber} — ${category.label}`)
-    .setDescription(description)
+    .setDescription(`${createdLine}\n\n${description}`)
     .setFooter({ text: `Ouvert par ${openedByTag}` })
     .setTimestamp();
 
@@ -341,39 +349,62 @@ async function fetchAllMessages(channel: TextChannel, hardCap = 5000): Promise<M
   return collected.reverse();
 }
 
+/** Longueur max de la raison de fermeture (limite du TextInput Discord). */
+const CLOSE_REASON_MAX_LEN = 1000;
+
 /**
- * Demande la confirmation avant de fermer le ticket. Sans cette étape, un
- * clic accidentel sur « Fermer » détruisait le salon et le transcript dans la
- * foulée.
+ * Ouvre la modale de fermeture. La raison est obligatoire pour le staff et
+ * facultative pour le créateur qui ferme son propre ticket. La modale fait
+ * aussi office de confirmation — la fermer sans valider annule l'opération,
+ * ce qui évite qu'un clic accidentel sur « Fermer » détruise le salon et le
+ * transcript dans la foulée.
  */
-async function askCloseConfirm(interaction: ButtonInteraction<'cached'>) {
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId('ticket:close-confirm')
-      .setLabel('Confirmer la fermeture')
-      .setEmoji('🔒')
-      .setStyle(ButtonStyle.Danger),
-    new ButtonBuilder()
-      .setCustomId('ticket:close-cancel')
-      .setLabel('Annuler')
-      .setStyle(ButtonStyle.Secondary)
-  );
-  return interaction.reply({
-    content: '⚠️ **Confirmer la fermeture du ticket ?**\nLe salon sera supprimé après 5 s — un transcript sera archivé dans le salon de logs et le créateur recevra un DM avec la possibilité de rouvrir pendant 7 jours.',
-    components: [row],
-    flags: MessageFlags.Ephemeral
-  });
+async function askCloseReason(interaction: ButtonInteraction<'cached'>) {
+  const ticket = interaction.channelId
+    ? await prisma.tickets.findUnique({ where: { channel_id: interaction.channelId } })
+    : null;
+  const reasonRequired = ticket ? ticket.user_id !== interaction.user.id : true;
+
+  const modal = new ModalBuilder()
+    .setCustomId('ticket:close-confirm')
+    .setTitle('Fermeture du ticket');
+
+  const input = new TextInputBuilder()
+    .setCustomId('raison')
+    .setLabel('Raison de la fermeture')
+    .setStyle(TextInputStyle.Paragraph)
+    .setMaxLength(CLOSE_REASON_MAX_LEN)
+    .setRequired(reasonRequired)
+    .setPlaceholder(reasonRequired
+      ? 'Obligatoire : décris la résolution ou le motif (transmis au créateur et archivé).'
+      : 'Facultatif : ajoute une raison si tu le souhaites.');
+  if (reasonRequired) input.setMinLength(3);
+
+  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
+  return interaction.showModal(modal);
 }
 
-/** Annulation de la fermeture — répond éphémèrement et retire les boutons. */
-async function cancelClose(interaction: ButtonInteraction<'cached'>) {
-  return interaction.update({ content: '❎ Fermeture annulée.', components: [] });
-}
-
-/** Fermeture confirmée : transcript + archivage + suppression du salon. */
-async function doCloseTicket(interaction: ButtonInteraction<'cached'>, client: Client<true>) {
-  await interaction.update({ content: '🔒 Fermeture du ticket dans 5 secondes...', components: [] });
+/**
+ * Fermeture confirmée (soumission de la modale) : transcript + archivage +
+ * suppression du salon. La raison est obligatoire pour le staff, facultative
+ * pour le créateur qui ferme son propre ticket. Elle est persistée, archivée
+ * dans les logs et transmise au créateur dans son DM.
+ */
+async function doCloseTicket(interaction: ModalSubmitInteraction<'cached'>, client: Client<true>) {
   const channel = interaction.channel as TextChannel;
+  const ticket = await prisma.tickets.findUnique({ where: { channel_id: channel.id } });
+  const reason = interaction.fields.getTextInputValue('raison').trim();
+
+  // Le staff DOIT motiver la fermeture ; le créateur qui ferme son propre
+  // ticket peut laisser le champ vide.
+  const reasonRequired = ticket ? ticket.user_id !== interaction.user.id : true;
+  if (reasonRequired && !reason) {
+    return interaction.reply({
+      content: '❌ La raison de fermeture est obligatoire pour le staff.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+  await interaction.reply({ content: '🔒 Fermeture du ticket dans 5 secondes...' });
 
   const messages = await fetchAllMessages(channel);
   const transcript = messages.map((m) =>
@@ -391,19 +422,19 @@ async function doCloseTicket(interaction: ButtonInteraction<'cached'>, client: C
   if (logsChannelId) {
     const logs = await interaction.guild.channels.fetch(logsChannelId).catch(() => null);
     if (logs && logs.isTextBased() && 'send' in logs) {
+      const quotedReason = reason ? reason.slice(0, 900).replace(/\n/g, '\n> ') : '_non précisée_';
       await logs.send({
         content: `📁 **Ticket fermé** : \`${channel.name}\` par ${interaction.user.tag} ` +
-                 `(${messages.length} message(s))`,
+                 `(${messages.length} message(s))\n> **Raison :** ${quotedReason}`,
         files: [attachment],
         allowedMentions: { parse: [] }
       }).catch((e: unknown) => log.warn('archive failed', e));
     }
   }
 
-  const ticket = await prisma.tickets.findUnique({ where: { channel_id: channel.id } });
   await prisma.tickets.update({
     where: { channel_id: channel.id },
-    data: { status: 'closed', closed_at: Date.now() }
+    data: { status: 'closed', closed_at: Date.now(), close_reason: reason || null }
   });
 
   // Demande de notation + option de réouverture envoyées au créateur du ticket
@@ -434,6 +465,7 @@ async function doCloseTicket(interaction: ButtonInteraction<'cached'>, client: C
           .setTitle('Votre ticket a été fermé')
           .setDescription(
             `Merci d'avoir contacté le support de **${interaction.guild.name}**.\n` +
+            (reason ? `**Raison de la fermeture :** ${reason}\n\n` : '') +
             'Comment évaluez-vous votre expérience sur ce ticket ? (1 = mauvaise · 5 = excellente)\n\n' +
             '💬 *Tu peux aussi laisser un commentaire libre — il sera transmis à l\'équipe.*\n' +
             '🔓 *Le ticket peut être rouvert dans les 7 jours si la discussion n\'est pas terminée.*'
@@ -541,7 +573,10 @@ async function reopenTicket(interaction: ButtonInteraction, client: Client<true>
     content: `<@${ticket.user_id}> • <@&${categoryRoleId}>`,
     embeds: [embeds.primary()
       .setTitle(`Ticket #${ticket.number} — rouvert`)
-      .setDescription('Le ticket a été rouvert. Reprends la discussion ici.')
+      .setDescription(
+        `Ticket créé par <@${ticket.user_id}> le <t:${Math.floor(ticket.created_at / 1000)}:F>\n\n` +
+        'Le ticket a été rouvert. Reprends la discussion ici.'
+      )
       .setTimestamp()],
     components: [new ActionRowBuilder<ButtonBuilder>().addComponents(claimBtn, closeBtn)],
     allowedMentions: {
