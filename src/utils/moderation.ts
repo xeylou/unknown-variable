@@ -56,7 +56,7 @@ export function consequencesText(type: SanctionType, durationText: string | null
              '• Tu **n\'as pas été banni** — tu peux te reconnecter immédiatement, sans nouvelle invitation.\n' +
              '• Considère ça comme un avertissement appuyé : une récidive peut mener à un vrai ban.';
     case 'ban':
-      return '• Tu as été banni du serveur — tu ne peux plus le rejoindre.\n' +
+      return '• Tu as été banni, hihi <3.\n' +
              '• Si tu penses qu\'il s\'agit d\'une erreur, contacte un administrateur (réseaux sociaux du serveur).';
     case 'unban':
       return '• Ton bannissement a été levé.\n' +
