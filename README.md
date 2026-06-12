@@ -1,6 +1,6 @@
 > 🇬🇧 **English version [README_en.md](README_en.md)**
 
-# unknown-variable bot Discord 
+<h2 align="center">unknown-variable bot Discord</h2>
 
 Bot Discord **multifonction**, écrit en **TypeScript strict** sur **discord.js v14**, persistance avec **Prisma 7 + SQLite**. ~71 commandes slash, ~21 composants interactifs, modération, tickets, logs, accueil, engagement, intégrations (Minecraft, YouTube/Twitch/RSS, GitHub, musique Lavalink) et autre ! **Multi-serveur**, **bilingue FR/EN** (réponses selon la langue choisie), nom du bot **personnalisable**.
 
@@ -13,7 +13,7 @@ Bot Discord **multifonction**, écrit en **TypeScript strict** sur **discord.js 
 
 ---
 
-## ✨ Fonctionnalités
+<h2 align="center">✨ Fonctionnalités</h2>
 
 | Module | Description |
 |---|---|
@@ -32,7 +32,7 @@ Bot Discord **multifonction**, écrit en **TypeScript strict** sur **discord.js 
 
 ---
 
-## 🚀 Démarrage rapide
+<h2 align="center">🚀 Démarrage</h2>
 
 ```bash
 git clone https://github.com/xeylou/unknown-variable.git bot_discord
@@ -55,7 +55,7 @@ docker compose exec bot npm run deploy     # une seule fois, après le 1er déma
 
 ---
 
-## 📚 Documentation
+<h2 align="center">📚 Documentation</h2>
 
 | Guide | Contenu |
 |---|---|
@@ -71,7 +71,7 @@ docker compose exec bot npm run deploy     # une seule fois, après le 1er déma
 
 ---
 
-## 🧱 Couches de développement
+<h2 align="center">🧱 Couches de développement</h2>
 
 - **Runtime** : Node.js ≥ 20, exécuté via [`tsx`](https://github.com/privatenumber/tsx) (pas d'étape de build)
 - **Discord** : [discordjs](https://discord.js.org/) v14 - intents `Guilds`, `GuildMessages`, `MessageContent`*, `GuildMembers`*, `GuildModeration`, `GuildVoiceStates`, `GuildExpressions`, `GuildInvites`, `GuildMessageReactions`
@@ -83,7 +83,7 @@ docker compose exec bot npm run deploy     # une seule fois, après le 1er déma
 
 ---
 
-## 📄 Licence
+<h2 align="center">📄 Licence</h2>
 
 Distribué sous **GNU General Public License v3.0 (ou ultérieure)** - voir [`LICENSE`](LICENSE).
 En résumé : utilisation, étude, modification et redistribution libres, y compris pour son propre serveur ; toute version **distribuée** doit rester sous GPL-3.0 et fournir son code source credité. Aucune garantie.

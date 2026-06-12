@@ -53,7 +53,7 @@ Enable **Developer Mode** (User Settings → Advanced) to copy IDs (right-click 
 | `#message-logs`, `#mod-logs`, … (staff-private) | Categorized server logs | `/logs salon …` |
 | `#suggestions` | Receives `/suggestion` | `/config suggestions` |
 | "➕ Create a voice" voice channel | "Join to create" pattern | `/config vocaux-temp` |
-| `#tickets` | Category picker panel | `/setup-tickets` (run inside it) |
+| `#tickets` | Category picker panel | `/setup-tickets` |
 
 ---
 
@@ -112,8 +112,9 @@ When the bot is added, a welcome message already reminds admins of these steps.
 4. /config reglement role:@Verified
    → Role granted when a member clicks "I accept".
 
-5. /setup-reglement
-   → Run INSIDE #rules (stores the ID for sanction DMs).
+5. /setup-reglement deployer [salon:#rules]
+   → Without the salon option, deploys in the current channel. Stores the
+     channel ID for sanction DMs.
 
 6. /config autorole role:@Pending        (optional — pre-verification role)
 
@@ -129,8 +130,8 @@ When the bot is added, a welcome message already reminds admins of these steps.
     /config ticket-role categorie:support role:@Support   (repeat per category)
     → A category with no owner role refuses ticket creation.
 
-11. /setup-tickets
-    → Run INSIDE #tickets. Deploys the dropdown menu.
+11. /setup-tickets deployer [salon:#tickets]
+    → Deploys the dropdown menu. Without the salon option, deploys in the current channel.
 ```
 
 ### Optional modules

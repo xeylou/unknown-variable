@@ -14,7 +14,7 @@ All slash commands, by module, with their access **tier** (`public` / `ticket-st
 
 | Command | Tier | Description |
 |---|---|---|
-| `/setup-tickets` | admin | Deploys the panel (once). |
+| `/setup-tickets deployer [salon:]` | admin | Deploys the panel in the given channel (or the current one). |
 | `/add-user <utilisateur>` | ticket-staff | Adds a member to the current ticket. |
 | `/remove-user <utilisateur>` | ticket-staff | Removes a member. |
 | `/ticket move <categorie>` | ticket-staff | Changes the ticket category (renames the channel). |
@@ -50,7 +50,7 @@ All slash commands, by module, with their access **tier** (`public` / `ticket-st
 
 | Command | Tier | Description |
 |---|---|---|
-| `/setup-reglement` | admin | Deploys the rules + button. |
+| `/setup-reglement deployer [salon:]` | admin | Deploys the rules + button in the given channel (or the current one). |
 | `/setup-captcha` | admin | Deploys the verification button (challenge shown ephemerally). |
 | `/setup-roles` | admin | Self-assignable role panel (buttons). |
 | `/setup-reaction-roles` | admin | Emoji → role panel (reactions). |

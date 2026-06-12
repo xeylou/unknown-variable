@@ -362,7 +362,8 @@ export const messages = {
 
   // --- Community: /setup-reglement ---
   'setupreglement.cmd.desc': { en: 'Official rules with button-based validation', fr: 'Règlement officiel avec validation par bouton' },
-  'setupreglement.sub.deployer.desc': { en: 'Deploy the rules in this channel', fr: 'Déployer le règlement dans ce salon' },
+  'setupreglement.sub.deployer.desc': { en: 'Deploy the rules in a channel', fr: 'Déployer le règlement dans un salon' },
+  'setupreglement.opt.salon.desc': { en: 'Target channel (default: current channel)', fr: 'Salon cible (défaut : salon courant)' },
   'setupreglement.sub.supprimer.desc': { en: 'Remove the deployed rule panel(s) and reset related settings', fr: 'Retirer le(s) règlement(s) déployé(s) et réinitialiser les réglages liés' },
   'setupreglement.no_panel': { en: 'ℹ️ No deployed rules to remove.', fr: 'ℹ️ Aucun règlement déployé à supprimer.' },
   'setupreglement.failed': { en: '❌ Failed to send the rules.', fr: '❌ Échec de l\'envoi du règlement.' },
@@ -502,7 +503,8 @@ export const messages = {
 
   // --- Tickets: /setup-tickets ---
   'setuptickets.cmd.desc': { en: 'Ticket panel', fr: 'Panneau de tickets' },
-  'setuptickets.sub.deployer.desc': { en: 'Deploy the ticket panel in this channel', fr: 'Déployer le panneau de tickets dans ce salon' },
+  'setuptickets.sub.deployer.desc': { en: 'Deploy the ticket panel in a channel', fr: 'Déployer le panneau de tickets dans un salon' },
+  'setuptickets.opt.salon.desc': { en: 'Target channel (default: current channel)', fr: 'Salon cible (défaut : salon courant)' },
   'setuptickets.sub.supprimer.desc': { en: 'Remove the ticket panel(s) and reset the opening message', fr: 'Retirer le(s) panneau(x) de tickets et réinitialiser le message d\'ouverture' },
   'setuptickets.no_panel': { en: 'ℹ️ No ticket panels to remove.', fr: 'ℹ️ Aucun panneau de tickets à supprimer.' },
   'setuptickets.failed': { en: '❌ Failed to send the panel.', fr: '❌ Échec de l\'envoi du panneau.' },

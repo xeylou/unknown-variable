@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder,
-  ActionRowBuilder, StringSelectMenuBuilder, MessageFlags,
-  type ChatInputCommandInteraction
+  ActionRowBuilder, StringSelectMenuBuilder, MessageFlags, ChannelType,
+  type ChatInputCommandInteraction, type GuildTextBasedChannel
 } from 'discord.js';
 import { requireAdmin } from '../../utils/permissions';
 import { ticketStaffRoleIds } from '../../utils/guildSettings';
@@ -17,7 +17,11 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((s) => s.setName('deployer')
       .setDescription(base('setuptickets.sub.deployer.desc'))
-      .setDescriptionLocalizations(frLoc('setuptickets.sub.deployer.desc')))
+      .setDescriptionLocalizations(frLoc('setuptickets.sub.deployer.desc'))
+      .addChannelOption((o) => o.setName('salon')
+        .setDescription(base('setuptickets.opt.salon.desc'))
+        .setDescriptionLocalizations(frLoc('setuptickets.opt.salon.desc'))
+        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)))
     .addSubcommand((s) => s.setName('supprimer')
       .setDescription(base('setuptickets.sub.supprimer.desc'))
       .setDescriptionLocalizations(frLoc('setuptickets.sub.supprimer.desc'))),
@@ -36,9 +40,9 @@ export default {
     }
 
     // --- Déployer ---
-    const channel = interaction.channel;
+    const channel = (interaction.options.getChannel('salon') ?? interaction.channel) as GuildTextBasedChannel | null;
     if (!channel || !channel.isTextBased() || !('send' in channel) || !('permissionsFor' in channel)) {
-      return interaction.reply({ content: '❌ Cette commande doit être lancée dans un salon texte.', flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: '❌ Choisis un salon texte valide (option `salon`) ou lance la commande dans un salon texte.', flags: MessageFlags.Ephemeral });
     }
     const me = interaction.guild.members.me;
     if (!me || !channel.permissionsFor(me)?.has(['SendMessages', 'EmbedLinks'])) {
@@ -76,7 +80,7 @@ export default {
     await recordPanel('tickets', sent);
     const noRoles = ticketStaffRoleIds(interaction.guild.id).length === 0;
     return interaction.reply({
-      content: '✅ Panneau déployé.' + (noRoles
+      content: `✅ Panneau déployé dans ${channel}.` + (noRoles
         ? '\n⚠️ Aucune catégorie n\'a de rôle responsable : les ouvertures seront refusées tant que tu n\'auras pas configuré `/config ticket-role`.'
         : ''),
       flags: MessageFlags.Ephemeral

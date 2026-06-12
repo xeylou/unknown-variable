@@ -184,8 +184,8 @@ Everything below changes **without a restart**, stored in the database (`guild_c
 
 | Command | Effect |
 |---|---|
-| `/setup-tickets` | Ticket menu panel in the current channel. |
-| `/setup-reglement` | Rules (`src/data/reglement.ts`) + accept button. |
+| `/setup-tickets deployer [salon:]` | Ticket menu panel in the given channel (or the current one). |
+| `/setup-reglement deployer [salon:]` | Rules (`src/data/reglement.ts`) + accept button, in the given channel (or the current one). |
 | `/setup-captcha` | Verification button (challenge shown ephemerally). |
 | `/setup-roles role1:… [titre] [description] [role2…role5]` | Self-assignable role panel (buttons, up to 5). |
 | `/setup-reaction-roles titre: description: paires: [exclusif]` | Emoji → role panel (`🟦 @Blue, 🔴 @Red`, up to 10 pairs). |
