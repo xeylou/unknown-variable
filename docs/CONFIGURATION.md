@@ -157,6 +157,7 @@ Ci-dessous modifiable **sans redémarrage**, stocké en base (`guild_config`).
 | `invite-whitelist` | `action:add\|remove\|list` `[guild-id]` | Serveurs alliés dont les invitations passent. |
 | `antiraid` | `actif` `[age-min-compte:0-365]` `[expulser-jeunes]` `[verrouillage-auto]` `[quarantaine:role]` | Détection de vague + actions. **Le filtre d'âge minimum est ignoré si le captcha est actif** (il filtre déjà l'entrée). |
 | `captcha` | `actif` `[role-non-verifie]` `[role-verifie]` | Vérification visuelle (6 caractères, défi en éphémère). |
+| `captcha-message` | `[message]` | Message affiché après réussite du CAPTCHA (vide = défaut). Variables : `{user}` `{username}` `{server}` `{count}`. |
 | `accueil` | `[message]` `[salon]` `[carte-image]` `[image-fond:url]` | Bienvenue à l'obtention du rôle règlement : MP (carte + embed) et carte postée dans `salon` **sans ping**. Variables : `{user}` `{username}` `{server}` `{count}`. |
 | `accueil-court` | `[salon]` `[message]` `[desactiver]` | Message de bienvenue **court qui ping le membre**, posté dans `salon` à la validation du règlement. Variables : `{user}` `{username}` `{server}` `{count}`. |
 | `depart` | `salon` `[message]` `[carte-image]` `[image-fond:url]` | Au revoir (carte image optionnelle, ex. salon staff). Variables : `{username}` `{server}` `{count}`. |

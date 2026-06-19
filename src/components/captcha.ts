@@ -4,7 +4,12 @@ import {
 } from 'discord.js';
 import { getConfig } from '../utils/configCache';
 import { verifyAnswer, buildChallengeReply } from '../features/captcha';
+import { applyPlaceholders } from '../utils/placeholders';
 import type { ComponentInteraction } from '../types';
+
+/** Message affiché après réussite du CAPTCHA (configurable via `/config captcha-message`). */
+const DEFAULT_SUCCESS_MESSAGE =
+  '✅ Vérification réussie — bienvenue sur **{server}** ! Penser à accepter le règlement pour finaliser votre accès.';
 
 export default {
   prefix: 'captcha',
@@ -58,8 +63,9 @@ export default {
         const verified = await getConfig(guildId, 'captcha_verified_role');
         if (unverified) await member.roles.remove(unverified, 'CAPTCHA réussi').catch(() => {});
         if (verified) await member.roles.add(verified, 'CAPTCHA réussi').catch(() => {});
+        const successRaw = (await getConfig(guildId, 'captcha_success_message')) || DEFAULT_SUCCESS_MESSAGE;
         return interaction.reply({
-          content: `✅ Vérification réussie — bienvenue sur **${interaction.guild.name}** ! Penser à accepter le règlement pour finaliser votre accès.`,
+          content: applyPlaceholders(successRaw, member),
           flags: MessageFlags.Ephemeral
         });
       }

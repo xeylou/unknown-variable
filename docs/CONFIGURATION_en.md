@@ -159,6 +159,7 @@ Everything below changes **without a restart**, stored in the database (`guild_c
 | `invite-whitelist` | `action:add\|remove\|list` `[guild-id]` | Allied servers whose invites are allowed. |
 | `antiraid` | `actif` `[age-min-compte:0-365]` `[expulser-jeunes]` `[verrouillage-auto]` `[quarantaine:role]` | Wave detection + actions. **The minimum-age filter is skipped when the captcha is enabled** (it already gates entry). |
 | `captcha` | `actif` `[role-non-verifie]` `[role-verifie]` | Visual verification (6 characters, challenge shown ephemerally). |
+| `captcha-message` | `[message]` | Message shown after a successful CAPTCHA (empty = default). Variables: `{user}` `{username}` `{server}` `{count}`. |
 | `accueil` | `[message]` `[salon]` `[carte-image]` `[image-fond:url]` | Welcome on rules-role grant: DM (card + embed) and card posted in `salon` **without ping**. Variables: `{user}` `{username}` `{server}` `{count}`. |
 | `accueil-court` | `[salon]` `[message]` `[desactiver]` | Short welcome message that **pings the member**, posted in `salon` when the rules role is granted. Variables: `{user}` `{username}` `{server}` `{count}`. |
 | `depart` | `salon` `[message]` `[carte-image]` `[image-fond:url]` | Goodbye (optional image card, e.g. staff channel). Variables: `{username}` `{server}` `{count}`. |
