@@ -22,6 +22,8 @@ type RenderParams = {
   backgroundURL?: string | null;
   /** 'welcome' (défaut, arrivée) ou 'goodbye' (départ) — change titre/teinte/texte. */
   variant?: 'welcome' | 'goodbye';
+  /** Sous-titre personnalisé (sinon dérivé du variant : N membre / membres restants). */
+  subtitle?: string;
 };
 
 /** Habillage (dégradé de fond + titre) selon la variante de la carte. */
@@ -112,9 +114,10 @@ export async function renderWelcomeCard(params: RenderParams): Promise<Buffer | 
 
     ctx.font = '22px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    const subtitle = params.variant === 'goodbye'
-      ? `${params.memberCount} membre(s) restant(s) sur ${params.guildName}`
-      : `Vous êtes le ${params.memberCount}ᵉ membre de ${params.guildName}`;
+    const subtitle = params.subtitle
+      ?? (params.variant === 'goodbye'
+        ? `${params.memberCount} membre(s) restant(s) sur ${params.guildName}`
+        : `Vous êtes le ${params.memberCount}ᵉ membre de ${params.guildName}`);
     ctx.fillText(subtitle, 250, 160);
 
     return Buffer.from(await canvas.encode('png'));

@@ -20,11 +20,11 @@ An **all-in-one** Discord bot written in **strict TypeScript** on **discord.js v
 | 🎫 **Tickets** | Panel + category picker, **per-team isolated categories**, transcript, 1–5 rating, comment, 7-day DM reopen |
 | 🛡️ **Moderation** | Sanctions with DM + record + log, channel/server `lockdown`, **anti-raid**, **auto-moderation** (phishing, tokens, Zalgo, words, spam, invites) |
 | 📜 **Logs & Audit** | Per-category log: messages, members, roles, channels, voice, server, moderation, bot actions |
-| ✅ **Onboarding & verification** | Rules to accept, autorole, **visual CAPTCHA** shown ephemerally, welcome card (PNG) in DM + channel |
+| ✅ **Onboarding & verification** | Rules to accept, autorole, **visual CAPTCHA** shown ephemerally, welcome/goodbye cards (PNG, optional) in DM + channel, **short welcome message that pings** the member |
 | 🎉 **Engagement** | Giveaways (requirements + multipliers), suggestions (thread + vote), persistent & native polls |
 | 🔊 **Temporary voice** | "Join to create" channel + persistant control panel |
 | 🧰 **Utilities** | `/userinfo`, `/serverinfo`, `/avatar`, `/ping`, `/botinfo`, reminders (one-off / recurring / per role), FAQ tags, AFK, embed builder |
-| ⛏️ **Minecraft** | Status, auto-watch + role alert, RCON (whitelist, in-game role), Discord <-> MC username link |
+| ⛏️ **Minecraft** | Status, auto-watch + role alert, RCON (whitelist, in-game role), Discord <-> MC username link, **in-game chat mirror** to a staff channel |
 | 🔔 **Notifications** | YouTube, Twitch, and **generic RSS feeds** (Instagram / TikTok / X via RSSHub, Reddit, blogs, podcasts…) with role ping |
 | 🐙 **GitHub** | Repo tracking (commits, PRs, **CI/CD**, releases, issues, reviews) in **hybrid** webhooks + polling, live pipeline status, digest, GitHub <-> Discord linking |
 | 🎵 **Music** | Playback via **Lavalink** (queue, filters, lyrics) |
