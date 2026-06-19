@@ -82,11 +82,13 @@ async function runAutomod(message: Message): Promise<void> {
     return punish(message, 'Trop de mentions dans un seul message');
   }
 
-  const letters = content.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/g) || [];
-  if (letters.length >= 10) {
-    const upper = letters.filter((c) => c === c.toUpperCase()).length;
-    if (upper / letters.length > 0.7) {
-      return punish(message, 'Excès de majuscules');
+  if ((await getConfig(message.guild.id, 'automod_caps', '1')) === '1') {
+    const letters = content.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/g) || [];
+    if (letters.length >= 10) {
+      const upper = letters.filter((c) => c === c.toUpperCase()).length;
+      if (upper / letters.length > 0.7) {
+        return punish(message, 'Excès de majuscules');
+      }
     }
   }
 

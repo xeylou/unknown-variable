@@ -38,7 +38,8 @@ export default {
       .addBooleanOption((o) => o.setName('actif').setDescription('Activer ?').setRequired(true))
       .addBooleanOption((o) => o.setName('phishing').setDescription('Bloquer liens de phishing (défaut on)'))
       .addBooleanOption((o) => o.setName('token-leak').setDescription('Bloquer tokens Discord (défaut on)'))
-      .addBooleanOption((o) => o.setName('zalgo').setDescription('Bloquer texte Zalgo (défaut on)')))
+      .addBooleanOption((o) => o.setName('zalgo').setDescription('Bloquer texte Zalgo (défaut on)'))
+      .addBooleanOption((o) => o.setName('majuscules').setDescription('Bloquer l\'excès de majuscules (défaut on)')))
     .addSubcommand((s) => s.setName('invite-whitelist').setDescription('Gérer la liste blanche des invitations Discord (IDs de guildes alliées)')
       .addStringOption((o) => o.setName('action').setDescription('Action').setRequired(true)
         .addChoices({ name: 'Ajouter', value: 'add' }, { name: 'Retirer', value: 'remove' }, { name: 'Lister', value: 'list' }))
@@ -171,14 +172,17 @@ export default {
       const ph = interaction.options.getBoolean('phishing');
       const tk = interaction.options.getBoolean('token-leak');
       const zg = interaction.options.getBoolean('zalgo');
+      const cp = interaction.options.getBoolean('majuscules');
       await setConfig(gid, 'automod_enabled', a ? '1' : '0');
       if (ph !== null) await setConfig(gid, 'automod_phishing', ph ? '1' : '0');
       if (tk !== null) await setConfig(gid, 'automod_token_leak', tk ? '1' : '0');
       if (zg !== null) await setConfig(gid, 'automod_zalgo', zg ? '1' : '0');
+      if (cp !== null) await setConfig(gid, 'automod_caps', cp ? '1' : '0');
       const parts: string[] = [];
       if (ph !== null) parts.push(`phishing ${ph ? 'on' : 'off'}`);
       if (tk !== null) parts.push(`token-leak ${tk ? 'on' : 'off'}`);
       if (zg !== null) parts.push(`zalgo ${zg ? 'on' : 'off'}`);
+      if (cp !== null) parts.push(`majuscules ${cp ? 'on' : 'off'}`);
       return ok(`✅ Auto-modération **${a ? 'activée' : 'désactivée'}**${parts.length ? ` — ${parts.join(' · ')}` : ''}.`);
     }
     if (sub === 'invite-whitelist') {

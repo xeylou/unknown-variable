@@ -151,7 +151,7 @@ Ci-dessous modifiable **sans redémarrage**, stocké en base (`guild_config`).
 | `staff` · `admin` | `[role]` | Rôle modération · administration (vide = retirer). |
 | `tickets` | `[categorie]` `[salon-logs]` | Catégorie des tickets + salon des transcripts. |
 | `ticket-role` | `categorie` `[role]` | Rôle responsable d'une catégorie (vide = désactive la catégorie). |
-| `automod` | `actif` `[phishing]` `[token-leak]` `[zalgo]` | Auto-modération et sous-modules. |
+| `automod` | `actif` `[phishing]` `[token-leak]` `[zalgo]` `[majuscules]` | Auto-modération et sous-modules (chaque sous-module activable/désactivable ; `majuscules` = blocage de l'excès de capitales). |
 | `mot-ajouter` · `mot-retirer` | `mot` | Mots interdits (insensible à la casse, variantes leet). |
 | `automod-spam` | `[messages:3-20]` `[secondes:3-30]` `[exclusion-minutes:1-60]` | Seuil·durée du timeout anti-spam (défauts 5 · 7 · 5). |
 | `invite-whitelist` | `action:add\|remove\|list` `[guild-id]` | Serveurs alliés dont les invitations passent. |

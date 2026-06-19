@@ -153,7 +153,7 @@ Everything below changes **without a restart**, stored in the database (`guild_c
 | `staff` / `admin` | `[role]` | Moderation / administration role (empty = remove). |
 | `tickets` | `[categorie]` `[salon-logs]` | Ticket category + transcripts channel. |
 | `ticket-role` | `categorie` `[role]` | Owner role of a category (empty = disable the category). |
-| `automod` | `actif` `[phishing]` `[token-leak]` `[zalgo]` | Auto-moderation and sub-modules. |
+| `automod` | `actif` `[phishing]` `[token-leak]` `[zalgo]` `[majuscules]` | Auto-moderation and sub-modules (each toggle on/off independently; `majuscules` = block excessive capitals). |
 | `mot-ajouter` / `mot-retirer` | `mot` | Banned words (case-insensitive, leet variants). |
 | `automod-spam` | `[messages:3-20]` `[secondes:3-30]` `[exclusion-minutes:1-60]` | Anti-spam timeout threshold/duration (defaults 5 / 7 / 5). |
 | `invite-whitelist` | `action:add\|remove\|list` `[guild-id]` | Allied servers whose invites are allowed. |
