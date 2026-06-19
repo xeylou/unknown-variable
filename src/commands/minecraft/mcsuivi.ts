@@ -83,7 +83,7 @@ export default {
       const watchers = await prisma.mc_watchers.findMany({ where: { guild_id: gid } });
       if (!watchers.length) {
         return interaction.reply({
-          content: 'ℹ️ Aucun suivi configuré. Utilise `/mcsuivi ajouter`.',
+          content: 'ℹ️ Aucun suivi configuré. Utiliser `/mcsuivi ajouter`.',
           flags: MessageFlags.Ephemeral
         });
       }

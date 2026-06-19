@@ -105,7 +105,7 @@ export default {
         if (check.status === 404 || check.status === 403) {
           return interaction.editReply(
             `⚠️ Dépôt \`${slug(ref.owner, ref.repo)}\` inaccessible avec le token configuré ` +
-            `(privé sans droits, ou inexistant). Vérifie les scopes du \`GITHUB_TOKEN\`.`);
+            `(privé sans droits, ou inexistant). Vérifier les scopes du \`GITHUB_TOKEN\`.`);
         }
       }
 
@@ -133,7 +133,7 @@ export default {
     if (sub === 'liste') {
       const rows = await prisma.github_repos.findMany({ where: { guild_id: gid } });
       if (!rows.length) {
-        return interaction.reply({ content: 'ℹ️ Aucun dépôt suivi. Utilise `/git suivre`.', flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: 'ℹ️ Aucun dépôt suivi. Utiliser `/git suivre`.', flags: MessageFlags.Ephemeral });
       }
       const embed = new EmbedBuilder()
         .setColor(config.colors.primary)

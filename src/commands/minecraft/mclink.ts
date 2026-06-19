@@ -52,7 +52,7 @@ export default {
       });
       if (existing) {
         return interaction.reply({
-          content: `ℹ️ Ton compte est déjà lié à **${existing.mc_username}**. Utilise \`/mclink delier\` pour changer.`,
+          content: `ℹ️ Votre compte est déjà lié à **${existing.mc_username}**. Utiliser \`/mclink delier\` pour changer.`,
           flags: MessageFlags.Ephemeral
         });
       }
@@ -79,9 +79,9 @@ export default {
           .setColor(config.colors.primary)
           .setTitle('⛏️ Liaison en attente')
           .setDescription(
-            `Connecte-toi au serveur Minecraft avec le pseudo **${pseudo}** dans les **30 minutes**.\n` +
-            'Dès que tu seras en ligne, ta liaison sera validée automatiquement.\n\n' +
-            '*Si tu n\'utilises pas ce pseudo exact, la liaison ne sera pas faite.*'
+            `Se connecter au serveur Minecraft avec le pseudo **${pseudo}** dans les **30 minutes**.\n` +
+            'Dès que vous serez en ligne, votre liaison sera validée automatiquement.\n\n' +
+            '*Si vous n\'utilisez pas ce pseudo exact, la liaison ne sera pas faite.*'
           )],
         flags: MessageFlags.Ephemeral
       });
@@ -102,7 +102,7 @@ export default {
       });
       if (pending) {
         return interaction.reply({
-          content: `⏳ Demande en attente pour **${pending.mc_username}**. Connecte-toi sur le serveur pour valider.`,
+          content: `⏳ Demande en attente pour **${pending.mc_username}**. Se connecter sur le serveur pour valider.`,
           flags: MessageFlags.Ephemeral
         });
       }

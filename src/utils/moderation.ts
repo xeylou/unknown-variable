@@ -45,28 +45,28 @@ const COLORS: Record<SanctionType, number> = {
 export function consequencesText(type: SanctionType, durationText: string | null): string {
   switch (type) {
     case 'warn':
-      return '• Cet avertissement est conservé dans ton casier.\n' +
+      return '• Cet avertissement est conservé dans votre casier.\n' +
              '• Plusieurs avertissements peuvent entraîner une sanction plus lourde (timeout, kick, ban).';
     case 'kick':
-      return '• Tu as été expulsé du serveur.\n' +
-             '• Tu peux le rejoindre à nouveau avec une nouvelle invitation.\n' +
+      return '• Vous avez été expulsé du serveur.\n' +
+             '• Vous pouvez le rejoindre à nouveau avec une nouvelle invitation.\n' +
              '• Une récidive peut entraîner un bannissement.';
     case 'softban':
-      return '• Tes messages récents ont été supprimés en masse.\n' +
-             '• Tu **n\'as pas été banni** — tu peux te reconnecter immédiatement, sans nouvelle invitation.\n' +
-             '• Considère ça comme un avertissement appuyé : une récidive peut mener à un vrai ban.';
+      return '• Vos messages récents ont été supprimés en masse.\n' +
+             '• Vous **n\'avez pas été banni** — vous pouvez vous reconnecter immédiatement, sans nouvelle invitation.\n' +
+             '• À considérer comme un avertissement appuyé : une récidive peut mener à un vrai ban.';
     case 'ban':
-      return '• Tu as été banni, hihi <3.\n' +
-             '• Si tu penses qu\'il s\'agit d\'une erreur, contacte un administrateur (réseaux sociaux du serveur).';
+      return '• Vous avez été banni, hihi <3.\n' +
+             '• Si vous pensez qu\'il s\'agit d\'une erreur, contacter un administrateur (réseaux sociaux du serveur).';
     case 'unban':
-      return '• Ton bannissement a été levé.\n' +
-             '• Tu peux à nouveau rejoindre le serveur avec une invitation.';
+      return '• Votre bannissement a été levé.\n' +
+             '• Vous pouvez à nouveau rejoindre le serveur avec une invitation.';
     case 'timeout':
-      return '• Tu ne peux plus envoyer de messages, parler en vocal ni ajouter de réactions.\n' +
-             (durationText ? `• Ton exclusion expire dans **${durationText}**.\n` : '') +
+      return '• Vous ne pouvez plus envoyer de messages, parler en vocal ni ajouter de réactions.\n' +
+             (durationText ? `• Votre exclusion expire dans **${durationText}**.\n` : '') +
              '• Une récidive peut entraîner un kick ou un ban.';
     case 'untimeout':
-      return '• Ton exclusion temporaire a été levée — tu peux à nouveau écrire et parler.';
+      return '• Votre exclusion temporaire a été levée — vous pouvez à nouveau écrire et parler.';
   }
 }
 
@@ -102,7 +102,7 @@ async function dmSanctionRich(
   if (type === 'warn' && typeof warnCount === 'number' && warnCount > 0) {
     fields.push({
       name: 'Casier',
-      value: `**${warnCount}** avertissement(s) actif(s) à ton actif.`
+      value: `**${warnCount}** avertissement(s) actif(s) à votre actif.`
     });
   }
   fields.push({ name: 'Conséquences', value: consequencesText(type, durationText) });

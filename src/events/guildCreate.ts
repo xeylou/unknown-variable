@@ -39,12 +39,12 @@ function welcomeEmbed(guild: Guild) {
     .setTitle(`Merci de m'avoir ajouté à ${guild.name} !`)
     .setDescription(
       'Je suis prêt. Voici la **mise en route** (commandes réservées aux admins) :\n\n' +
-      '**1.** `/config staff` et `/config admin` — déclare tes rôles de modération et d\'administration.\n' +
+      '**1.** `/config staff` et `/config admin` — déclarer vos rôles de modération et d\'administration.\n' +
       '**2.** `/permissions check` → bouton « Tout corriger » — pour que les commandes apparaissent dans Discord.\n' +
-      '**3.** `/logs tout-dans` — choisis un salon pour les logs du serveur.\n' +
+      '**3.** `/logs tout-dans` — choisir un salon pour les logs du serveur.\n' +
       '**4.** `/config reglement` puis `/setup-reglement` — règlement à accepter.\n' +
       '**5.** Tickets : `/config ticket-role`, `/config tickets`, puis `/setup-tickets`.\n\n' +
-      '📖 Tape `/help` pour la liste complète des commandes. Bonne configuration !'
+      '📖 Taper `/help` pour la liste complète des commandes. Bonne configuration !'
     )
     .setFooter({ text: config.botName });
 }

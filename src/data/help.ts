@@ -62,7 +62,7 @@ export const helpCategories: HelpCategory[] = [
       {
         usage: '/add-user <utilisateur>',
         usageEn: '/add-user <user>',
-        description: 'Ajoute un membre au ticket dans lequel tu te trouves.',
+        description: 'Ajoute un membre au ticket dans lequel vous vous trouvez.',
         descriptionEn: 'Adds a member to the ticket you are in.',
         tier: 'ticket-staff'
       },
@@ -569,7 +569,7 @@ export const helpCategories: HelpCategory[] = [
       {
         usage: '/userinfo [membre]',
         usageEn: '/userinfo [member]',
-        description: 'Affiche les informations d\'un membre (toi par défaut).',
+        description: 'Affiche les informations d\'un membre (vous par défaut).',
         descriptionEn: 'Shows a member\'s information (yourself by default).'
       },
       {
@@ -626,7 +626,7 @@ export const helpCategories: HelpCategory[] = [
       {
         usage: '/afk [raison]',
         usageEn: '/afk [reason]',
-        description: 'Te marque comme AFK — le bot répond aux pings.',
+        description: 'Vous marque comme AFK — le bot répond aux pings.',
         descriptionEn: 'Marks you as AFK — the bot replies to pings.',
         tier: 'public'
       },
@@ -645,7 +645,7 @@ export const helpCategories: HelpCategory[] = [
     labelEn: 'Minecraft & Integrations',
     summary: 'Statut serveur Minecraft et notifications YouTube / Twitch / RSS (Instagram, TikTok, X…) — réservé au staff/admin.',
     summaryEn: 'Minecraft server status and YouTube / Twitch / RSS notifications (Instagram, TikTok, X…) — staff/admin.',
-    tip: 'L\'ID d\'une chaîne YouTube commence par UC… (Paramètres avancés YouTube). Pour Instagram/TikTok/X, utilise un flux RSSHub.',
+    tip: 'L\'ID d\'une chaîne YouTube commence par UC… (Paramètres avancés YouTube). Pour Instagram/TikTok/X, utiliser un flux RSSHub.',
     tipEn: 'A YouTube channel ID starts with UC… (YouTube Advanced Settings). For Instagram/TikTok/X, use an RSSHub feed.',
     defaultTier: 'admin',
     commands: [
@@ -657,7 +657,7 @@ export const helpCategories: HelpCategory[] = [
       },
       {
         usage: '/mclink demande|statut|delier',
-        description: 'Lie ton compte Discord à ton pseudo Minecraft. Validation par connexion au serveur.',
+        description: 'Lie votre compte Discord à votre pseudo Minecraft. Validation par connexion au serveur.',
         descriptionEn: 'Links your Discord account to your Minecraft username. Validated by connecting to the server.',
         tier: 'staff'
       },

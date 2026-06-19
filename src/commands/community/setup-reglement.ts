@@ -68,7 +68,7 @@ export default {
 
     const channel = (interaction.options.getChannel('salon') ?? interaction.channel) as GuildTextBasedChannel | null;
     if (!channel || !channel.isTextBased() || !('send' in channel) || !('permissionsFor' in channel)) {
-      return interaction.reply({ content: '❌ Choisis un salon texte valide (option `salon`) ou lance la commande dans un salon texte.', flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: '❌ Choisir un salon texte valide (option `salon`) ou lancer la commande dans un salon texte.', flags: MessageFlags.Ephemeral });
     }
     const me = interaction.guild.members.me;
     if (!me || !channel.permissionsFor(me)?.has(['SendMessages', 'EmbedLinks'])) {

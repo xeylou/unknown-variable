@@ -57,7 +57,7 @@ function buildRecapEmbed(recap: SanctionRecap): EmbedBuilder {
       { name: 'Membre', value: `${target} (\`${target.tag}\` · \`${target.id}\`)` },
       { name: 'Raison', value: reason && reason.trim() ? reason : '*Non précisée*' }
     )
-    .setFooter({ text: 'Vérifie puis confirme — la demande expire après 2 min.' })
+    .setFooter({ text: 'Vérifier puis confirmer — la demande expire après 2 min.' })
     .setTimestamp();
   if (durationText) embed.addFields({ name: 'Durée', value: durationText });
   if (extraFields?.length) embed.addFields(...extraFields);

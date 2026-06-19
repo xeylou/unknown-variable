@@ -31,13 +31,13 @@ export default {
 
     const menu = new StringSelectMenuBuilder()
       .setCustomId('music:search')
-      .setPlaceholder('Choisis un titre à jouer')
+      .setPlaceholder('Choisir un titre à jouer')
       .addOptions(results.slice(0, 10).map((t: any) => ({
         label: (t.info.title ?? 'Titre inconnu').slice(0, 100),
         description: `${t.info.author ?? '—'} · ${music.formatDuration(t.info.duration ?? 0)}`.slice(0, 100),
         value: (t.info.uri ?? '').slice(0, 100)
       })).filter((o) => o.value));
 
-    return interaction.editReply({ content: '🔎 Résultats — sélectionne un titre :', components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)] });
+    return interaction.editReply({ content: '🔎 Résultats — sélectionner un titre :', components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)] });
   }
 };

@@ -42,7 +42,7 @@ export default {
     // --- Déployer ---
     const channel = (interaction.options.getChannel('salon') ?? interaction.channel) as GuildTextBasedChannel | null;
     if (!channel || !channel.isTextBased() || !('send' in channel) || !('permissionsFor' in channel)) {
-      return interaction.reply({ content: '❌ Choisis un salon texte valide (option `salon`) ou lance la commande dans un salon texte.', flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: '❌ Choisir un salon texte valide (option `salon`) ou lancer la commande dans un salon texte.', flags: MessageFlags.Ephemeral });
     }
     const me = interaction.guild.members.me;
     if (!me || !channel.permissionsFor(me)?.has(['SendMessages', 'EmbedLinks'])) {
@@ -57,14 +57,14 @@ export default {
       .setTitle('📁 Tickets')
       .setDescription(
         'Bienvenue sur le support.\n' +
-        'Sélectionnez la catégorie la plus adaptée à votre demande pour ouvrir un ticket.\n' +
+        'Sélectionner la catégorie la plus adaptée à votre demande pour ouvrir un ticket.\n' +
         'Une demande claire, détaillée et complète permet à notre équipe de builders Minecraft de vous répondre plus vite.\n\n' +
         '⚠️ **Les demandes incomplètes, non sérieuses ou hors sujet peuvent être refusées sans suite.**'
       );
 
     const menu = new StringSelectMenuBuilder()
       .setCustomId('ticket:category')
-      .setPlaceholder('Choisissez une catégorie de ticket')
+      .setPlaceholder('Choisir une catégorie de ticket')
       .addOptions(config.tickets.categories.map((c) => ({
         label: c.label, description: c.description, value: c.value, emoji: c.emoji
       })));
@@ -81,7 +81,7 @@ export default {
     const noRoles = ticketStaffRoleIds(interaction.guild.id).length === 0;
     return interaction.reply({
       content: `✅ Panneau déployé dans ${channel}.` + (noRoles
-        ? '\n⚠️ Aucune catégorie n\'a de rôle responsable : les ouvertures seront refusées tant que tu n\'auras pas configuré `/config ticket-role`.'
+        ? '\n⚠️ Aucune catégorie n\'a de rôle responsable : les ouvertures seront refusées tant que vous n\'aurez pas configuré `/config ticket-role`.'
         : ''),
       flags: MessageFlags.Ephemeral
     });

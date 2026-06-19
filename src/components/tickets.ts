@@ -270,8 +270,8 @@ async function createTicket(interaction: StringSelectMenuInteraction<'cached'>) 
   });
   if (recent >= MAX_TICKETS_PER_DAY) {
     return interaction.editReply({
-      content: `❌ Tu as déjà ouvert **${recent} tickets** dans les dernières 24 h. ` +
-               `Limite : ${MAX_TICKETS_PER_DAY} par jour — réessaie plus tard.`
+      content: `❌ Vous avez déjà ouvert **${recent} tickets** dans les dernières 24 h. ` +
+               `Limite : ${MAX_TICKETS_PER_DAY} par jour — réessayer plus tard.`
     });
   }
 
@@ -376,8 +376,8 @@ async function askCloseReason(interaction: ButtonInteraction<'cached'>) {
     .setMaxLength(CLOSE_REASON_MAX_LEN)
     .setRequired(reasonRequired)
     .setPlaceholder(reasonRequired
-      ? 'Obligatoire : décris la résolution ou le motif (transmis au créateur et archivé).'
-      : 'Facultatif : ajoute une raison si tu le souhaites.');
+      ? 'Obligatoire : décrire la résolution ou le motif (transmis au créateur et archivé).'
+      : 'Facultatif : ajouter une raison si vous le souhaitez.');
   if (reasonRequired) input.setMinLength(3);
 
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
@@ -467,7 +467,7 @@ async function doCloseTicket(interaction: ModalSubmitInteraction<'cached'>, clie
             `Merci d'avoir contacté le support de **${interaction.guild.name}**.\n` +
             (reason ? `**Raison de la fermeture :** ${reason}\n\n` : '') +
             'Comment évaluez-vous votre expérience sur ce ticket ? (1 = mauvaise · 5 = excellente)\n\n' +
-            '💬 *Tu peux aussi laisser un commentaire libre — il sera transmis à l\'équipe.*\n' +
+            '💬 *Vous pouvez aussi laisser un commentaire libre — il sera transmis à l\'équipe.*\n' +
             '🔓 *Le ticket peut être rouvert dans les 7 jours si la discussion n\'est pas terminée.*'
           )],
         components: [stars, reopen, comment]
@@ -524,7 +524,7 @@ async function reopenTicket(interaction: ButtonInteraction, client: Client<true>
   });
   if (recent >= MAX_TICKETS_PER_DAY) {
     return interaction.editReply({
-      content: `❌ Tu as déjà ${recent} ticket(s) ouvert(s) dans les dernières 24 h.`
+      content: `❌ Vous avez déjà ${recent} ticket(s) ouvert(s) dans les dernières 24 h.`
     });
   }
 

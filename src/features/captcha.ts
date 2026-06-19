@@ -126,7 +126,7 @@ function makeCode(): string {
 function buildCaptchaPayload(guildName: string, guildId: string, imageBuffer: Buffer | null) {
   let desc =
     `Bienvenue sur **${guildName}** !\n\n` +
-    'Pour accéder au serveur, clique sur le bouton ci-dessous et **recopie exactement les caractères affichés dans l\'image** (insensible à la casse).';
+    'Pour accéder au serveur, cliquer sur le bouton ci-dessous et **recopier exactement les caractères affichés dans l\'image** (insensible à la casse).';
 
   if (!imageBuffer) {
     desc += '\n\n⚠️ L\'image CAPTCHA est temporairement indisponible — contacte un staff pour le renvoyer.';

@@ -21,7 +21,7 @@ export default {
     const ip = interaction.options.getString('ip', true) || (await getConfig(interaction.guild.id, 'mc_server_ip'));
     if (!ip) {
       return interaction.editReply(
-        "⚠️ Aucun serveur configuré. Précise une IP, ou fais `/config minecraft ip:<adresse>`."
+        "⚠️ Aucun serveur configuré. Préciser une IP, ou faire `/config minecraft ip:<adresse>`."
       );
     }
 

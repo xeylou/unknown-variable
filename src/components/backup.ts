@@ -31,8 +31,8 @@ export default {
         });
       }
       return interaction.update({
-        content: '✅ Import appliqué. Pense à relancer `/setup-tickets`, `/setup-reglement` et ' +
-                 '`/setup-roles` si tu as restauré sur un nouveau serveur (les message_id changent).',
+        content: '✅ Import appliqué. Penser à relancer `/setup-tickets`, `/setup-reglement` et ' +
+                 '`/setup-roles` si vous avez restauré sur un nouveau serveur (les message_id changent).',
         components: []
       });
     }

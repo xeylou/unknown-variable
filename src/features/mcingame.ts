@@ -71,7 +71,7 @@ async function tick(client: Client<true>): Promise<void> {
           // Notifie le membre en DM
           const member = await guild.members.fetch(p.user_id).catch(() => null);
           if (member) {
-            member.send(`✅ Ton compte Discord est maintenant lié à **${p.mc_username}** sur **${guild.name}**.`)
+            member.send(`✅ Votre compte Discord est maintenant lié à **${p.mc_username}** sur **${guild.name}**.`)
               .catch(() => {});
           }
         }

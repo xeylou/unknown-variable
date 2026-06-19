@@ -27,7 +27,7 @@ export async function performLeaderboardReset(guild: Guild, type: ResetType): Pr
 async function deploy(interaction: ChatInputCommandInteraction<'cached'>, type: LeaderboardType) {
   const channel = (interaction.options.getChannel('salon') ?? interaction.channel) as GuildTextBasedChannel | null;
   if (!channel || !channel.isTextBased() || !('send' in channel) || !('permissionsFor' in channel)) {
-    return interaction.reply({ content: '❌ Choisis un salon texte valide.', flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: '❌ Choisir un salon texte valide.', flags: MessageFlags.Ephemeral });
   }
   const me = interaction.guild.members.me;
   if (!me || !channel.permissionsFor(me)?.has(['SendMessages', 'EmbedLinks'])) {
@@ -100,7 +100,7 @@ export default {
       const rows = await prisma.leaderboard_panels.findMany({ where: { guild_id: guild.id } });
       if (!rows.length) {
         return interaction.reply({
-          content: 'ℹ️ Aucun classement déployé. Utilise `/classement messages` ou `/classement invitations`.',
+          content: 'ℹ️ Aucun classement déployé. Utiliser `/classement messages` ou `/classement invitations`.',
           flags: MessageFlags.Ephemeral
         });
       }

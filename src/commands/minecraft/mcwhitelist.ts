@@ -26,7 +26,7 @@ export default {
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     if (!(await isConfigured(interaction.guild.id))) {
       return interaction.reply({
-        content: '⚠️ RCON non configuré pour ce serveur. Utilise `/config minecraft-rcon`.',
+        content: '⚠️ RCON non configuré pour ce serveur. Utiliser `/config minecraft-rcon`.',
         flags: MessageFlags.Ephemeral
       });
     }

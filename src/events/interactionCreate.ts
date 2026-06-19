@@ -50,7 +50,7 @@ export default {
         if (expirationTime && expirationTime > now) {
           const expiredTimestamp = Math.round(expirationTime / 1000);
           await interaction.reply({
-            content: `⏳ Attends un peu. Tu pourras réutiliser \`/${command.data.name}\` <t:${expiredTimestamp}:R>.`,
+            content: `⏳ Attendre un peu. Vous pourrez réutiliser \`/${command.data.name}\` <t:${expiredTimestamp}:R>.`,
             flags: MessageFlags.Ephemeral
           });
           // On ne journalise PAS un rejet pour cooldown — bruit inutile.
@@ -114,7 +114,7 @@ export default {
       error = err;
       log.error('interaction handler threw', err);
       if (!interaction.isRepliable()) return;
-      const content = '❌ Une erreur est survenue. Réessaie ; si le problème persiste, préviens un administrateur.';
+      const content = '❌ Une erreur est survenue. Réessayer ; si le problème persiste, prévenir un administrateur.';
       if (interaction.deferred || interaction.replied) {
         interaction.followUp({ content, flags: MessageFlags.Ephemeral }).catch(() => {});
       } else {

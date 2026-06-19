@@ -52,9 +52,9 @@ export default {
     const embed = embeds.primary()
       .setTitle('🛡️ Vérification anti-robot')
       .setDescription(
-        'Pour accéder au serveur, clique sur le bouton ci-dessous.\n\n' +
-        'Un défi visuel **visible de toi seul** s\'affichera : recopie les caractères ' +
-        'de l\'image pour prouver que tu es humain.'
+        'Pour accéder au serveur, cliquer sur le bouton ci-dessous.\n\n' +
+        'Un défi visuel **visible de vous seul** s\'affichera : recopier les caractères ' +
+        'de l\'image pour prouver que vous êtes humain.'
       );
 
     const button = new ButtonBuilder()

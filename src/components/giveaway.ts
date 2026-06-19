@@ -14,7 +14,7 @@ export default {
       return interaction.reply({ content: '❌ Ce giveaway est terminé.', flags: MessageFlags.Ephemeral });
     }
     if (g.paused) {
-      return interaction.reply({ content: '⏸️ Ce giveaway est actuellement en pause — réessaie plus tard.', flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: '⏸️ Ce giveaway est actuellement en pause — réessayer plus tard.', flags: MessageFlags.Ephemeral });
     }
 
     // Vérifie les conditions d'entrée
@@ -43,7 +43,7 @@ export default {
           }
         }
       });
-      reply = '➖ Tu ne participes plus à ce giveaway.';
+      reply = '➖ Vous ne participez plus à ce giveaway.';
     } else {
       await prisma.giveaway_entries.create({
         data: {
@@ -58,8 +58,8 @@ export default {
         if (interaction.member.roles.cache.has(roleId)) mult = Math.max(mult, m);
       }
       reply = mult > 1
-        ? `🎉 Tu participes à ce giveaway avec un bonus **×${mult}** !`
-        : '🎉 Tu participes à ce giveaway, bonne chance !';
+        ? `🎉 Vous participez à ce giveaway avec un bonus **×${mult}** !`
+        : '🎉 Vous participez à ce giveaway, bonne chance !';
     }
 
     // Met à jour le compteur de participants sur le message

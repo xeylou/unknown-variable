@@ -163,7 +163,7 @@ export async function getActivePlayer(
     const userVc = member?.voice?.channelId;
     if (!userVc || userVc !== player.voiceChannelId) {
       await interaction.reply({
-        content: '❌ Tu dois être dans le même salon vocal que le bot.',
+        content: '❌ Vous devez être dans le même salon vocal que le bot.',
         flags: MessageFlags.Ephemeral
       });
       return null;
@@ -210,7 +210,7 @@ export async function playQuery(
   // Services non pris en charge (seuls YouTube et SoundCloud sont configurés)
   if (/open\.spotify\.com|music\.apple\.com|deezer\.com|tidal\.com|music\.amazon\./i.test(query)) {
     return interaction.editReply(
-      "❌ Ce service n'est pas pris en charge. Utilise une recherche par mots-clés, " +
+      "❌ Ce service n'est pas pris en charge. Utiliser une recherche par mots-clés, " +
       'ou un lien **YouTube** / **SoundCloud**.'
     );
   }

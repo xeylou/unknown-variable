@@ -43,7 +43,7 @@ export default {
       });
       invalidateLinks(gid);
       return interaction.reply({
-        content: `✅ Ton compte est lié à **@${login}**. Tu seras mentionné sur tes commits et PR.`,
+        content: `✅ Votre compte est lié à **@${login}**. Vous serez mentionné sur vos commits et PR.`,
         flags: MessageFlags.Ephemeral
       });
     }
@@ -55,7 +55,7 @@ export default {
       return interaction.reply({
         content: link
           ? `✅ Lié à **@${link.github_login}** depuis <t:${Math.floor(link.linked_at / 1000)}:R>.`
-          : 'ℹ️ Aucune liaison. Utilise `/gitlink lier`.',
+          : 'ℹ️ Aucune liaison. Utiliser `/gitlink lier`.',
         flags: MessageFlags.Ephemeral
       });
     }

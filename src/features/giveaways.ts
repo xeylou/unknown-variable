@@ -120,7 +120,7 @@ function buildEmbed(g: EmbedGiveaway, opts: BuildEmbedOptions = {}): EmbedBuilde
       `**Participants :** ${count}\n` +
       (reqText ? `\n**Conditions :**\n${reqText}\n` : '') +
       (bonusText ? `\n**Bonus :** ${bonusText}\n` : '') +
-      '\nClique sur le bouton 🎉 ci-dessous pour participer !'
+      '\nCliquer sur le bouton 🎉 ci-dessous pour participer !'
     );
   }
   return embed;
@@ -167,16 +167,16 @@ function pickWinners(entries: string[], count: number): string[] {
 export async function checkEligibility(member: GuildMember, requirements: Requirements): Promise<string | null> {
   if (requirements.min_age_days && requirements.min_age_days > 0) {
     const since = member.joinedTimestamp;
-    if (!since) return 'Impossible de vérifier ton ancienneté.';
+    if (!since) return 'Impossible de vérifier votre ancienneté.';
     const days = (Date.now() - since) / 86_400_000;
     if (days < requirements.min_age_days) {
-      return `Tu dois être membre depuis au moins **${requirements.min_age_days}** jour(s) (tu en as ${days.toFixed(1)}).`;
+      return `Vous devez être membre depuis au moins **${requirements.min_age_days}** jour(s) (vous en avez ${days.toFixed(1)}).`;
     }
   }
   if (requirements.required_role_ids?.length) {
     for (const roleId of requirements.required_role_ids) {
       if (!member.roles.cache.has(roleId)) {
-        return `Il te manque le rôle <@&${roleId}> pour participer.`;
+        return `Il vous manque le rôle <@&${roleId}> pour participer.`;
       }
     }
   }

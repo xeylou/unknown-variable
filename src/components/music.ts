@@ -38,7 +38,7 @@ export default {
     }
     const userVc = (interaction.member as any)?.voice?.channelId;
     if (!userVc || userVc !== player.voiceChannelId) {
-      return interaction.reply({ content: '❌ Tu dois être dans le même salon vocal que le bot.', flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: '❌ Vous devez être dans le même salon vocal que le bot.', flags: MessageFlags.Ephemeral });
     }
 
     if (action === 'pause') {

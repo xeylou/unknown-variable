@@ -95,7 +95,7 @@ export default {
     }
 
     if (parsed.length === 0 || parsed.length > 10) {
-      return interaction.reply({ content: '❌ Donne entre 1 et 10 paires.', flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: '❌ Donner entre 1 et 10 paires.', flags: MessageFlags.Ephemeral });
     }
 
     const channel = interaction.channel;

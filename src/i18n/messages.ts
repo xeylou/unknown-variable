@@ -15,7 +15,7 @@ export const messages = {
   // --- Communs ---
   'common.error': {
     en: '❌ An error occurred. Try again; if it persists, contact an administrator.',
-    fr: '❌ Une erreur est survenue. Réessaie ; si le problème persiste, préviens un administrateur.'
+    fr: '❌ Une erreur est survenue. Réessayer ; si le problème persiste, prévenir un administrateur.'
   },
 
   // --- /avatar (commande pilote i18n) ---
@@ -25,7 +25,7 @@ export const messages = {
   },
   'avatar.opt.member.desc': {
     en: 'Member (yourself by default)',
-    fr: 'Membre (toi par défaut)'
+    fr: 'Membre (vous par défaut)'
   },
   'avatar.title': {
     en: "{name}'s avatar",
@@ -63,21 +63,21 @@ export const messages = {
   // --- /afk ---
   'afk.cmd.desc': {
     en: 'Mark yourself as AFK (the bot replies to those who ping you)',
-    fr: 'Te marque comme AFK (le bot répondra à ceux qui te pinguent)'
+    fr: 'Vous marque comme AFK (le bot répondra à ceux qui vous pinguent)'
   },
   'afk.opt.reason.desc': { en: 'Reason shown', fr: 'Raison affichée' },
   'afk.set.reason': {
     en: '💤 You are now AFK: *{reason}*. Send a message here to clear your status.',
-    fr: '💤 Tu es maintenant AFK : *{reason}*. Envoie un message ici pour retirer ton statut.'
+    fr: '💤 Vous êtes maintenant AFK : *{reason}*. Envoyer un message ici pour retirer votre statut.'
   },
   'afk.set.noreason': {
     en: '💤 You are now AFK. Send a message here to clear your status.',
-    fr: '💤 Tu es maintenant AFK. Envoie un message ici pour retirer ton statut.'
+    fr: '💤 Vous êtes maintenant AFK. Envoyer un message ici pour retirer votre statut.'
   },
 
   // --- /userinfo ---
   'userinfo.cmd.desc': { en: "Show a member's information", fr: "Afficher les informations d'un membre" },
-  'userinfo.opt.member.desc': { en: 'Member (yourself by default)', fr: 'Membre (toi par défaut)' },
+  'userinfo.opt.member.desc': { en: 'Member (yourself by default)', fr: 'Membre (vous par défaut)' },
   'userinfo.field.bot': { en: 'Bot', fr: 'Bot' },
   'userinfo.field.created': { en: 'Account created', fr: 'Compte créé' },
   'userinfo.field.joined': { en: 'Joined the server', fr: 'A rejoint le serveur' },
@@ -95,10 +95,10 @@ export const messages = {
   // --- /rappel ---
   'rappel.cmd.desc': { en: 'Schedule / list / delete personal reminders', fr: 'Programmer / lister / supprimer des rappels personnels' },
   'rappel.sub.set.desc': { en: 'Schedule a reminder', fr: 'Programmer un rappel' },
-  'rappel.sub.liste.desc': { en: 'List your pending reminders', fr: 'Lister tes rappels en attente' },
+  'rappel.sub.liste.desc': { en: 'List your pending reminders', fr: 'Lister vos rappels en attente' },
   'rappel.sub.supprimer.desc': { en: 'Delete a reminder by its id', fr: 'Supprimer un rappel par son id' },
   'rappel.opt.delai.desc': { en: 'How soon (10m, 2h, 1d)', fr: 'Dans combien de temps (10m, 2h, 1d)' },
-  'rappel.opt.message.desc': { en: 'What to remind you of', fr: 'Quoi te rappeler ?' },
+  'rappel.opt.message.desc': { en: 'What to remind you of', fr: 'Quoi vous rappeler ?' },
   'rappel.opt.id.desc': { en: 'Reminder ID', fr: 'ID du rappel' },
   'rappel.set.invalid_delay': {
     en: '❌ Invalid delay (min 10s). Example: `10m`, `2h`, `1d`.',
@@ -106,7 +106,7 @@ export const messages = {
   },
   'rappel.set.max': {
     en: '❌ You already have {max} pending reminders — that is the maximum.',
-    fr: '❌ Tu as déjà {max} rappels en attente — c\'est le maximum.'
+    fr: '❌ Vous avez déjà {max} rappels en attente — c\'est le maximum.'
   },
   'rappel.set.ok': {
     en: '⏰ Reminder #{id} scheduled in **{dur}**.',
@@ -114,16 +114,16 @@ export const messages = {
   },
   'rappel.liste.empty': {
     en: 'ℹ️ You have no pending reminders.',
-    fr: 'ℹ️ Tu n\'as aucun rappel en attente.'
+    fr: 'ℹ️ Vous n\'avez aucun rappel en attente.'
   },
-  'rappel.liste.title': { en: '⏰ Your reminders', fr: '⏰ Tes rappels' },
+  'rappel.liste.title': { en: '⏰ Your reminders', fr: '⏰ Vos rappels' },
   'rappel.delete.ok': { en: '🗑️ Reminder #{id} deleted.', fr: '🗑️ Rappel #{id} supprimé.' },
   'rappel.delete.notfound': { en: '❌ Reminder #{id} not found.', fr: '❌ Rappel #{id} introuvable.' },
 
   // --- /rappel-rec ---
   'rappelrec.cmd.desc': { en: 'Recurring reminders (daily, weekly, monthly)', fr: 'Rappels récurrents (quotidien, hebdomadaire, mensuel)' },
   'rappelrec.sub.set.desc': { en: 'Create a recurring reminder', fr: 'Créer un rappel récurrent' },
-  'rappelrec.sub.liste.desc': { en: 'List your recurring reminders', fr: 'Lister tes rappels récurrents' },
+  'rappelrec.sub.liste.desc': { en: 'List your recurring reminders', fr: 'Lister vos rappels récurrents' },
   'rappelrec.sub.supprimer.desc': { en: 'Delete a recurring reminder', fr: 'Supprimer un rappel récurrent' },
   'rappelrec.opt.frequence.desc': { en: 'Frequency', fr: 'Fréquence' },
   'rappelrec.opt.message.desc': { en: 'Message to remind', fr: 'Message à rappeler' },
@@ -133,7 +133,7 @@ export const messages = {
     fr: '🔁 Rappel récurrent #{id} créé ({freq}). Premier déclenchement <t:{ts}:R>.'
   },
   'rappelrec.liste.empty': { en: 'ℹ️ No recurring reminders.', fr: 'ℹ️ Aucun rappel récurrent.' },
-  'rappelrec.liste.title': { en: '🔁 Your recurring reminders', fr: '🔁 Tes rappels récurrents' },
+  'rappelrec.liste.title': { en: '🔁 Your recurring reminders', fr: '🔁 Vos rappels récurrents' },
   'rappelrec.delete.ok': { en: '🗑️ Recurring reminder #{id} deleted.', fr: '🗑️ Rappel récurrent #{id} supprimé.' },
   'rappelrec.delete.notfound': { en: '❌ Not found.', fr: '❌ Introuvable.' },
 
@@ -145,7 +145,7 @@ export const messages = {
   'rappelrole.opt.delai.desc': { en: 'Delay if "once": 10m, 2h, 1d', fr: 'Délai si « une fois » : 10m, 2h, 1d' },
   'rappelrole.once.invalid': {
     en: '❌ For a one-shot reminder, provide a valid delay (`10m`, `2h`, `1d`).',
-    fr: '❌ Pour un rappel ponctuel, fournis un délai valide (`10m`, `2h`, `1d`).'
+    fr: '❌ Pour un rappel ponctuel, fournir un délai valide (`10m`, `2h`, `1d`).'
   },
   'rappelrole.once.ok': {
     en: '⏰ One-shot reminder scheduled for {role} in **{dur}**.',
@@ -180,7 +180,7 @@ export const messages = {
   },
   'tag.add.exists': {
     en: '❌ Tag `{name}` already exists — use `/tag editer`.',
-    fr: '❌ Le tag `{name}` existe déjà — utilise `/tag editer`.'
+    fr: '❌ Le tag `{name}` existe déjà — utiliser `/tag editer`.'
   },
   'tag.add.ok': { en: '✅ Tag `{name}` created.', fr: '✅ Tag `{name}` créé.' },
   'tag.edit.ok': { en: '✅ Tag `{name}` updated.', fr: '✅ Tag `{name}` mis à jour.' },
@@ -233,7 +233,7 @@ export const messages = {
   'poll.cancel.btn.confirm': { en: 'Cancel poll', fr: 'Annuler le sondage' },
   'poll.cancel.btn.keep': { en: 'Keep', fr: 'Garder' },
   'poll.create.invalid_duration': { en: '❌ Invalid duration (minimum 1 min).', fr: '❌ Durée invalide (minimum 1 min).' },
-  'poll.create.invalid_options': { en: '❌ Provide between 2 and 10 options separated by `|`.', fr: '❌ Donne entre 2 et 10 options séparées par `|`.' },
+  'poll.create.invalid_options': { en: '❌ Provide between 2 and 10 options separated by `|`.', fr: '❌ Donner entre 2 et 10 options séparées par `|`.' },
   'poll.create.no_perms': { en: '❌ I\'m missing permissions in {channel}.', fr: '❌ Il me manque les permissions dans {channel}.' },
   'poll.create.ok': { en: '✅ Poll started for **{dur}**.', fr: '✅ Sondage lancé pour **{dur}**.' },
   'poll.channel_only': { en: '❌ This command must be run in a text channel.', fr: '❌ Cette commande doit être lancée dans un salon texte.' },
@@ -241,7 +241,7 @@ export const messages = {
   // --- /help (command UI) ---
   'help.cmd.desc': {
     en: 'Show commands available at your permission level',
-    fr: 'Afficher les commandes accessibles à ton niveau'
+    fr: 'Afficher les commandes accessibles à votre niveau'
   },
   'help.tier.admin':  { en: 'administrator', fr: 'administrateur' },
   'help.tier.staff':  { en: 'staff',         fr: 'staff' },
@@ -249,7 +249,7 @@ export const messages = {
   'help.overview.title': { en: '📖 Command overview', fr: '📖 Inventaire des commandes' },
   'help.overview.desc': {
     en: '**{total} commands** in **{cats} modules** accessible at your level ({tier}).\nChoose a category from the dropdown to see each command\'s usage.',
-    fr: '**{total} commandes** dans **{cats} modules** accessibles à ton niveau ({tier}).\nChoisis une catégorie dans le menu déroulant pour voir l\'usage de chaque commande.'
+    fr: '**{total} commandes** dans **{cats} modules** accessibles à votre niveau ({tier}).\nChoisir une catégorie dans le menu déroulant pour voir l\'usage de chaque commande.'
   },
   'help.overview.footer.public': {
     en: 'Some commands are only visible to staff or administrators.',
@@ -257,12 +257,12 @@ export const messages = {
   },
   'help.overview.footer.staff': {
     en: 'You only see commands your role can use.',
-    fr: 'Tu vois uniquement les commandes que ton rôle peut utiliser.'
+    fr: 'Vous voyez uniquement les commandes que votre rôle peut utiliser.'
   },
   'help.menu.placeholder': { en: '📂 Choose a category…',      fr: '📂 Choisir une catégorie…' },
   'help.menu.home.label':  { en: 'Overview',                    fr: "Vue d'ensemble" },
   'help.menu.home.desc':   { en: 'Back to the module list',      fr: 'Revenir à la liste des modules' },
-  'help.detail.footer':    { en: 'Select "Overview" to go back.', fr: 'Sélectionne « Vue d\'ensemble » pour revenir à la liste.' },
+  'help.detail.footer':    { en: 'Select "Overview" to go back.', fr: 'Sélectionner « Vue d\'ensemble » pour revenir à la liste.' },
 
   // --- Common shared responses ---
   'common.text_channel_only': {
@@ -305,18 +305,18 @@ export const messages = {
   'stats.opt.role_remove.desc': { en: 'Role of the counter to remove', fr: 'Rôle du compteur à retirer' },
   'stats.creer.exists': {
     en: '❌ A stat category already exists. Use `/stats ajouter`.',
-    fr: '❌ Une catégorie statistique existe déjà. Utilise `/stats ajouter`.'
+    fr: '❌ Une catégorie statistique existe déjà. Utiliser `/stats ajouter`.'
   },
   'stats.creer.ok': { en: '✅ Stat category **{name}** created with a counter for {role}.', fr: '✅ Catégorie statistique **{name}** créée, avec un compteur pour {role}.' },
   'stats.ajouter.no_category': {
     en: '❌ No stat category. Create one first with `/stats creer`.',
-    fr: '❌ Aucune catégorie statistique. Crée-la d\'abord avec `/stats creer`.'
+    fr: '❌ Aucune catégorie statistique. À créer d\'abord avec `/stats creer`.'
   },
   'stats.ajouter.dup': { en: '❌ A counter already exists for {role}.', fr: '❌ Un compteur existe déjà pour {role}.' },
   'stats.ajouter.ok': { en: '✅ Counter added for {role}.', fr: '✅ Compteur ajouté pour {role}.' },
   'stats.retirer.none': { en: '❌ No counter for {role}.', fr: '❌ Aucun compteur pour {role}.' },
   'stats.retirer.ok': { en: '🗑️ Counter for {role} removed.', fr: '🗑️ Compteur pour {role} retiré.' },
-  'stats.liste.empty': { en: 'ℹ️ No counters configured. Use `/stats creer`.', fr: 'ℹ️ Aucun compteur configuré. Utilise `/stats creer`.' },
+  'stats.liste.empty': { en: 'ℹ️ No counters configured. Use `/stats creer`.', fr: 'ℹ️ Aucun compteur configuré. Utiliser `/stats creer`.' },
   'stats.liste.title': { en: '📊 Stat counters', fr: '📊 Compteurs statistiques' },
   'stats.supprimer.empty': {
     en: 'ℹ️ No stat category to delete.',
@@ -329,11 +329,11 @@ export const messages = {
 
   // --- Community: /suggestion ---
   'suggestion.cmd.desc': { en: 'Submit a suggestion for the server', fr: 'Proposer une suggestion pour le serveur' },
-  'suggestion.opt.proposition.desc': { en: 'Your suggestion', fr: 'Ta suggestion' },
+  'suggestion.opt.proposition.desc': { en: 'Your suggestion', fr: 'Votre suggestion' },
   'suggestion.opt.categorie.desc': { en: 'Category / tag', fr: 'Catégorie / tag' },
   'suggestion.cooldown': {
     en: '⏳ Wait **{min} min** before your next suggestion.',
-    fr: '⏳ Attends encore **{min} min** avant ta prochaine suggestion.'
+    fr: '⏳ Attendre encore **{min} min** avant votre prochaine suggestion.'
   },
   'suggestion.no_channel': {
     en: '⚠️ The suggestion channel is not configured. An admin must run `/config suggestions`.',
@@ -370,7 +370,7 @@ export const messages = {
   'setupreglement.ok': { en: '✅ Rules deployed.', fr: '✅ Règlement déployé.' },
   'setupreglement.ok_no_role': {
     en: '✅ Rules deployed.\n⚠️ No validation role configured — run `/config reglement role:<role>` or the button will grant no access.',
-    fr: '✅ Règlement déployé.\n⚠️ Aucun rôle de validation configuré — fais `/config reglement role:<rôle>` sinon le bouton ne donnera aucun accès.'
+    fr: '✅ Règlement déployé.\n⚠️ Aucun rôle de validation configuré — faire `/config reglement role:<rôle>` sinon le bouton ne donnera aucun accès.'
   },
 
   // --- Community: /setup-roles ---
@@ -385,10 +385,10 @@ export const messages = {
   'setuproles.opt.pied.desc': { en: 'Footer text (optional)', fr: 'Texte du pied de page (optionnel)' },
   'setuproles.unassignable': {
     en: '❌ I cannot assign: {roles}. Place my role above these (avoid integration-managed roles).',
-    fr: '❌ Je ne peux pas attribuer : {roles}. Place mon rôle au-dessus de ces rôles (et évite les rôles gérés par une intégration).'
+    fr: '❌ Je ne peux pas attribuer : {roles}. Placer mon rôle au-dessus de ces rôles (et éviter les rôles gérés par une intégration).'
   },
   'setuproles.creer.ok': { en: '✅ Role panel deployed ({count} role(s)).', fr: '✅ Panneau de rôles déployé ({count} rôle(s)).' },
-  'setuproles.liste.empty': { en: 'ℹ️ No role panels. Use `/setup-roles creer`.', fr: 'ℹ️ Aucun panneau de rôles. Utilise `/setup-roles creer`.' },
+  'setuproles.liste.empty': { en: 'ℹ️ No role panels. Use `/setup-roles creer`.', fr: 'ℹ️ Aucun panneau de rôles. Utiliser `/setup-roles creer`.' },
   'setuproles.liste.title': { en: '🎭 Role panels', fr: '🎭 Panneaux de rôles' },
   'setuproles.supprimer.empty': { en: 'ℹ️ No role panels to delete.', fr: 'ℹ️ Aucun panneau de rôles à supprimer.' },
   'setuproles.supprimer.confirm': {
@@ -414,7 +414,7 @@ export const messages = {
     en: '❌ I cannot assign {role} (managed or higher than my role).',
     fr: '❌ Je ne peux pas attribuer {role} (rôle géré ou plus haut que le mien).'
   },
-  'setuprr.invalid_count': { en: '❌ Provide between 1 and 10 pairs.', fr: '❌ Donne entre 1 et 10 paires.' },
+  'setuprr.invalid_count': { en: '❌ Provide between 1 and 10 pairs.', fr: '❌ Donner entre 1 et 10 paires.' },
   'setuprr.missing_perms': {
     en: '❌ I\'m missing **Send**, **Embeds** or **Reactions** permission in {channel}.',
     fr: '❌ Il me manque les permissions **Envoyer**, **Embeds** ou **Réactions** dans {channel}.'
@@ -430,7 +430,7 @@ export const messages = {
   'classement.opt.salon.desc': { en: 'Channel to post the leaderboard (default: current channel)', fr: 'Salon où poster le classement (défaut : salon courant)' },
   'classement.opt.top.desc': { en: 'Number of members to display (default: 10)', fr: 'Nombre de membres affichés (défaut : 10)' },
   'classement.opt.type.desc': { en: 'Which leaderboard to delete', fr: 'Quel classement supprimer' },
-  'classement.invalid_channel': { en: '❌ Choose a valid text channel.', fr: '❌ Choisis un salon texte valide.' },
+  'classement.invalid_channel': { en: '❌ Choose a valid text channel.', fr: '❌ Choisir un salon texte valide.' },
   'classement.failed': { en: '❌ Failed to deploy the leaderboard.', fr: '❌ Échec du déploiement du classement.' },
   'classement.ok': { en: '✅ Leaderboard deployed in {channel} — [see message]({url}).', fr: '✅ Classement déployé dans {channel} — [voir le message]({url}).' },
   'classement.ok_invites': {
@@ -488,16 +488,16 @@ export const messages = {
 
   // --- Tickets: /tickets-ouverts ---
   'ticketsouverts.cmd.desc': { en: 'List open tickets grouped by category', fr: 'Lister les tickets ouverts groupés par catégorie' },
-  'ticketsouverts.opt.categorie.desc': { en: 'Filter by category (among those you have access to)', fr: 'Filtrer sur une catégorie (parmi celles auxquelles tu as accès)' },
+  'ticketsouverts.opt.categorie.desc': { en: 'Filter by category (among those you have access to)', fr: 'Filtrer sur une catégorie (parmi celles auxquelles vous avez accès)' },
   'ticketsouverts.opt.member.desc': { en: 'Filter by ticket author', fr: 'Filtrer sur l\'auteur du ticket' },
   'ticketsouverts.opt.claimed.desc': { en: 'false = unclaimed only; true = claimed only', fr: 'false = uniquement les tickets non-claim ; true = uniquement les claim' },
   'ticketsouverts.no_access': {
     en: '⛔ You are neither staff nor ticket-staff for any configured category. Ask an admin for a category role.',
-    fr: '⛔ Tu n\'es ni staff ni ticket-staff d\'aucune catégorie configurée. Demande à un admin un rôle responsable de catégorie.'
+    fr: '⛔ Vous n\'êtes ni staff ni ticket-staff d\'aucune catégorie configurée. Demander à un admin un rôle responsable de catégorie.'
   },
   'ticketsouverts.no_access_cat': {
     en: '⛔ You do not have access to the **{label}** category.',
-    fr: '⛔ Tu n\'as pas accès à la catégorie **{label}**.'
+    fr: '⛔ Vous n\'avez pas accès à la catégorie **{label}**.'
   },
   'ticketsouverts.title': { en: '🎫 Open tickets', fr: '🎫 Tickets ouverts' },
 
@@ -511,7 +511,7 @@ export const messages = {
   'setuptickets.ok': { en: '✅ Panel deployed.', fr: '✅ Panneau déployé.' },
   'setuptickets.ok_no_roles': {
     en: '✅ Panel deployed.\n⚠️ No category has a responsible role: ticket creation will be refused until you run `/config ticket-role`.',
-    fr: '✅ Panneau déployé.\n⚠️ Aucune catégorie n\'a de rôle responsable : les ouvertures seront refusées tant que tu n\'auras pas configuré `/config ticket-role`.'
+    fr: '✅ Panneau déployé.\n⚠️ Aucune catégorie n\'a de rôle responsable : les ouvertures seront refusées tant que vous n\'aurez pas configuré `/config ticket-role`.'
   },
 
   // --- Moderation: /ban ---
@@ -601,16 +601,16 @@ export const messages = {
   'casiersearch.opt.keyword.desc': { en: 'Keyword in the reason', fr: 'Mot contenu dans la raison' },
   'casiersearch.need_filter': {
     en: '❌ Provide at least one filter (moderator, type, or keyword).',
-    fr: '❌ Fournis au moins un filtre (modérateur, type, ou mot-clé).'
+    fr: '❌ Fournir au moins un filtre (modérateur, type, ou mot-clé).'
   },
   'casiersearch.empty': { en: 'ℹ️ No sanctions match these filters.', fr: 'ℹ️ Aucune sanction ne correspond à ces filtres.' },
   'casiersearch.title': { en: '🔎 Record search', fr: '🔎 Recherche dans le casier' },
 
   // --- Moderation: /note ---
   'note.cmd.desc': { en: 'Private staff notes on a member', fr: 'Notes privées staff sur un membre' },
-  'note.sub.ajouter.desc': { en: 'Add a note on a member', fr: 'Ajoute une note sur un membre' },
+  'note.sub.ajouter.desc': { en: 'Add a note on a member', fr: 'Ajouter une note sur un membre' },
   'note.sub.liste.desc': { en: 'List notes for a member', fr: 'Lister les notes d\'un membre' },
-  'note.sub.retirer.desc': { en: 'Remove a note by its ID', fr: 'Retire une note par son id' },
+  'note.sub.retirer.desc': { en: 'Remove a note by its ID', fr: 'Retirer une note par son id' },
   'note.opt.member.desc': { en: 'Member concerned', fr: 'Membre concerné' },
   'note.opt.text.desc': { en: 'Note content', fr: 'Contenu de la note' },
   'note.opt.id.desc': { en: 'Note ID', fr: 'ID de la note' },
@@ -621,9 +621,9 @@ export const messages = {
 
   // --- Moderation: /role ---
   'role.cmd.desc': { en: 'Temporary role management', fr: 'Gestion des rôles temporaires' },
-  'role.sub.temp.desc': { en: 'Assign a role for a limited duration', fr: 'Attribue un rôle pour une durée limitée' },
-  'role.sub.templiste.desc': { en: 'List active temporary roles', fr: 'Liste les rôles temporaires actifs' },
-  'role.sub.tempannuler.desc': { en: 'Cancel a temporary role', fr: 'Annule un rôle temporaire' },
+  'role.sub.temp.desc': { en: 'Assign a role for a limited duration', fr: 'Attribuer un rôle pour une durée limitée' },
+  'role.sub.templiste.desc': { en: 'List active temporary roles', fr: 'Lister les rôles temporaires actifs' },
+  'role.sub.tempannuler.desc': { en: 'Cancel a temporary role', fr: 'Annuler un rôle temporaire' },
   'role.opt.member.desc': { en: 'Member', fr: 'Membre' },
   'role.opt.role.desc': { en: 'Role to assign', fr: 'Rôle à attribuer' },
   'role.opt.duration.desc': { en: 'E.g. 10m, 2h, 1d, 7d', fr: 'Ex 10m, 2h, 1d, 7d' },
@@ -640,10 +640,10 @@ export const messages = {
   'role.annuler.ok': { en: '🗑️ Assignment #{id} cancelled.', fr: '🗑️ Attribution #{id} annulée.' },
 
   // --- Moderation: /lockdown ---
-  'lockdown.cmd.desc': { en: 'Lock / unlock a channel or the whole server', fr: 'Verrouille / déverrouille un salon ou tout le serveur' },
-  'lockdown.sub.salon.desc': { en: 'Lock a channel (removes SendMessages from @everyone)', fr: 'Verrouille un salon (retire SendMessages à @everyone)' },
-  'lockdown.sub.serveur.desc': { en: 'Lock all text channels on the server (admin only)', fr: 'Verrouille tous les salons texte du serveur (réservé admin)' },
-  'lockdown.sub.lift.desc': { en: 'Unlock a channel (or the whole server)', fr: 'Déverrouille un salon (ou tout le serveur)' },
+  'lockdown.cmd.desc': { en: 'Lock / unlock a channel or the whole server', fr: 'Verrouiller / déverrouiller un salon ou tout le serveur' },
+  'lockdown.sub.salon.desc': { en: 'Lock a channel (removes SendMessages from @everyone)', fr: 'Verrouiller un salon (retire SendMessages à @everyone)' },
+  'lockdown.sub.serveur.desc': { en: 'Lock all text channels on the server (admin only)', fr: 'Verrouiller tous les salons texte du serveur (réservé admin)' },
+  'lockdown.sub.lift.desc': { en: 'Unlock a channel (or the whole server)', fr: 'Déverrouiller un salon (ou tout le serveur)' },
   'lockdown.opt.salon.desc': { en: 'Channel to lock (default: current channel)', fr: 'Salon à verrouiller (par défaut : le salon courant)' },
   'lockdown.opt.duration.desc': { en: 'Duration (e.g. 30m, 2h) — without = until manual lift', fr: 'Durée (ex 30m, 2h) — sans = jusqu\'au lift manuel' },
   'lockdown.opt.reason.desc': { en: 'Reason shown in the log', fr: 'Raison affichée dans le log' },
@@ -662,19 +662,19 @@ export const messages = {
   'backup.opt.fichier.desc': { en: 'JSON file produced by /backup export', fr: 'Fichier .json produit par /backup export' },
   'backup.export.ok': {
     en: '📦 **Backup produced.** Keep this file safe — it contains all configuration keys (including secrets like `mc_rcon_password` and the Twitch code).',
-    fr: '📦 **Sauvegarde produite.** Conserve ce fichier en lieu sûr — il contient toutes les clés de configuration (y compris des secrets comme `mc_rcon_password` et le code Twitch).'
+    fr: '📦 **Sauvegarde produite.** Conserver ce fichier en lieu sûr — il contient toutes les clés de configuration (y compris des secrets comme `mc_rcon_password` et le code Twitch).'
   },
-  'backup.import.not_json': { en: '❌ Attach a `.json` file.', fr: '❌ Joins un fichier `.json`.' },
+  'backup.import.not_json': { en: '❌ Attach a `.json` file.', fr: '❌ Joindre un fichier `.json`.' },
 
   // --- Engagement: /giveaway ---
   'giveaway.cmd.desc': { en: 'Manage giveaways', fr: 'Gérer les giveaways' },
   'giveaway.sub.lancer.desc': { en: 'Start a giveaway', fr: 'Lancer un giveaway' },
   'giveaway.sub.terminer.desc': { en: 'End a giveaway immediately', fr: 'Terminer un giveaway immédiatement' },
   'giveaway.sub.relancer.desc': { en: 'Draw new winners', fr: 'Retirer de nouveaux gagnants' },
-  'giveaway.sub.pause.desc': { en: 'Pause an ongoing giveaway', fr: 'Met en pause un giveaway en cours' },
-  'giveaway.sub.reprendre.desc': { en: 'Resume a paused giveaway', fr: 'Reprend un giveaway en pause' },
-  'giveaway.sub.edit.desc': { en: 'Edit an ongoing giveaway', fr: 'Édite un giveaway en cours' },
-  'giveaway.sub.liste.desc': { en: 'List ongoing server giveaways', fr: 'Liste les giveaways en cours du serveur' },
+  'giveaway.sub.pause.desc': { en: 'Pause an ongoing giveaway', fr: 'Mettre en pause un giveaway en cours' },
+  'giveaway.sub.reprendre.desc': { en: 'Resume a paused giveaway', fr: 'Reprendre un giveaway en pause' },
+  'giveaway.sub.edit.desc': { en: 'Edit an ongoing giveaway', fr: 'Éditer un giveaway en cours' },
+  'giveaway.sub.liste.desc': { en: 'List ongoing server giveaways', fr: 'Lister les giveaways en cours du serveur' },
   'giveaway.sub.info.desc': { en: 'Details of a giveaway', fr: 'Détails d\'un giveaway' },
   'giveaway.opt.lot.desc': { en: 'What is being given away', fr: 'Ce qui est à gagner' },
   'giveaway.opt.duree.desc': { en: 'E.g.: 30m, 6h, 2d', fr: 'Ex : 30m, 6h, 2d' },
@@ -691,7 +691,7 @@ export const messages = {
 
   // --- Music ---
   'music.not_configured': { en: '⚠️ Music module is not configured.', fr: '⚠️ Le module musique n\'est pas configuré.' },
-  'music.join_voice': { en: '❌ Join a voice channel first.', fr: '❌ Rejoins d\'abord un salon vocal.' },
+  'music.join_voice': { en: '❌ Join a voice channel first.', fr: '❌ Rejoindre d\'abord un salon vocal.' },
   'play.cmd.desc': { en: 'Play a YouTube track or playlist (link or keywords)', fr: 'Jouer un titre ou une playlist YouTube (lien ou mots-clés)' },
   'play.opt.query.desc': { en: 'Track to search, YouTube link or playlist link', fr: 'Titre à rechercher, lien YouTube ou lien de playlist' },
   'recherche.cmd.desc': { en: 'Search YouTube and pick a track from a list', fr: 'Rechercher un titre YouTube et le choisir dans une liste' },
@@ -723,14 +723,14 @@ export const messages = {
   'mcstatus.opt.ip.desc': { en: 'Server address (default: the configured one)', fr: 'Adresse du serveur (par défaut : celui configuré)' },
   'mcstatus.no_ip': {
     en: '⚠️ No server configured. Provide an IP or run `/config minecraft ip:<address>`.',
-    fr: '⚠️ Aucun serveur configuré. Précise une IP, ou fais `/config minecraft ip:<adresse>`.'
+    fr: '⚠️ Aucun serveur configuré. Préciser une IP, ou faire `/config minecraft ip:<adresse>`.'
   },
   'mcstatus.failed': { en: '❌ Could not retrieve server status.', fr: '❌ Impossible de récupérer le statut du serveur.' },
-  'mclink.cmd.desc': { en: 'Link your Discord account to your Minecraft username', fr: 'Lier ton compte Discord à ton pseudo Minecraft' },
+  'mclink.cmd.desc': { en: 'Link your Discord account to your Minecraft username', fr: 'Lier votre compte Discord à votre pseudo Minecraft' },
   'mclink.sub.demande.desc': { en: 'Request a link by connecting to the server', fr: 'Demande de liaison à valider en se connectant au serveur' },
-  'mclink.sub.statut.desc': { en: 'Check your link', fr: 'Vérifier ta liaison' },
-  'mclink.sub.delier.desc': { en: 'Remove your link', fr: 'Supprimer ta liaison' },
-  'mclink.opt.pseudo.desc': { en: 'Your exact Minecraft username', fr: 'Ton pseudo Minecraft exact' },
+  'mclink.sub.statut.desc': { en: 'Check your link', fr: 'Vérifier votre liaison' },
+  'mclink.sub.delier.desc': { en: 'Remove your link', fr: 'Supprimer votre liaison' },
+  'mclink.opt.pseudo.desc': { en: 'Your exact Minecraft username', fr: 'Votre pseudo Minecraft exact' },
   'mcsuivi.cmd.desc': { en: 'Continuously track a Minecraft server and alert a role', fr: 'Suivre un serveur Minecraft en continu et alerter un rôle' },
   'mcsuivi.sub.ajouter.desc': { en: 'Add a Minecraft server watcher', fr: 'Ajouter un suivi de serveur Minecraft' },
   'mcsuivi.sub.liste.desc': { en: 'List the configured Minecraft watchers', fr: 'Lister les suivis Minecraft configurés' },
@@ -747,16 +747,16 @@ export const messages = {
   'mcwhitelist.opt.pseudo.desc': { en: 'Minecraft username', fr: 'Pseudo Minecraft' },
   'mcwhitelist.no_rcon': {
     en: '⚠️ RCON not configured for this server. Use `/config minecraft-rcon`.',
-    fr: '⚠️ RCON non configuré pour ce serveur. Utilise `/config minecraft-rcon`.'
+    fr: '⚠️ RCON non configuré pour ce serveur. Utiliser `/config minecraft-rcon`.'
   },
 
   // --- Git / GitHub ---
   'git.cmd.desc': { en: 'Track GitHub repository activity (commits, PRs, CI/CD, releases…)', fr: 'Suivre l\'activité de dépôts GitHub (commits, PR, CI/CD, releases…)' },
-  'gitlink.cmd.desc': { en: 'Link your Discord account to your GitHub username (mentions in announcements)', fr: 'Lier ton compte Discord à ton pseudo GitHub (mentions dans les annonces)' },
-  'gitlink.sub.lier.desc': { en: 'Register your GitHub username', fr: 'Déclarer ton pseudo GitHub' },
-  'gitlink.sub.statut.desc': { en: 'Check your link', fr: 'Voir ta liaison' },
-  'gitlink.sub.delier.desc': { en: 'Remove your link', fr: 'Supprimer ta liaison' },
-  'gitlink.opt.pseudo.desc': { en: 'Your GitHub username', fr: 'Ton pseudo GitHub' },
+  'gitlink.cmd.desc': { en: 'Link your Discord account to your GitHub username (mentions in announcements)', fr: 'Lier votre compte Discord à votre pseudo GitHub (mentions dans les annonces)' },
+  'gitlink.sub.lier.desc': { en: 'Register your GitHub username', fr: 'Déclarer votre pseudo GitHub' },
+  'gitlink.sub.statut.desc': { en: 'Check your link', fr: 'Voir votre liaison' },
+  'gitlink.sub.delier.desc': { en: 'Remove your link', fr: 'Supprimer votre liaison' },
+  'gitlink.opt.pseudo.desc': { en: 'Your GitHub username', fr: 'Votre pseudo GitHub' },
 
   // --- Integrations: /notif ---
   'notif.cmd.desc': { en: 'Manage YouTube / Twitch / RSS notifications', fr: 'Gérer les notifications YouTube / Twitch / RSS' },

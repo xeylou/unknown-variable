@@ -44,15 +44,15 @@ const TICKET_STAFF_PERMS: PermSpec[] = [
 export default {
   data: new SlashCommandBuilder()
     .setName('permissions')
-    .setDescription('Vérifie/accorde les permissions Discord aux rôles bot (STAFF / ADMIN / catégories tickets)')
+    .setDescription('Vérifier/accorder les permissions Discord aux rôles bot (STAFF / ADMIN / catégories tickets)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .addSubcommand((s) => s.setName('check').setDescription('Affiche l\'état des permissions des rôles configurés'))
+    .addSubcommand((s) => s.setName('check').setDescription('Afficher l\'état des permissions des rôles configurés'))
     .addSubcommand((s) => s.setName('grant-staff')
-      .setDescription("Accorde au rôle staff (/config staff) les permissions Discord de modération"))
+      .setDescription("Accorder au rôle staff (/config staff) les permissions Discord de modération"))
     .addSubcommand((s) => s.setName('grant-admin')
-      .setDescription("Accorde au rôle admin (/config admin) les permissions Discord d'administration"))
+      .setDescription("Accorder au rôle admin (/config admin) les permissions Discord d'administration"))
     .addSubcommand((s) => s.setName('grant-ticket-staff')
-      .setDescription("Accorde les perms ticket-staff à TOUS les rôles de catégories — ou à un rôle ponctuel si fourni")
+      .setDescription("Accorder les perms ticket-staff à TOUS les rôles de catégories — ou à un rôle ponctuel si fourni")
       .addRoleOption((o) => o.setName('role')
         .setDescription("Rôle à cibler. Sans argument, traite tous les rôles de catégories de tickets."))),
 
@@ -197,7 +197,7 @@ type GrantResult =
  */
 export async function grantTo(guild: Guild, kind: 'staff' | 'admin', reason: string): Promise<GrantResult> {
   const id = kind === 'staff' ? getStaffRole(guild.id) : getAdminRole(guild.id);
-  if (!id) return { kind: 'error', message: `❌ Aucun rôle ${kind} configuré. Définis-le avec \`/config ${kind}\`.` };
+  if (!id) return { kind: 'error', message: `❌ Aucun rôle ${kind} configuré. À définir avec \`/config ${kind}\`.` };
 
   const list = kind === 'staff' ? STAFF_PERMS : ADMIN_PERMS;
   return grantRolePerms(guild, id, list, reason);

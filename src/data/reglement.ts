@@ -9,7 +9,7 @@ export default {
       'Bienvenue parmi nous. Afin de garantir à chaque membre un environnement **sain, ' +
       'respectueux et agréable**, la lecture et le respect du présent règlement sont **obligatoires**.\n\n' +
       "Ce document constitue un engagement : en validant votre accès, vous acceptez l'ensemble " +
-      'des dispositions qui suivent. Prenez le temps de tout lire attentivement.'
+      'des dispositions qui suivent. Prendre le temps de tout lire attentivement.'
   },
 
   // Texte affiché au-dessus du bouton d'acceptation
@@ -38,7 +38,7 @@ export default {
       contenu:
         'Les insultes gratuites, la vulgarité excessive, les provocations et le « troll » ' +
         'sont proscrits. La langue principale du serveur est le **français**. ' +
-        'La critique est permise, le mépris ne l\'est pas : privilégiez toujours un ton posé.'
+        'La critique est permise, le mépris ne l\'est pas : privilégier toujours un ton posé.'
     },
     {
       emoji: '🔞',
@@ -46,7 +46,7 @@ export default {
       contenu:
         'Sont formellement interdits tout contenu à caractère **sexuel, pornographique, ' +
         'gore, violent ou choquant**, ainsi que tout contenu **illégal** (piratage, ' +
-        'substances illicites, etc.). Gardez vos publications appropriées à un public large.'
+        'substances illicites, etc.). Garder vos publications appropriées à un public large.'
     },
     {
       emoji: '📢',
@@ -76,8 +76,8 @@ export default {
       emoji: '🧵',
       titre: 'Bon usage des salons',
       contenu:
-        'Respectez la thématique de chaque salon et lisez sa description avant de publier. ' +
-        'Utilisez le **système de tickets** pour toute demande d\'aide ou de build. ' +
+        'Respecter la thématique de chaque salon et lire sa description avant de publier. ' +
+        'Utiliser le **système de tickets** pour toute demande d\'aide ou de build. ' +
         'Les discussions hors-sujet disposent de leurs propres salons.'
     },
     {
@@ -92,7 +92,7 @@ export default {
       emoji: '🔐',
       titre: 'Sécurité & arnaques',
       contenu:
-        'Ne cliquez jamais sur des liens suspects. **L\'équipe ne vous demandera jamais ' +
+        'Ne jamais cliquer sur des liens suspects. **L\'équipe ne vous demandera jamais ' +
         'votre mot de passe ni votre token.** Tout lien de phishing, arnaque ou logiciel ' +
         'malveillant entraîne un **bannissement définitif** et un signalement.'
     },
@@ -100,7 +100,7 @@ export default {
       emoji: '🛡️',
       titre: 'Données personnelles & vie privée',
       contenu:
-        "Ne divulguez pas vos informations personnelles ni celles d'autrui (adresse, " +
+        "Ne pas divulguer vos informations personnelles ni celles d'autrui (adresse, " +
         'identité réelle, etc.). Le **doxxing** est puni d\'un bannissement immédiat et ' +
         'signalé à Discord. Respectez la vie privée de chacun en toutes circonstances.'
     },

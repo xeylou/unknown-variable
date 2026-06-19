@@ -37,7 +37,7 @@ export default {
         .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(
           new TextInputBuilder()
             .setCustomId('answer')
-            .setLabel('Recopie les caractères de l\'image')
+            .setLabel('Recopier les caractères de l\'image')
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
             .setMinLength(6)
@@ -59,27 +59,27 @@ export default {
         if (unverified) await member.roles.remove(unverified, 'CAPTCHA réussi').catch(() => {});
         if (verified) await member.roles.add(verified, 'CAPTCHA réussi').catch(() => {});
         return interaction.reply({
-          content: `✅ Vérification réussie — bienvenue sur **${interaction.guild.name}** ! Pense à accepter le règlement pour finaliser ton accès.`,
+          content: `✅ Vérification réussie — bienvenue sur **${interaction.guild.name}** ! Penser à accepter le règlement pour finaliser votre accès.`,
           flags: MessageFlags.Ephemeral
         });
       }
 
       if (res.reason === 'no-pending') {
-        return interaction.reply({ content: '❌ Aucune vérification en cours. Reclique sur **Vérifier** dans le salon de vérification.', flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: '❌ Aucune vérification en cours. Recliquer sur **Vérifier** dans le salon de vérification.', flags: MessageFlags.Ephemeral });
       }
       if (res.reason === 'expired') {
-        return interaction.reply({ content: '⏰ Le défi a expiré. Reclique sur **Vérifier** dans le salon de vérification.', flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: '⏰ Le défi a expiré. Recliquer sur **Vérifier** dans le salon de vérification.', flags: MessageFlags.Ephemeral });
       }
       if (res.reason === 'wrong') {
         return interaction.reply({
-          content: `❌ Mauvaise réponse. Il te reste **${res.remaining}** essai(s) — reclique sur **Je suis humain**.`,
+          content: `❌ Mauvaise réponse. Il vous reste **${res.remaining}** essai(s) — recliquer sur **Je suis humain**.`,
           flags: MessageFlags.Ephemeral
         });
       }
       if (res.reason === 'exhausted') {
         const payload = await buildChallengeReply(interaction.guild, interaction.user.id);
         return interaction.reply({
-          content: '❌ Trois mauvaises réponses. Voici un **nouveau défi** — recopie les caractères puis clique sur **Je suis humain**.',
+          content: '❌ Trois mauvaises réponses. Voici un **nouveau défi** — recopier les caractères puis cliquer sur **Je suis humain**.',
           ...payload,
           flags: MessageFlags.Ephemeral
         });

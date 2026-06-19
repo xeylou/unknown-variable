@@ -68,10 +68,10 @@ export default {
       const select = new UserSelectMenuBuilder()
         .setCustomId(`tempvoice:select_${action}`)
         .setPlaceholder(
-          action === 'invite' ? 'Sélectionne le membre à inviter'
-          : action === 'ban' ? 'Sélectionne le membre à bannir du salon'
-          : action === 'kick' ? 'Sélectionne le membre à expulser du salon'
-          : 'Sélectionne le nouvel owner'
+          action === 'invite' ? 'Sélectionner lemembre à inviter'
+          : action === 'ban' ? 'Sélectionner lemembre à bannir du salon'
+          : action === 'kick' ? 'Sélectionner lemembre à expulser du salon'
+          : 'Sélectionner lenouvel owner'
         )
         .setMinValues(1)
         .setMaxValues(1);
@@ -110,7 +110,7 @@ export default {
       }
       if (action === 'select_transfer') {
         if (target.id === interaction.user.id) {
-          return interaction.update({ content: '❌ Tu es déjà l\'owner.', components: [] });
+          return interaction.update({ content: '❌ Vous êtes déjà l\'owner.', components: [] });
         }
         await prisma.temp_voice.update({
           where: { channel_id: channel.id },
@@ -137,7 +137,7 @@ export default {
     if (action === 'limit_modal') {
       const n = parseInt(interaction.fields.getTextInputValue('valeur'), 10);
       if (Number.isNaN(n) || n < 0 || n > 99) {
-        return interaction.reply({ content: '❌ Entre un nombre entre 0 et 99.', flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: '❌ Entrer un nombre entre 0 et 99.', flags: MessageFlags.Ephemeral });
       }
       await channel.setUserLimit(n).catch(() => {});
       await saveOwnerPref(interaction.user.id, { user_limit: n });

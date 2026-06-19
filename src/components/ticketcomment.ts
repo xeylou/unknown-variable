@@ -53,7 +53,7 @@ async function openModal(interaction: ButtonInteraction, channelId: string) {
     .setMinLength(1)
     .setMaxLength(MAX_LEN)
     .setRequired(true)
-    .setPlaceholder("Qu'as-tu pensé de la prise en charge ? Suggestions, remarques…");
+    .setPlaceholder("Qu'avez-vous pensé de la prise en charge ? Suggestions, remarques…");
 
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
   return interaction.showModal(modal);
@@ -110,7 +110,7 @@ async function saveComment(
   }
 
   return interaction.reply({
-    content: "✅ Merci pour ton retour ! Le commentaire a bien été transmis à l'équipe.",
+    content: "✅ Merci pour votre retour ! Le commentaire a bien été transmis à l'équipe.",
     flags: MessageFlags.Ephemeral
   });
 }

@@ -100,10 +100,10 @@ export default {
 
       const embed = new EmbedBuilder()
         .setColor(parseColor(interaction.options.getString('couleur')) ?? config.colors.primary)
-        .setTitle(interaction.options.getString('titre') || '🎭 Choisis tes rôles')
+        .setTitle(interaction.options.getString('titre') || '🎭 Choisir vos rôles')
         .setDescription(
           (interaction.options.getString('description') ||
-            'Clique sur un bouton pour obtenir ou retirer le rôle correspondant.') +
+            'Cliquer sur un bouton pour obtenir ou retirer le rôle correspondant.') +
           '\n\n' + roles.map((r) => `• ${r}`).join('\n')
         );
       if (image && /^https?:\/\//i.test(image)) embed.setImage(image);
@@ -143,7 +143,7 @@ export default {
       const rows = await prisma.button_role_panels.findMany({ where: { guild_id: guild.id } });
       if (!rows.length) {
         return interaction.reply({
-          content: 'ℹ️ Aucun panneau de rôles. Utilise `/setup-roles creer`.',
+          content: 'ℹ️ Aucun panneau de rôles. Utiliser `/setup-roles creer`.',
           flags: MessageFlags.Ephemeral
         });
       }

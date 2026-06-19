@@ -98,12 +98,12 @@ async function handleVoiceUpdate(oldState: VoiceState, newState: VoiceState): Pr
       channel.send({
         embeds: [new EmbedBuilder()
           .setColor(config.colors.primary)
-          .setTitle('🔊 Ton salon vocal personnel')
+          .setTitle('🔊 Votre salon vocal personnel')
           .setDescription(
             `Salon créé pour ${member}.\n\n` +
             '**Configuration :** verrouiller, déverrouiller, renommer, limiter les places.\n' +
             '**Gestion :** inviter ➕, bannir 🚫, expulser 👢, céder 👑.\n\n' +
-            '*Tes choix de nom / limite / verrou sont mémorisés pour tes futurs salons.*'
+            '*Vos choix de nom / limite / verrou sont mémorisés pour vos futurs salons.*'
           )],
         components: controlRows(),
         allowedMentions: { users: [member.id] }

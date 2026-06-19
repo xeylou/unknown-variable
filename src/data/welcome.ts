@@ -17,7 +17,7 @@ export default {
   description:
     'Bienvenue **{username}** sur **{server}** ! br br br :\n\n' +
     '• 🎫 tickets : <#REMPLACE_PAR_ID_TICKETS>\n\n' +
-    'On est ravis de t\'avoir parmi nous. 🎉',
+    'On est ravis de vous avoir parmi nous. 🎉',
 
   // Champs additionnels facultatifs. Laisse [] si inutile.
   // Exemple : { name: '📜 Règlement', value: 'Relis-le à tout moment dans <#ID>.' }

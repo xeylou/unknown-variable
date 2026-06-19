@@ -27,7 +27,7 @@ export default {
         where: { guild_id_user_id: { guild_id: message.guild.id, user_id: message.author.id } }
       }).catch(() => {});
       message.reply({
-        content: `👋 Re ${message.author}, j'ai retiré ton statut AFK (absent depuis <t:${Math.floor(ownAfk.since / 1000)}:R>).`,
+        content: `👋 Re ${message.author}, j'ai retiré votre statut AFK (absent depuis <t:${Math.floor(ownAfk.since / 1000)}:R>).`,
         allowedMentions: { repliedUser: false }
       }).then((m) => setTimeout(() => m.delete().catch(() => {}), 5000).unref()).catch(() => {});
     }

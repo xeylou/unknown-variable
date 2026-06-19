@@ -42,8 +42,8 @@ export default {
     const allowed = categoriesVisibleTo(interaction.member);
     if (allowed.length === 0) {
       return interaction.reply({
-        content: '⛔ Tu n\'es ni staff ni ticket-staff d\'aucune catégorie configurée. ' +
-          'Demande à un admin un rôle responsable de catégorie.',
+        content: '⛔ Vous n\'êtes ni staff ni ticket-staff d\'aucune catégorie configurée. ' +
+          'Demander à un admin un rôle responsable de catégorie.',
         flags: MessageFlags.Ephemeral
       });
     }
@@ -51,7 +51,7 @@ export default {
     const categoryFilter = interaction.options.getString('categorie');
     if (categoryFilter && !allowed.includes(categoryFilter)) {
       return interaction.reply({
-        content: `⛔ Tu n'as pas accès à la catégorie **${categoryLabel(categoryFilter)}**.`,
+        content: `⛔ Vous n'avez pas accès à la catégorie **${categoryLabel(categoryFilter)}**.`,
         flags: MessageFlags.Ephemeral
       });
     }
@@ -78,7 +78,7 @@ export default {
 
     if (rows.length === 0) {
       return interaction.reply({
-        embeds: [embeds.neutral('ℹ️ Aucun ticket ouvert ne correspond à ces filtres dans tes catégories.')],
+        embeds: [embeds.neutral('ℹ️ Aucun ticket ouvert ne correspond à ces filtres dans vos catégories.')],
         flags: MessageFlags.Ephemeral
       });
     }
