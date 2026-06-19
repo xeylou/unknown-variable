@@ -4,7 +4,7 @@ import { createLogger } from '../utils/logger';
 const log = createLogger('welcomecard');
 
 /**
- * Génération des cartes de bienvenue. Le rendu Canvas est fait directement dans
+ * Génération des cartes membre (bienvenue / départ). Le rendu Canvas est fait directement dans
  * le thread principal : le dessin est négligeable et `canvas.encode('png')` est
  * asynchrone (offload natif napi-rs), donc l'event loop n'est pas bloqué.
  *
@@ -20,7 +20,15 @@ type RenderParams = {
   guildName: string;
   /** URL d'image de fond optionnelle (config `welcome_card_background`). */
   backgroundURL?: string | null;
+  /** 'welcome' (défaut, arrivée) ou 'goodbye' (départ) — change titre/teinte/texte. */
+  variant?: 'welcome' | 'goodbye';
 };
+
+/** Habillage (dégradé de fond + titre) selon la variante de la carte. */
+const THEME = {
+  welcome: { from: '#1e2747', to: '#5865f2', title: 'Bienvenue !' },
+  goodbye: { from: '#2b1216', to: '#b3203a', title: 'Au revoir' }
+} as const;
 
 const WIDTH = 800;
 const HEIGHT = 250;
@@ -32,14 +40,17 @@ const AVATAR_SIZE = 160;
  */
 export async function renderWelcomeCard(params: RenderParams): Promise<Buffer | null> {
   try {
+    const theme = THEME[params.variant ?? 'welcome'];
+
     const canvas = createCanvas(WIDTH, HEIGHT);
     const ctx = canvas.getContext('2d');
 
-    // Fond : dégradé bleu sombre → indigo Discord. Couche de base (fallback si
-    // l'image custom échoue, et couleur sous les PNG transparents).
+    // Fond : dégradé sombre → couleur d'accent (bleu pour l'arrivée, rouge pour
+    // le départ). Couche de base (fallback si l'image custom échoue, et couleur
+    // sous les PNG transparents).
     const grad = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-    grad.addColorStop(0, '#1e2747');
-    grad.addColorStop(1, '#5865f2');
+    grad.addColorStop(0, theme.from);
+    grad.addColorStop(1, theme.to);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
@@ -93,7 +104,7 @@ export async function renderWelcomeCard(params: RenderParams): Promise<Buffer | 
     ctx.textBaseline = 'top';
 
     ctx.font = 'bold 38px sans-serif';
-    ctx.fillText('Bienvenue !', 250, 50);
+    ctx.fillText(theme.title, 250, 50);
 
     ctx.font = 'bold 32px sans-serif';
     const usernameDisplay = params.username.length > 22 ? `${params.username.slice(0, 22)}…` : params.username;
@@ -101,7 +112,10 @@ export async function renderWelcomeCard(params: RenderParams): Promise<Buffer | 
 
     ctx.font = '22px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.fillText(`Tu es le ${params.memberCount}ᵉ membre de ${params.guildName}`, 250, 160);
+    const subtitle = params.variant === 'goodbye'
+      ? `${params.memberCount} membre(s) restant(s) sur ${params.guildName}`
+      : `Vous êtes le ${params.memberCount}ᵉ membre de ${params.guildName}`;
+    ctx.fillText(subtitle, 250, 160);
 
     return Buffer.from(await canvas.encode('png'));
   } catch (e) {

@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import {
   SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ChannelType, MessageFlags,
   type ChatInputCommandInteraction
@@ -76,11 +77,22 @@ export default {
       .addBooleanOption((o) => o.setName('carte-image').setDescription('Joindre une carte image générée (welcome card)'))
       .addStringOption((o) => o.setName('image-fond')
         .setDescription("URL d'image de fond pour la carte (https://...) — « retirer » pour revenir au dégradé")))
-    .addSubcommand((s) => s.setName('depart').setDescription("Salon et message d'au revoir")
+    .addSubcommand((s) => s.setName('accueil-court').setDescription("Message de bienvenue court (avec ping) posté à l'obtention du rôle règlement")
+      .addChannelOption((o) => o.setName('salon')
+        .setDescription('Salon où poster le message court qui ping le membre')
+        .addChannelTypes(ChannelType.GuildText))
+      .addStringOption((o) => o.setName('message')
+        .setDescription('Message — variables : {user} {username} {server} {count}'))
+      .addBooleanOption((o) => o.setName('desactiver')
+        .setDescription('Désactiver le message de bienvenue court')))
+    .addSubcommand((s) => s.setName('depart').setDescription("Salon et message d'au revoir (carte image optionnelle, ex. salon staff)")
       .addChannelOption((o) => o.setName('salon').setDescription('Salon de départ')
         .addChannelTypes(ChannelType.GuildText).setRequired(true))
       .addStringOption((o) => o.setName('message')
-        .setDescription('Message — variables : {username} {server} {count}')))
+        .setDescription('Message — variables : {username} {server} {count}'))
+      .addBooleanOption((o) => o.setName('carte-image').setDescription('Joindre une carte image de départ générée'))
+      .addStringOption((o) => o.setName('image-fond')
+        .setDescription("URL d'image de fond pour la carte (https://...) — « retirer » pour revenir au dégradé")))
     .addSubcommand((s) => s.setName('autorole').setDescription("Rôle attribué automatiquement à l'arrivée")
       .addRoleOption((o) => o.setName('role').setDescription('Rôle').setRequired(true)))
     .addSubcommand((s) => s.setName('reglement').setDescription('Rôle donné lorsque le règlement est accepté')
@@ -103,6 +115,14 @@ export default {
       .addStringOption((o) => o.setName('mot-de-passe').setDescription('Mot de passe RCON').setRequired(true))
       .addIntegerOption((o) => o.setName('port').setDescription('Port RCON (défaut 25575)').setMinValue(1).setMaxValue(65535))
       .addRoleOption((o) => o.setName('role-en-jeu').setDescription('Rôle attribué aux joueurs connectés au serveur (optionnel)')))
+    .addSubcommand((s) => s.setName('minecraft-chat').setDescription('Miroir du chat Minecraft dans un salon staff (lecture seule)')
+      .addChannelOption((o) => o.setName('salon')
+        .setDescription('Salon où relayer le chat en jeu (à rendre visible staff uniquement)')
+        .addChannelTypes(ChannelType.GuildText))
+      .addBooleanOption((o) => o.setName('regenerer-secret')
+        .setDescription('Générer un nouveau secret (invalide l\'ancien pont)'))
+      .addBooleanOption((o) => o.setName('desactiver')
+        .setDescription('Désactiver le miroir du chat')))
     .addSubcommand((s) => s.setName('invitation').setDescription('URL d\'invitation publique (affichée dans les DM de kick/softban/unban)')
       .addStringOption((o) => o.setName('url').setDescription('URL d\'invitation Discord (vide = retirer)')))
     .addSubcommand((s) => s.setName('ticket-message').setDescription("Message d'ouverture des tickets (vide = restaurer le défaut)")
@@ -212,7 +232,7 @@ export default {
       await setConfig(gid, 'captcha_enabled', a ? '1' : '0');
       if (unverified) await setConfig(gid, 'captcha_unverified_role', unverified.id);
       if (verified) await setConfig(gid, 'captcha_verified_role', verified.id);
-      return ok(`✅ CAPTCHA **${a ? 'activé' : 'désactivé'}**.${a ? ' Déploie le bouton de vérification avec `/setup-captcha` dans ton salon de vérification.' : ''}`);
+      return ok(`✅ CAPTCHA **${a ? 'activé' : 'désactivé'}**.${a ? ' Déployer le bouton de vérification avec `/setup-captcha` dans votre salon de vérification.' : ''}`);
     }
     if (sub === 'mot-ajouter' || sub === 'mot-retirer') {
       const word = interaction.options.getString('mot', true).toLowerCase().trim();
@@ -263,12 +283,47 @@ export default {
         : '';
       return ok(`✅ Bienvenue (MP${salon ? ` + ${salon}` : ''}, à l'obtention du rôle règlement) mise à jour${msg ? ' · message défini' : ''}${card !== null ? ` · carte ${card ? 'on' : 'off'}` : ''}${bgLabel}`);
     }
+    if (sub === 'accueil-court') {
+      if (interaction.options.getBoolean('desactiver')) {
+        await setConfig(gid, 'welcome_short_channel', null);
+        return ok('✅ Message de bienvenue court désactivé.');
+      }
+      const salon = interaction.options.getChannel('salon');
+      const msg = interaction.options.getString('message');
+      if (!salon && !msg) {
+        return ok('ℹ️ Indiquez un « salon » (pour activer), un « message », ou « desactiver ».');
+      }
+      if (salon) await setConfig(gid, 'welcome_short_channel', salon.id);
+      if (msg) await setConfig(gid, 'welcome_short_message', msg);
+      const current = salon ? salon.id : await getConfig(gid, 'welcome_short_channel');
+      return ok(current
+        ? `✅ Bienvenue courte → <#${current}> (ping le membre à la validation du règlement)${msg ? ' · message défini' : ''}.`
+        : '✅ Message enregistré. ⚠️ Indiquez un « salon » pour activer l\'envoi.');
+    }
     if (sub === 'depart') {
       const ch = interaction.options.getChannel('salon', true);
       await setConfig(gid, 'goodbye_channel', ch.id);
-      const msg = interaction.options.getString('message', true);
+      const msg = interaction.options.getString('message');
       if (msg) await setConfig(gid, 'goodbye_message', msg);
-      return ok(`✅ Salon de départ : ${ch}`);
+      const card = interaction.options.getBoolean('carte-image');
+      if (card !== null) await setConfig(gid, 'goodbye_card_enabled', card ? '1' : '0');
+      const bgRaw = interaction.options.getString('image-fond')?.trim();
+      let bgChange: 'set' | 'remove' | null = null;
+      if (bgRaw !== undefined) {
+        if (!bgRaw || /^(retirer|none|off)$/i.test(bgRaw)) {
+          await setConfig(gid, 'goodbye_card_background', null);
+          bgChange = 'remove';
+        } else if (/^https:\/\/\S+$/i.test(bgRaw)) {
+          await setConfig(gid, 'goodbye_card_background', bgRaw);
+          bgChange = 'set';
+        } else {
+          return ok('❌ URL invalide pour l\'image de fond. Attendu : `https://...` ou `retirer`.');
+        }
+      }
+      const bgLabel = bgChange === 'set' ? ' · image de fond définie'
+        : bgChange === 'remove' ? ' · image de fond retirée'
+        : '';
+      return ok(`✅ Salon de départ : ${ch}${msg ? ' · message défini' : ''}${card !== null ? ` · carte ${card ? 'on' : 'off'}` : ''}${bgLabel}`);
     }
     if (sub === 'autorole') {
       const role = interaction.options.getRole('role', true);
@@ -311,6 +366,39 @@ export default {
       await setConfig(gid, 'mc_rcon_password', pw);
       if (ingameRole) await setConfig(gid, 'mc_ingame_role', ingameRole.id);
       return ok(`✅ RCON configuré (\`${host}:${port}\`)${ingameRole ? ` — rôle en jeu : ${ingameRole}` : ''}.`);
+    }
+    if (sub === 'minecraft-chat') {
+      if (interaction.options.getBoolean('desactiver')) {
+        await setConfig(gid, 'mc_chat_enabled', '0');
+        return ok('✅ Miroir du chat Minecraft désactivé.');
+      }
+      const salon = interaction.options.getChannel('salon');
+      if (salon) {
+        await setConfig(gid, 'mc_chat_channel', salon.id);
+        await setConfig(gid, 'mc_chat_enabled', '1');
+      }
+      // Secret par serveur : généré au 1ᵉʳ usage, renouvelé à la demande.
+      let secret = await getConfig(gid, 'mc_chat_secret');
+      if (!secret || interaction.options.getBoolean('regenerer-secret')) {
+        secret = randomBytes(24).toString('hex');
+        await setConfig(gid, 'mc_chat_secret', secret);
+      }
+      const channelId = await getConfig(gid, 'mc_chat_channel');
+      if (!channelId) {
+        return ok('ℹ️ Indiquez un « salon » pour activer le miroir du chat Minecraft.');
+      }
+      const portLabel = config.mcChat.port || '<MC_CHAT_PORT>';
+      return ok([
+        `✅ Miroir du chat Minecraft → <#${channelId}>.`,
+        '',
+        '**Pont à lancer sur la machine du serveur Minecraft :**',
+        `• Endpoint : \`POST http://<adresse-du-bot>:${portLabel}/mc-chat\``,
+        `• \`GUILD_ID\` = \`${gid}\``,
+        `• \`MC_CHAT_SECRET\` = \`${secret}\``,
+        '',
+        '↳ Script fourni : `scripts/mc-chat-bridge.mjs` (voir README.md et l\'en-tête du script).' +
+        (config.mcChat.port ? '' : '\n⚠️ Récepteur HTTP désactivé : définissez `MC_CHAT_PORT` côté hébergement du bot.')
+      ].join('\n'));
     }
     if (sub === 'invitation') {
       const url = interaction.options.getString('url')?.trim() || null;
@@ -371,14 +459,16 @@ export default {
         { name: '🎫 Catégorie tickets', value: showChan(getTicketCategory(gid)), inline: true },
         { name: '🗂️ Transcripts tickets', value: showChan(getTicketLogsChannel(gid)), inline: true },
         { name: '🛡️ Auto-modération', value: await bool('automod_enabled'), inline: true },
-        { name: '🚨 Anti-raid', value: `${await bool('antiraid_enabled')}\nÂge min. : ${await getConfig(gid, 'antiraid_min_age_days', '0')} j`, inline: true },
+        { name: '🚨 Anti-raid', value: `${await bool('antiraid_enabled')}\nÂge min. : ${await getConfig(gid, 'antiraid_min_age_days', '0')} j${(await getConfig(gid, 'captcha_enabled', '0')) === '1' ? ' (ignoré : captcha actif)' : ''}`, inline: true },
         { name: '👋 Bienvenue', value: `MP ✅ · salon ${showChan(await getConfig(gid, 'welcome_channel'))} · carte ${(await getConfig(gid, 'welcome_card_enabled', '0')) === '1' ? 'on' : 'off'}`, inline: true },
-        { name: '🚪 Départ', value: showChan(await getConfig(gid, 'goodbye_channel')), inline: true },
+        { name: '👋 Bienvenue courte', value: showChan(await getConfig(gid, 'welcome_short_channel')), inline: true },
+        { name: '🚪 Départ', value: `${showChan(await getConfig(gid, 'goodbye_channel'))} · carte ${(await getConfig(gid, 'goodbye_card_enabled', '0')) === '1' ? 'on' : 'off'}`, inline: true },
         { name: '🎭 Autorôle', value: showRole(await getConfig(gid, 'autorole')), inline: true },
         { name: '✅ Rôle règlement', value: showRole(await getConfig(gid, 'verified_role')), inline: true },
         { name: '💡 Suggestions', value: showChan(await getConfig(gid, 'suggestions_channel')), inline: true },
         { name: '🔊 Vocaux temporaires', value: showChan(await getConfig(gid, 'jtc_channel')), inline: true },
         { name: '⛏️ Serveur Minecraft', value: (await getConfig(gid, 'mc_server_ip')) || '*Non défini*', inline: true },
+        { name: '💬 Chat Minecraft', value: (await getConfig(gid, 'mc_chat_enabled', '0')) === '1' ? showChan(await getConfig(gid, 'mc_chat_channel')) : '❌ Désactivé', inline: true },
         { name: '🚫 Mots interdits', value: `${words.length} mot(s)`, inline: true },
         { name: '👥 Rôles par catégorie de ticket', value: ticketRolesSummary, inline: false },
         { name: '📁 Message tickets', value: ticketSummary, inline: false },

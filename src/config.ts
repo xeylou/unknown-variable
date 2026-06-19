@@ -34,7 +34,11 @@ const envSchema = z.object({
   GITHUB_WEBHOOK_PATH: z.string().default('/github/webhook'),
   // Sonde de santé HTTP (GET /health). 0 = désactivée. Sert au HEALTHCHECK
   // Docker et au monitoring d'uptime externe.
-  HEALTH_PORT: z.coerce.number().default(3001)
+  HEALTH_PORT: z.coerce.number().default(3001),
+  // Récepteur HTTP du miroir de chat Minecraft (POST /mc-chat). 0 = désactivé.
+  // Le pont côté serveur MC y envoie le chat ; auth par secret PAR SERVEUR (BDD).
+  MC_CHAT_PORT: z.coerce.number().default(0),
+  MC_CHAT_HOST: z.string().default('0.0.0.0')
 });
 
 const envParsed = envSchema.safeParse(process.env);
@@ -100,6 +104,15 @@ export default {
   // --- Sonde de santé HTTP (GET /health) ---
   // Port d'écoute ; 0 = désactivée. Indépendante du serveur webhook GitHub.
   healthPort: env.HEALTH_PORT,
+
+  // --- Miroir du chat Minecraft (optionnel — récepteur HTTP, désactivé si port 0) ---
+  // Un pont côté serveur MC POST le chat sur `POST /mc-chat` ; le bot le relaie
+  // dans le salon défini par `/config minecraft-chat`. L'authentification se fait
+  // par un secret PAR SERVEUR stocké en BDD (`mc_chat_secret`), pas via .env.
+  mcChat: {
+    port: env.MC_CHAT_PORT,
+    host: env.MC_CHAT_HOST
+  },
 
   // --- Notifications Twitch (optionnel — laisser vide désactive Twitch) ---
   twitch: {

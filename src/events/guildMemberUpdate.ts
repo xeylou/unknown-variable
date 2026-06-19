@@ -49,7 +49,7 @@ export default {
     const cardFile = () => (cardBuf ? [new AttachmentBuilder(cardBuf, { name: 'welcome.png' })] : undefined);
 
     const raw = (await getConfig(gid, 'welcome_message'))
-      || 'Bienvenue {user} sur **{server}** ! Tu es notre {count}ᵉ membre. 🎉';
+      || 'Bienvenue {user} sur **{server}** ! Vous êtes notre {count}ᵉ membre. 🎉';
 
     // Embed de bienvenue (texte + carte). Recréé à chaque envoi (cf. ci-dessus).
     const welcomeEmbed = (): EmbedBuilder => {
@@ -87,6 +87,22 @@ export default {
           embeds: [welcomeEmbed()],
           files: cardFile(),
           allowedMentions: noMentions
+        }).catch(() => {});
+      }
+    }
+
+    // --- 3) Message de bienvenue court, AVEC ping, dans un salon défini ---
+    // Contrairement à la carte ci-dessus (sans ping), ce message mentionne le
+    // membre — on n'autorise donc QUE le ping de ce membre, rien d'autre.
+    const shortChannelId = await getConfig(gid, 'welcome_short_channel');
+    if (shortChannelId) {
+      const shortChannel = newMember.guild.channels.cache.get(shortChannelId);
+      if (shortChannel?.isTextBased() && 'send' in shortChannel) {
+        const shortRaw = (await getConfig(gid, 'welcome_short_message'))
+          || 'Bienvenue {user} sur **{server}**.';
+        shortChannel.send({
+          content: applyPlaceholders(shortRaw, newMember),
+          allowedMentions: { parse: [], users: [newMember.id] }
         }).catch(() => {});
       }
     }

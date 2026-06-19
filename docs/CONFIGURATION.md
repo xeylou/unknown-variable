@@ -35,6 +35,7 @@ Source de vérité : [`.env.example`](../.env.example) (copier en `.env`).
 | `LOGS_CHANNEL_ID` | *(vide)* | **Défaut du serveur principal uniquement.** Salon des résumés des tickets fermés. Préfèrer `/config tickets`. |
 | `DATABASE_PATH` | `./data/<slug BOT_NAME>.db` | Chemin du fichier SQLite. ⚠️ À fixer explicitement si changement de `BOT_NAME` avec une base existante, sinon le bot pointera sur un nouveau fichier vide. |
 | `HEALTH_PORT` | `3001` | Port de la **sonde de santé** HTTP (`GET /health` -> `ok`). `0` = désactivée. Sert au HEALTHCHECK Docker et au monitoring d'uptime. |
+| `MC_CHAT_PORT` · `_HOST` | `0` · `0.0.0.0` | Récepteur HTTP du **miroir de chat Minecraft** (`POST /mc-chat`). `0` = désactivé. Auth par secret **par serveur** (`/config minecraft-chat`). Voir le pont `scripts/mc-chat-bridge.mjs`. |
 | `TWITCH_CLIENT_ID` · `TWITCH_CLIENT_SECRET` | *(vide)* | Sans eux, `/notif ajouter-twitch` est désactivé. Création sur <https://dev.twitch.tv/console/apps>. |
 | `LAVALINK_HOST` · `LAVALINK_PORT` | `localhost` · `2333` | Serveur Lavalink (musique). |
 | `LAVALINK_PASSWORD` | *(vide)* | **Sans mot de passe, le module musique est désactivé.** Voir [Lavalink](LAVALINK.md). |
@@ -154,16 +155,18 @@ Ci-dessous modifiable **sans redémarrage**, stocké en base (`guild_config`).
 | `mot-ajouter` · `mot-retirer` | `mot` | Mots interdits (insensible à la casse, variantes leet). |
 | `automod-spam` | `[messages:3-20]` `[secondes:3-30]` `[exclusion-minutes:1-60]` | Seuil·durée du timeout anti-spam (défauts 5 · 7 · 5). |
 | `invite-whitelist` | `action:add\|remove\|list` `[guild-id]` | Serveurs alliés dont les invitations passent. |
-| `antiraid` | `actif` `[age-min-compte:0-365]` `[expulser-jeunes]` `[verrouillage-auto]` `[quarantaine:role]` | Détection de vague + actions. |
+| `antiraid` | `actif` `[age-min-compte:0-365]` `[expulser-jeunes]` `[verrouillage-auto]` `[quarantaine:role]` | Détection de vague + actions. **Le filtre d'âge minimum est ignoré si le captcha est actif** (il filtre déjà l'entrée). |
 | `captcha` | `actif` `[role-non-verifie]` `[role-verifie]` | Vérification visuelle (6 caractères, défi en éphémère). |
 | `accueil` | `[message]` `[salon]` `[carte-image]` `[image-fond:url]` | Bienvenue à l'obtention du rôle règlement : MP (carte + embed) et carte postée dans `salon` **sans ping**. Variables : `{user}` `{username}` `{server}` `{count}`. |
-| `depart` | `salon` `[message]` | Au revoir. Variables : `{username}` `{server}` `{count}`. |
+| `accueil-court` | `[salon]` `[message]` `[desactiver]` | Message de bienvenue **court qui ping le membre**, posté dans `salon` à la validation du règlement. Variables : `{user}` `{username}` `{server}` `{count}`. |
+| `depart` | `salon` `[message]` `[carte-image]` `[image-fond:url]` | Au revoir (carte image optionnelle, ex. salon staff). Variables : `{username}` `{server}` `{count}`. |
 | `autorole` | `role` | Rôle attribué à chaque arrivée. |
 | `reglement` | `role` | Rôle donné au clic sur "J'accepte". |
 | `suggestions` | `salon` | Salon de réception des `/suggestion`. |
 | `vocaux-temp` | `salon:voice` `[categorie]` | Salon "rejoindre pour créer". |
 | `minecraft` | `ip` `[salon-statut]` | IP suivie + salon de statut auto-rafraîchi. |
 | `minecraft-rcon` | `host` `mot-de-passe` `[port:1-65535]` `[role-en-jeu]` | RCON pour `/mcwhitelist` + rôle en jeu. |
+| `minecraft-chat` | `[salon]` `[regenerer-secret]` `[desactiver]` | Miroir (lecture seule) du chat MC dans un `salon` staff. Renvoie l'endpoint + le secret pour le pont `scripts/mc-chat-bridge.mjs`. Requiert `MC_CHAT_PORT` côté hébergement. |
 | `invitation` | `[url]` | URL d'invitation affichée dans les MP de kick·softban·unban. |
 | `ticket-message` | `[message]` `[categorie]` | Message d'ouverture des tickets (max 3500 car.). Variables : `{user}` `{username}` `{category}` `{number}` `{server}`. |
 

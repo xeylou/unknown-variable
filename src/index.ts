@@ -6,6 +6,7 @@ import { closeAll as closeRcon } from './features/mcrcon';
 import { closeWorker as closeWelcomeCard } from './features/welcomecard';
 import { close as closeGithub } from './features/github';
 import { close as closeHealth } from './features/health';
+import { close as closeMcChat } from './features/mcchat';
 import { flush as flushMessageStats } from './features/messagestats';
 
 const log = createLogger('main');
@@ -82,6 +83,11 @@ async function shutdown(signal: string) {
     await closeHealth();
   } catch (e) {
     log.warn('health close failed', e);
+  }
+  try {
+    await closeMcChat();
+  } catch (e) {
+    log.warn('mcchat close failed', e);
   }
   try {
     // Vide le tampon de compteurs de messages avant de fermer Prisma.

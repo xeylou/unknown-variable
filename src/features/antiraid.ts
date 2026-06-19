@@ -19,9 +19,13 @@ async function checkRaid(member: GuildMember): Promise<void> {
   if ((await getConfig(member.guild.id, 'antiraid_enabled', '0')) !== '1') return;
   const now = Date.now();
 
-  // 1. Âge minimum du compte (peut quarantaine ou expulser selon config)
+  // 1. Âge minimum du compte (peut quarantaine ou expulser selon config).
+  //    Court-circuité si le CAPTCHA d'entrée est actif : il filtre déjà les bots
+  //    à l'arrivée, donc bloquer les comptes récents devient redondant et
+  //    pénalise inutilement de vrais nouveaux joueurs.
   const minDays = Number(await getConfig(member.guild.id, 'antiraid_min_age_days', '0'));
-  if (minDays > 0) {
+  const captchaOn = (await getConfig(member.guild.id, 'captcha_enabled', '0')) === '1';
+  if (minDays > 0 && !captchaOn) {
     const ageDays = (now - member.user.createdTimestamp) / 86_400_000;
     if (ageDays < minDays) {
       const autoKick = (await getConfig(member.guild.id, 'antiraid_kick_young', '0')) === '1';
@@ -73,7 +77,7 @@ async function checkRaid(member: GuildMember): Promise<void> {
       .setAuthor({ name: "🚨 Anti-raid — vague d'arrivées détectée" })
       .setDescription(
         `**${stamps.length} arrivées en moins de ${RAID_WINDOW / 1000} s.**\n` +
-        'Vérifiez le serveur et pensez à verrouiller les salons si nécessaire.' +
+        'Vérifier le serveur et penser à verrouiller les salons si nécessaire.' +
         lockdownNote
       )
       .setTimestamp()).catch(() => {});

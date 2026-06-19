@@ -5,6 +5,7 @@ import * as github from '../features/github';
 import * as health from '../features/health';
 import * as invitetracker from '../features/invitetracker';
 import * as leaderboards from '../features/leaderboards';
+import * as mcchat from '../features/mcchat';
 import * as mcingame from '../features/mcingame';
 import * as mcstatus from '../features/mcstatus';
 import * as mcwatch from '../features/mcwatch';
@@ -46,6 +47,7 @@ export default {
     temproles.init(client);
     polls.init(client);
     mcingame.init(client);
+    mcchat.start(client);
     github.init(client);
     messagestats.init();
     invitetracker.init(client);

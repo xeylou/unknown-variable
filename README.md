@@ -20,11 +20,11 @@ Bot Discord **multifonction**, écrit en **TypeScript strict** sur **discord.js 
 | 🎫 **Tickets** | Panneau + sélecteur de catégories de tickets, **catégories isolées par équipe**, résumé à la fermeture, notation 1–5, commentaire et réouverture sous 7 j en MP |
 | 🛡️ **Modération** | Sanctions avec raison en MP + casier pour le staff + log, `lockdown` des salons ou serveur, **anti-raid**, **auto-modération** (phishing, tokens, Zalgo, mots, spam, invites...) |
 | 📜 **Logs et Audit** | Journal par catégorie : messages, action des membres, rôles, channels, vocaux, serveur, modération, actions du bot |
-| ✅ **Accueil & vérification** | Règlement à accepter, autorôle à l'arrivée, **CAPTCHA visuel**, carte de bienvenue (avec ou sans image) en DM et salon bienvenue |
+| ✅ **Accueil & vérification** | Règlement à accepter, autorôle à l'arrivée, **CAPTCHA visuel**, cartes de bienvenue/départ (avec ou sans image) en MP et salon, message de bienvenue **court qui ping** le membre |
 | 🎉 **Intéravtions** | Giveaways, suggestions (thread + vote), sondages persistants |
 | 🔊 **Vocaux temporaires** | Salon "rejoindre pour créer" + panneau de contrôle avec mémoire des paramètres du salon |
 | 🧰 **Utilitaires** | `/userinfo`, `/serverinfo`, `/avatar`, `/ping`, `/botinfo`, rappels (ponctuels, récurrents, par rôle), tags FAQ, AFK, formateur d'embed |
-| ⛏️ **Minecraft** | Statut, suivi auto et alerte par rôle, RCON (whitelist, rôle en jeu), liaison Discord <-> pseudo MC |
+| ⛏️ **Minecraft** | Statut, suivi auto et alerte par rôle, RCON (whitelist, rôle en jeu), liaison Discord <-> pseudo MC, **miroir du chat en jeu** vers un salon staff |
 | 🔔 **Notifications** | YouTube, Twitch, et **flux RSS génériques** (Instagram / TikTok / X via RSSHub, Reddit, blogs, podcasts…) avec ping |
 | 🐙 **GitHub** | Suivi de dépôts (commits, PR, **CI/CD**, releases, issues, reviews) en **hybride** webhooks + polling, statut pipeline live, digest, liaison compte GitHub <-> Discord |
 | 🎵 **Musique** | Lecture et intéraction avec **Lavalink** (filtres, paroles...) |
