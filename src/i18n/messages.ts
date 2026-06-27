@@ -727,10 +727,11 @@ export const messages = {
   },
   'mcstatus.failed': { en: '❌ Could not retrieve server status.', fr: '❌ Impossible de récupérer le statut du serveur.' },
   'mclink.cmd.desc': { en: 'Link your Discord account to your Minecraft username', fr: 'Lier votre compte Discord à votre pseudo Minecraft' },
-  'mclink.sub.demande.desc': { en: 'Request a link by connecting to the server', fr: 'Demande de liaison à valider en se connectant au serveur' },
+  'mclink.sub.lier.desc': { en: 'Whitelist and link your Minecraft account (allowed members)', fr: 'Whitelister et lier votre compte Minecraft (membres autorisés)' },
   'mclink.sub.statut.desc': { en: 'Check your link', fr: 'Vérifier votre liaison' },
-  'mclink.sub.delier.desc': { en: 'Remove your link', fr: 'Supprimer votre liaison' },
+  'mclink.sub.delier.desc': { en: 'Unlink a username — keeps the whitelist (staff)', fr: 'Délier un pseudo — garde la whitelist (staff)' },
   'mclink.opt.pseudo.desc': { en: 'Your exact Minecraft username', fr: 'Votre pseudo Minecraft exact' },
+  'mclink.opt.delier_pseudo.desc': { en: 'Minecraft username to unlink', fr: 'Pseudo Minecraft à délier' },
   'mcsuivi.cmd.desc': { en: 'Continuously track a Minecraft server and alert a role', fr: 'Suivre un serveur Minecraft en continu et alerter un rôle' },
   'mcsuivi.sub.ajouter.desc': { en: 'Add a Minecraft server watcher', fr: 'Ajouter un suivi de serveur Minecraft' },
   'mcsuivi.sub.liste.desc': { en: 'List the configured Minecraft watchers', fr: 'Lister les suivis Minecraft configurés' },
@@ -740,15 +741,11 @@ export const messages = {
   'mcsuivi.opt.role.desc': { en: 'Role mentioned on each status change', fr: 'Rôle mentionné à chaque changement de statut' },
   'mcsuivi.opt.intervalle.desc': { en: 'Refresh interval in minutes (2-60, default 5)', fr: 'Rafraîchissement en minutes (2-60, défaut 5)' },
   'mcsuivi.opt.id.desc': { en: 'Watcher ID (see /mcsuivi liste)', fr: 'ID du suivi (voir /mcsuivi liste)' },
-  'mcwhitelist.cmd.desc': { en: 'Minecraft whitelist (via RCON)', fr: 'Whitelist Minecraft (via RCON)' },
-  'mcwhitelist.sub.add.desc': { en: 'Add a username to the whitelist', fr: 'Ajouter un pseudo à la whitelist' },
-  'mcwhitelist.sub.remove.desc': { en: 'Remove a username from the whitelist', fr: 'Retirer un pseudo de la whitelist' },
-  'mcwhitelist.sub.list.desc': { en: 'Show the current whitelist', fr: 'Afficher la whitelist actuelle' },
-  'mcwhitelist.opt.pseudo.desc': { en: 'Minecraft username', fr: 'Pseudo Minecraft' },
-  'mcwhitelist.no_rcon': {
-    en: '⚠️ RCON not configured for this server. Use `/config minecraft-rcon`.',
-    fr: '⚠️ RCON non configuré pour ce serveur. Utiliser `/config minecraft-rcon`.'
-  },
+  'whitelist.cmd.desc': { en: 'Manage the server whitelist (staff)', fr: 'Gérer la whitelist du serveur (staff)' },
+  'whitelist.sub.add.desc': { en: 'Whitelist a username (no account link)', fr: 'Whitelister un pseudo (sans liaison de compte)' },
+  'whitelist.sub.remove.desc': { en: 'Remove a username from the whitelist (and its link)', fr: 'Retirer un pseudo de la whitelist (et sa liaison)' },
+  'whitelist.sub.list.desc': { en: 'Show the whitelist, annotated with linked members', fr: 'Afficher la whitelist, annotée des membres liés' },
+  'whitelist.opt.pseudo.desc': { en: 'Exact Minecraft username', fr: 'Pseudo Minecraft exact' },
 
   // --- Git / GitHub ---
   'git.cmd.desc': { en: 'Track GitHub repository activity (commits, PRs, CI/CD, releases…)', fr: 'Suivre l\'activité de dépôts GitHub (commits, PR, CI/CD, releases…)' },
@@ -776,7 +773,15 @@ export const messages = {
   'notif.twitch_unavailable': {
     en: '⚠️ Twitch notifications are not available on this bot: the host must configure a Twitch application. YouTube and RSS remain available via `/notif`.',
     fr: '⚠️ Les notifications Twitch ne sont pas disponibles sur ce bot : l\'hébergeur doit configurer une application Twitch. YouTube et RSS restent disponibles via `/notif`.'
-  }
+  },
+
+  // --- /normalize & /pseudos (pseudos Discord) ---
+  'normalize.cmd.desc': { en: "Clean up a member's display name (remove Zalgo, fancy fonts, hoisting)", fr: 'Nettoyer le pseudo affiché d\'un membre (Zalgo, polices fantaisie, hoisting)' },
+  'normalize.opt.member.desc': { en: 'Member to normalize', fr: 'Membre à normaliser' },
+  'pseudos.cmd.desc': { en: 'Show a member\'s name-change history', fr: 'Afficher l\'historique des changements de pseudo d\'un membre' },
+  'pseudos.opt.member.desc': { en: 'Member (yourself by default)', fr: 'Membre (vous par défaut)' },
+  'pseudos.title': { en: 'Name history', fr: 'Historique des pseudos' },
+  'pseudos.empty': { en: 'No name change recorded yet.', fr: 'Aucun changement de pseudo enregistré pour l\'instant.' }
 } as const satisfies Record<string, { en: string; fr: string }>;
 
 /** Union de toutes les clés de traduction disponibles. */

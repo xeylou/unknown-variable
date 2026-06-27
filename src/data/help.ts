@@ -207,6 +207,18 @@ export const helpCategories: HelpCategory[] = [
         usageEn: '/clear <count> [member]',
         description: 'Supprime en masse de 1 à 100 messages, éventuellement filtrés sur un membre.',
         descriptionEn: 'Bulk-deletes 1-100 messages, optionally filtered by member.'
+      },
+      {
+        usage: '/normalize <membre>',
+        usageEn: '/normalize <member>',
+        description: 'Nettoie le pseudo affiché d\'un membre (retire Zalgo, polices fantaisie et caractères de « hoisting » qui forcent le tri en haut).',
+        descriptionEn: 'Cleans up a member\'s display name (removes Zalgo, fancy fonts, and "hoisting" characters that force them to the top of the list).'
+      },
+      {
+        usage: '/pseudos [membre]',
+        usageEn: '/pseudos [member]',
+        description: 'Affiche l\'historique des changements de pseudo (surnom, nom d\'utilisateur, nom global) d\'un membre.',
+        descriptionEn: 'Shows a member\'s name-change history (server nickname, username, display name).'
       }
     ]
   },
@@ -342,10 +354,10 @@ export const helpCategories: HelpCategory[] = [
         descriptionEn: 'Tracked Minecraft server and auto-updated status channel.'
       },
       {
-        usage: '/config minecraft-rcon <host> [port] <mot-de-passe> [role-en-jeu]',
-        usageEn: '/config minecraft-rcon <host> [port] <mot-de-passe> [role-en-jeu]',
-        description: 'Connexion RCON pour /mcwhitelist et le rôle attribué aux joueurs connectés.',
-        descriptionEn: 'RCON connection for /mcwhitelist and the role assigned to online players.'
+        usage: '/config minecraft-rcon [host] [port] [mot-de-passe] [role-en-jeu] [role-liaison] [liaison-age-min] [liaison-exiger-verifie]',
+        usageEn: '/config minecraft-rcon [host] [port] [mot-de-passe] [role-en-jeu] [role-liaison] [liaison-age-min] [liaison-exiger-verifie]',
+        description: 'Connexion RCON (host + mot-de-passe ensemble), rôle des joueurs connectés, et liaison libre : role-liaison autorise les membres à /mclink lier, avec options anti-abus (âge mini du compte, rôle vérifié requis).',
+        descriptionEn: 'RCON connection (host + password together), online-players role, and self-link: role-liaison lets members use /mclink lier, with anti-abuse options (min account age, verified role required).'
       },
       {
         usage: '/backup export · /backup import',
@@ -656,9 +668,17 @@ export const helpCategories: HelpCategory[] = [
         tier: 'staff'
       },
       {
-        usage: '/mclink demande|statut|delier',
-        description: 'Lie votre compte Discord à votre pseudo Minecraft. Validation par connexion au serveur.',
-        descriptionEn: 'Links your Discord account to your Minecraft username. Validated by connecting to the server.',
+        usage: '/mclink lier <pseudo> · /mclink statut',
+        usageEn: '/mclink lier <username> · /mclink statut',
+        description: 'Lie votre compte Discord à votre pseudo Minecraft (réservé aux membres ayant le rôle autorisé via `/config minecraft-rcon role-liaison:`) : whiteliste + valide à la connexion. Une seule liaison par membre.',
+        descriptionEn: 'Links your Discord account to your Minecraft username (members with the role allowed via `/config minecraft-rcon role-liaison:`): whitelists + validates on connect. One link per member.',
+        tier: 'public'
+      },
+      {
+        usage: '/mclink delier <pseudo>',
+        usageEn: '/mclink delier <username>',
+        description: 'Retire la liaison d\'un pseudo (le pseudo reste whitelisté). Réservé au staff.',
+        descriptionEn: 'Removes a username\'s link (the username stays whitelisted). Staff only.',
         tier: 'staff'
       },
       {
@@ -673,9 +693,10 @@ export const helpCategories: HelpCategory[] = [
         descriptionEn: 'Lists or removes Minecraft auto-watchers.'
       },
       {
-        usage: '/mcwhitelist add|remove|list',
-        description: 'Whitelist Minecraft via RCON. Nécessite /config minecraft-rcon.',
-        descriptionEn: 'Minecraft whitelist via RCON. Requires /config minecraft-rcon.'
+        usage: '/whitelist add|remove <pseudo> · /whitelist list',
+        description: 'Gestion staff de la whitelist Minecraft (RCON) : whitelister un pseudo sans liaison, retirer un pseudo (+ sa liaison), liste annotée des membres liés. Nécessite /config minecraft-rcon.',
+        descriptionEn: 'Staff Minecraft whitelist management (RCON): whitelist a username without linking, remove a username (+ its link), list annotated with linked members. Requires /config minecraft-rcon.',
+        tier: 'staff'
       },
       {
         usage: '/notif ajouter-youtube <identifiant-chaine> <salon> [nom] [role]',
