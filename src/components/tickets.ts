@@ -482,6 +482,22 @@ async function doCloseTicket(interaction: ModalSubmitInteraction<'cached'>, clie
 const REOPEN_WINDOW_MS = 7 * DAY_MS;
 
 /**
+ * Ramène `closed_at` à des millisecondes plausibles, ou `null` si la valeur est
+ * inexploitable. Garde-fou contre un faux « fermé il y a plus de 7 jours » sur
+ * un ticket pourtant récent : `closed_at` est censé être un `Date.now()` (ms),
+ * mais on se protège des valeurs anormales (héritées, en secondes, ou nulles) :
+ *  - ms plausible (≥ 1e12, ~2001+)   → tel quel ;
+ *  - secondes plausibles (1e9–1e12)  → recalées ×1000 ;
+ *  - 0 / null / autre                → `null` (on n'empêche pas la réouverture).
+ */
+function normalizeClosedAt(value: number | null): number | null {
+  if (!value || value <= 0) return null;
+  if (value >= 1e12) return value;       // déjà en millisecondes
+  if (value >= 1e9) return value * 1000; // stocké en secondes → ms
+  return null;                           // invraisemblable : ne pas bloquer
+}
+
+/**
  * Réouverture d'un ticket : recrée un salon avec les permissions d'origine
  * (auteur + staff), met à jour la table tickets en repassant à `open`.
  * Peut être déclenché depuis un DM — on n'utilise jamais `interaction.guild`
@@ -508,8 +524,16 @@ async function reopenTicket(interaction: ButtonInteraction, client: Client<true>
   if (ticket.user_id !== interaction.user.id && !canManageTicket(member, categoryRoleId)) {
     return interaction.editReply({ content: '❌ Seul le créateur du ticket, le staff responsable ou l\'administration peut le rouvrir.' });
   }
-  if (ticket.closed_at && Date.now() - ticket.closed_at > REOPEN_WINDOW_MS) {
-    return interaction.editReply({ content: '❌ Ce ticket a été fermé il y a plus de 7 jours.' });
+  const closedAtMs = normalizeClosedAt(ticket.closed_at);
+  if (closedAtMs === null && ticket.closed_at) {
+    // closed_at présent mais invraisemblable : on autorise la réouverture plutôt
+    // que de bloquer à tort, et on logue la valeur brute pour diagnostic.
+    log.warn(`reopen: closed_at invraisemblable (ticket #${ticket.number}, closed_at=${ticket.closed_at}) — réouverture autorisée`);
+  }
+  if (closedAtMs !== null && Date.now() - closedAtMs > REOPEN_WINDOW_MS) {
+    const ageDays = Math.floor((Date.now() - closedAtMs) / DAY_MS);
+    log.info(`reopen refusé : ticket #${ticket.number} fermé il y a ${ageDays} j (closed_at=${ticket.closed_at})`);
+    return interaction.editReply({ content: `❌ Ce ticket a été fermé il y a plus de 7 jours (${ageDays} j).` });
   }
 
   // Limite anti-abus appliquée aussi à la réouverture
