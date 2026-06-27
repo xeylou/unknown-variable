@@ -5,6 +5,7 @@ import { prisma } from '../../database';
 import { rconCommand, isConfigured } from '../../features/mcrcon';
 import { requireStaff } from '../../utils/permissions';
 import { validatePseudo, sameUsername } from '../../features/mclinking';
+import { auditLinkRemoved } from '../../features/mclinkaudit';
 import { noMentions } from '../../utils/mentions';
 import config from '../../config';
 import { base, frLoc } from '../../i18n';
@@ -80,6 +81,7 @@ export default {
       for (const p of pendings) {
         if (sameUsername(p.mc_username, pseudo)) await prisma.mc_link_codes.delete({ where: { code: p.code } }).catch(() => {});
       }
+      auditLinkRemoved(interaction.guild, pseudo, matches[0]?.user_id ?? null, interaction.user.tag, true).catch(() => {});
       return interaction.editReply(
         `📤 ${out || `\`${pseudo}\` retiré de la whitelist.`}` +
         (matches.length ? ` Liaison Discord supprimée (${matches.length}).` : '')

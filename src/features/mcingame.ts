@@ -1,7 +1,8 @@
 import { PermissionFlagsBits, type Client } from 'discord.js';
 import { prisma } from '../database';
-import { rconCommand, isConfigured } from './mcrcon';
+import { listOnline, isConfigured } from './mcrcon';
 import { pseudoConflict } from './mclinking';
+import { auditLinkCreated } from './mclinkaudit';
 import { getConfig } from '../utils/configCache';
 import { createLogger } from '../utils/logger';
 
@@ -20,30 +21,12 @@ const log = createLogger('mcingame');
 
 const TICK_MS = 30_000;
 
-/** Parse la sortie de la commande RCON `list`. */
-function parsePlayerList(raw: string): string[] {
-  // Format usuel : « There are X of a max of Y players online: pseudo1, pseudo2 »
-  const m = raw.match(/:\s*(.+)$/);
-  if (!m) return [];
-  return m[1]
-    .split(',')
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
-}
-
-/** Récupère les joueurs en ligne sur le serveur d'une guilde. */
-async function fetchOnlinePlayers(guildId: string): Promise<Set<string> | null> {
-  const out = await rconCommand(guildId, 'list');
-  if (out === null) return null;
-  return new Set(parsePlayerList(out).map((p) => p.toLowerCase()));
-}
-
 /** Tick principal : valide les demandes pendantes, ajuste les rôles. */
 async function tick(client: Client<true>): Promise<void> {
   for (const guild of client.guilds.cache.values()) {
     if (!await isConfigured(guild.id)) continue;
 
-    const online = await fetchOnlinePlayers(guild.id);
+    const online = await listOnline(guild.id);
     if (online === null) continue; // serveur hors ligne / RCON inaccessible
 
     // 1. Valide les demandes de liaison pendantes
@@ -90,6 +73,7 @@ async function tick(client: Client<true>): Promise<void> {
       });
       const member = await guild.members.fetch(p.user_id).catch(() => null);
       member?.send(`✅ Votre compte Discord est maintenant lié à **${p.mc_username}** sur **${guild.name}**.`).catch(() => {});
+      auditLinkCreated(guild, p.user_id, p.mc_username).catch(() => {});
     }
 
     // 2. Mise à jour du rôle « en jeu »

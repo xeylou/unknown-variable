@@ -64,6 +64,20 @@ export async function rconCommand(guildId: string, command: string): Promise<str
   }
 }
 
+/**
+ * Joueurs actuellement en ligne (pseudos en minuscules), ou `null` si RCON est
+ * injoignable. Partagé par la boucle `mcingame` et l'indicateur en ligne de
+ * `/mclink statut`. Format RCON usuel : « There are X of a max of Y players
+ * online: a, b, c ».
+ */
+export async function listOnline(guildId: string): Promise<Set<string> | null> {
+  const out = await rconCommand(guildId, 'list');
+  if (out === null) return null;
+  const m = out.match(/:\s*(.+)$/);
+  const names = m ? m[1].split(',').map((p) => p.trim()).filter(Boolean) : [];
+  return new Set(names.map((p) => p.toLowerCase()));
+}
+
 /** Vrai si RCON est configuré pour cette guilde. */
 export async function isConfigured(guildId: string): Promise<boolean> {
   return !!(await getConfig(guildId, 'mc_rcon_host')) &&

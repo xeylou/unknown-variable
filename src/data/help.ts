@@ -668,17 +668,17 @@ export const helpCategories: HelpCategory[] = [
         tier: 'staff'
       },
       {
-        usage: '/mclink lier <pseudo> · /mclink statut',
-        usageEn: '/mclink lier <username> · /mclink statut',
-        description: 'Lie votre compte Discord à votre pseudo Minecraft (réservé aux membres ayant le rôle autorisé via `/config minecraft-rcon role-liaison:`) : whiteliste + valide à la connexion. Une seule liaison par membre.',
-        descriptionEn: 'Links your Discord account to your Minecraft username (members with the role allowed via `/config minecraft-rcon role-liaison:`): whitelists + validates on connect. One link per member.',
+        usage: '/mclink lier <pseudo> · /mclink statut [membre] [pseudo]',
+        usageEn: '/mclink lier <username> · /mclink statut [member] [username]',
+        description: 'Lie votre compte Discord à votre pseudo Minecraft (réservé aux membres ayant le rôle autorisé via `/config minecraft-rcon role-liaison:`) : whiteliste + valide à la connexion. `statut` sans option = la vôtre ; avec `membre` ou `pseudo` (recherche inverse) = staff. Une seule liaison par membre.',
+        descriptionEn: 'Links your Discord account to your Minecraft username (members with the role allowed via `/config minecraft-rcon role-liaison:`): whitelists + validates on connect. `statut` with no option = yours; with `membre`/`pseudo` (reverse lookup) = staff. One link per member.',
         tier: 'public'
       },
       {
-        usage: '/mclink delier <pseudo>',
-        usageEn: '/mclink delier <username>',
-        description: 'Retire la liaison d\'un pseudo (le pseudo reste whitelisté). Réservé au staff.',
-        descriptionEn: 'Removes a username\'s link (the username stays whitelisted). Staff only.',
+        usage: '/mclink delier <pseudo> · /mclink forcer <membre> <pseudo>',
+        usageEn: '/mclink delier <username> · /mclink forcer <member> <username>',
+        description: 'Staff. `delier` retire la liaison d\'un pseudo (le pseudo reste whitelisté). `forcer` lie directement un membre à un pseudo sans validation en jeu (filet de secours : whiteliste, écrase les conflits, journalisé).',
+        descriptionEn: 'Staff. `delier` removes a username\'s link (it stays whitelisted). `forcer` directly links a member to a username with no in-game check (fallback: whitelists, overrides conflicts, audit-logged).',
         tier: 'staff'
       },
       {
