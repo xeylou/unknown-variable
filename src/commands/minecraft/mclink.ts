@@ -2,9 +2,10 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import { prisma } from '../../database';
-import { isConfigured, rconCommand } from '../../features/mcrcon';
+import { isConfigured, rconCommand, listOnline } from '../../features/mcrcon';
 import { lookupProfile } from '../../features/mojang';
 import { LINK_TTL_MS, validatePseudo, sameUsername, pseudoConflict } from '../../features/mclinking';
+import { auditLinkForced, auditLinkRemoved } from '../../features/mclinkaudit';
 import { getConfig } from '../../utils/configCache';
 import { requireStaff, isAdmin } from '../../utils/permissions';
 import config from '../../config';
@@ -32,11 +33,21 @@ export default {
       .addStringOption((o) => o.setName('pseudo').setDescription(base('mclink.opt.pseudo.desc'))
         .setDescriptionLocalizations(frLoc('mclink.opt.pseudo.desc')).setRequired(true)))
     .addSubcommand((s) => s.setName('statut').setDescription(base('mclink.sub.statut.desc'))
-      .setDescriptionLocalizations(frLoc('mclink.sub.statut.desc')))
+      .setDescriptionLocalizations(frLoc('mclink.sub.statut.desc'))
+      .addUserOption((o) => o.setName('membre').setDescription(base('mclink.opt.statut_membre.desc'))
+        .setDescriptionLocalizations(frLoc('mclink.opt.statut_membre.desc')))
+      .addStringOption((o) => o.setName('pseudo').setDescription(base('mclink.opt.statut_pseudo.desc'))
+        .setDescriptionLocalizations(frLoc('mclink.opt.statut_pseudo.desc'))))
     .addSubcommand((s) => s.setName('delier').setDescription(base('mclink.sub.delier.desc'))
       .setDescriptionLocalizations(frLoc('mclink.sub.delier.desc'))
       .addStringOption((o) => o.setName('pseudo').setDescription(base('mclink.opt.delier_pseudo.desc'))
-        .setDescriptionLocalizations(frLoc('mclink.opt.delier_pseudo.desc')).setRequired(true))),
+        .setDescriptionLocalizations(frLoc('mclink.opt.delier_pseudo.desc')).setRequired(true)))
+    .addSubcommand((s) => s.setName('forcer').setDescription(base('mclink.sub.forcer.desc'))
+      .setDescriptionLocalizations(frLoc('mclink.sub.forcer.desc'))
+      .addUserOption((o) => o.setName('membre').setDescription(base('mclink.opt.forcer_membre.desc'))
+        .setDescriptionLocalizations(frLoc('mclink.opt.forcer_membre.desc')).setRequired(true))
+      .addStringOption((o) => o.setName('pseudo').setDescription(base('mclink.opt.forcer_pseudo.desc'))
+        .setDescriptionLocalizations(frLoc('mclink.opt.forcer_pseudo.desc')).setRequired(true))),
 
   async execute(interaction: ChatInputCommandInteraction<'cached'>) {
     const sub = interaction.options.getSubcommand();
@@ -44,8 +55,16 @@ export default {
     if (sub === 'lier')   return lier(interaction, gid);
     if (sub === 'statut') return statut(interaction, gid);
     if (sub === 'delier') return delier(interaction, gid);
+    if (sub === 'forcer') return forcer(interaction, gid);
   }
 };
+
+/** Indicateur en ligne (🟢/⚪) pour un pseudo ; '' si RCON injoignable. */
+async function onlineTagFor(gid: string, pseudo: string): Promise<string> {
+  const online = await listOnline(gid);
+  if (online === null) return '';
+  return online.has(pseudo.toLowerCase()) ? ' · 🟢 en ligne' : ' · ⚪ hors ligne';
+}
 
 /** Libre-service réservé au rôle configuré : whiteliste + crée la demande. */
 async function lier(interaction: ChatInputCommandInteraction<'cached'>, gid: string) {
@@ -162,25 +181,67 @@ async function lier(interaction: ChatInputCommandInteraction<'cached'>, gid: str
   });
 }
 
-/** Libre-service : état de la liaison du membre appelant. */
+/**
+ * État d'une liaison. Sans option : sa propre liaison (libre-service). Avec
+ * `membre` ou `pseudo` (recherche inverse), réservé au staff.
+ */
 async function statut(interaction: ChatInputCommandInteraction<'cached'>, gid: string) {
-  const link = await prisma.mc_links.findUnique({
-    where: { guild_id_user_id: { guild_id: gid, user_id: interaction.user.id } }
-  });
+  const targetUser = interaction.options.getUser('membre');
+  const pseudoQuery = interaction.options.getString('pseudo')?.trim();
+
+  // Cibler autrui (membre ≠ soi, ou recherche par pseudo) exige le staff.
+  const targetsOther = (targetUser && targetUser.id !== interaction.user.id) || !!pseudoQuery;
+  if (targetsOther && !await requireStaff(interaction)) return;
+
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const ephemeralNoPing = { allowedMentions: { parse: [] as never[] } };
+
+  // --- Recherche inverse par pseudo (staff) : qui est lié à ce pseudo ? ---
+  if (pseudoQuery && !targetUser) {
+    if (!validatePseudo(pseudoQuery)) return interaction.editReply('❌ Pseudo invalide (3-16 caractères alphanumériques ou `_`).');
+    const links = await prisma.mc_links.findMany({ where: { guild_id: gid } });
+    const link = links.find((l) => sameUsername(l.mc_username, pseudoQuery));
+    if (link) {
+      const tag = await onlineTagFor(gid, link.mc_username);
+      return interaction.editReply({ content: `🔗 **${link.mc_username}** est lié à <@${link.user_id}> depuis <t:${Math.floor(link.linked_at / 1000)}:R>.${tag}`, ...ephemeralNoPing });
+    }
+    const pendings = await prisma.mc_link_codes.findMany({ where: { guild_id: gid } });
+    const pend = pendings.find((p) => sameUsername(p.mc_username, pseudoQuery) && p.expires_at > Date.now());
+    if (pend) return interaction.editReply({ content: `⏳ **${pseudoQuery}** est réservé (demande en attente) par <@${pend.user_id}>.`, ...ephemeralNoPing });
+    return interaction.editReply(`ℹ️ Aucun membre lié au pseudo **${pseudoQuery}**.`);
+  }
+
+  // --- Statut d'un membre (soi par défaut) ---
+  const userId = targetUser?.id ?? interaction.user.id;
+  const isSelf = userId === interaction.user.id;
+
+  const link = await prisma.mc_links.findUnique({ where: { guild_id_user_id: { guild_id: gid, user_id: userId } } });
   if (link) {
-    return interaction.reply({
-      content: `✅ Lié à **${link.mc_username}** depuis <t:${Math.floor(link.linked_at / 1000)}:R>.`,
-      flags: MessageFlags.Ephemeral
+    const tag = await onlineTagFor(gid, link.mc_username);
+    const since = `<t:${Math.floor(link.linked_at / 1000)}:R>`;
+    return interaction.editReply({
+      content: isSelf
+        ? `✅ Lié à **${link.mc_username}** depuis ${since}.${tag}`
+        : `✅ <@${userId}> est lié à **${link.mc_username}** depuis ${since}.${tag}`,
+      ...ephemeralNoPing
     });
   }
-  const pending = await prisma.mc_link_codes.findFirst({ where: { guild_id: gid, user_id: interaction.user.id } });
+  const pending = await prisma.mc_link_codes.findFirst({ where: { guild_id: gid, user_id: userId } });
   if (pending && pending.expires_at > Date.now()) {
-    return interaction.reply({
-      content: `⏳ Demande en attente pour **${pending.mc_username}** — connectez-vous au serveur pour valider (avant <t:${Math.floor(pending.expires_at / 1000)}:R>).`,
-      flags: MessageFlags.Ephemeral
+    const before = `<t:${Math.floor(pending.expires_at / 1000)}:R>`;
+    return interaction.editReply({
+      content: isSelf
+        ? `⏳ Demande en attente pour **${pending.mc_username}** — connectez-vous au serveur pour valider (avant ${before}).`
+        : `⏳ <@${userId}> : demande en attente pour **${pending.mc_username}** (à valider avant ${before}).`,
+      ...ephemeralNoPing
     });
   }
-  return interaction.reply({ content: 'ℹ️ Aucune liaison ni demande en cours. Utilisez `/mclink lier`.', flags: MessageFlags.Ephemeral });
+  return interaction.editReply({
+    content: isSelf
+      ? 'ℹ️ Aucune liaison ni demande en cours. Utilisez `/mclink lier`.'
+      : `ℹ️ <@${userId}> n'a aucune liaison ni demande en cours.`,
+    ...ephemeralNoPing
+  });
 }
 
 /** Staff : retire la LIAISON d'un pseudo (le pseudo reste whitelisté). */
@@ -209,8 +270,80 @@ async function delier(interaction: ChatInputCommandInteraction<'cached'>, gid: s
   if (!matchLinks.length && !pendCount) {
     return interaction.editReply(`ℹ️ Aucune liaison ni demande pour **${raw}**.`);
   }
+  auditLinkRemoved(interaction.guild, raw, matchLinks[0]?.user_id ?? null, interaction.user.tag, false).catch(() => {});
   return interaction.editReply(
     `🗑️ Liaison de **${raw}** supprimée (lien seul — le pseudo reste whitelisté ; utilisez ` +
     `\`/whitelist remove\` pour retirer aussi la whitelist). ${matchLinks.length} lien(s), ${pendCount} demande(s).`
   );
+}
+
+/**
+ * Staff : FORCE la liaison d'un membre à un pseudo, sans validation en jeu —
+ * filet de secours quand la validation par connexion échoue (changement de
+ * pseudo, serveur offline, Bedrock…). Écrase les conflits (c'est le but).
+ */
+async function forcer(interaction: ChatInputCommandInteraction<'cached'>, gid: string) {
+  if (!await requireStaff(interaction)) return;
+  if (!(await isConfigured(gid))) {
+    return interaction.reply({ content: '⚠️ RCON non configuré (`/config minecraft-rcon`).', flags: MessageFlags.Ephemeral });
+  }
+  const target = interaction.options.getUser('membre', true);
+  const raw = interaction.options.getString('pseudo', true).trim();
+  if (target.bot) {
+    return interaction.reply({ content: '❌ Impossible de lier un bot.', flags: MessageFlags.Ephemeral });
+  }
+  if (!validatePseudo(raw)) {
+    return interaction.reply({ content: '❌ Pseudo invalide (3-16 caractères alphanumériques ou `_`).', flags: MessageFlags.Ephemeral });
+  }
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+  // Mojang best-effort : forçage possible même sans résolution (Bedrock / offline).
+  const profile = await lookupProfile(raw);
+  const resolved = profile !== 'error' && profile !== 'not_found';
+  const name = resolved ? profile.name : raw;
+  const uuid = resolved ? profile.uuid : null;
+  const mojangNote = profile === 'not_found' ? ' ⚠️ (pseudo introuvable côté Mojang — forcé tel quel)' : '';
+
+  const overrides: string[] = [];
+
+  // Override 1 : ancienne liaison du membre cible.
+  const memberExisting = await prisma.mc_links.findUnique({ where: { guild_id_user_id: { guild_id: gid, user_id: target.id } } });
+  if (memberExisting) {
+    overrides.push(`ancienne liaison du membre (**${memberExisting.mc_username}**) remplacée`);
+    await prisma.mc_links.delete({ where: { guild_id_user_id: { guild_id: gid, user_id: target.id } } }).catch(() => {});
+  }
+  // Override 2 : liaison d'un AUTRE membre sur ce pseudo / UUID.
+  const allLinks = await prisma.mc_links.findMany({ where: { guild_id: gid } });
+  for (const l of allLinks) {
+    if (l.user_id === target.id) continue;
+    if (sameUsername(l.mc_username, name) || (uuid && l.mc_uuid && l.mc_uuid === uuid)) {
+      overrides.push(`liaison de <@${l.user_id}> sur ce pseudo retirée`);
+      await prisma.mc_links.delete({ where: { guild_id_user_id: { guild_id: gid, user_id: l.user_id } } }).catch(() => {});
+    }
+  }
+  // Nettoie les demandes pendantes du membre et/ou du pseudo.
+  const pendings = await prisma.mc_link_codes.findMany({ where: { guild_id: gid } });
+  for (const p of pendings) {
+    if (p.user_id === target.id || sameUsername(p.mc_username, name)) {
+      await prisma.mc_link_codes.delete({ where: { code: p.code } }).catch(() => {});
+    }
+  }
+
+  // Whitelist best-effort (la liaison est créée même si RCON est injoignable).
+  const wl = await rconCommand(gid, `whitelist add ${name}`);
+  const wlNote = wl === null ? ' ⚠️ (whitelist non appliquée — RCON injoignable)' : '';
+
+  await prisma.mc_links.create({
+    data: { guild_id: gid, user_id: target.id, mc_uuid: uuid ?? '', mc_username: name, linked_at: Date.now() }
+  });
+
+  auditLinkForced(interaction.guild, target.id, name, interaction.user.tag, overrides.join(' · ') || undefined).catch(() => {});
+  (await interaction.guild.members.fetch(target.id).catch(() => null))
+    ?.send(`✅ Un membre du staff a lié votre compte Discord à **${name}** sur **${interaction.guild.name}**.`).catch(() => {});
+
+  return interaction.editReply({
+    content: `✅ <@${target.id}> est désormais lié à **${name}**.${mojangNote}${wlNote}` +
+             (overrides.length ? `\n↳ ${overrides.join('\n↳ ')}` : ''),
+    allowedMentions: { parse: [] }
+  });
 }

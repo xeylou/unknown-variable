@@ -2,6 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder,
   type ChatInputCommandInteraction
 } from 'discord.js';
 import config from '../../config';
+import { prisma } from '../../database';
 import { base, frLoc, resolveLang, t } from '../../i18n';
 
 export default {
@@ -39,6 +40,14 @@ export default {
         name: t(lang, 'userinfo.field.roles', { count: roles.size }),
         value: roles.size ? [...roles.values()].join(', ').slice(0, 1024) : t(lang, 'common.none')
       });
+    }
+
+    // Compte Minecraft lié (si présent) — utile au staff pour recouper Discord ↔ jeu.
+    const mcLink = await prisma.mc_links.findUnique({
+      where: { guild_id_user_id: { guild_id: interaction.guild.id, user_id: user.id } }
+    }).catch(() => null);
+    if (mcLink) {
+      embed.addFields({ name: t(lang, 'userinfo.field.mc'), value: `\`${mcLink.mc_username}\``, inline: true });
     }
 
     return interaction.reply({ embeds: [embed] });
