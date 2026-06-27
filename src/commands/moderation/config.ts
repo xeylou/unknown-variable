@@ -114,11 +114,15 @@ export default {
       .addChannelOption((o) => o.setName('salon-statut')
         .setDescription('Salon où afficher le statut mis à jour automatiquement')
         .addChannelTypes(ChannelType.GuildText)))
-    .addSubcommand((s) => s.setName('minecraft-rcon').setDescription('Connexion RCON pour /mcwhitelist et /mclink')
-      .addStringOption((o) => o.setName('host').setDescription('Hôte RCON').setRequired(true))
-      .addStringOption((o) => o.setName('mot-de-passe').setDescription('Mot de passe RCON').setRequired(true))
+    .addSubcommand((s) => s.setName('minecraft-rcon').setDescription('Connexion RCON + rôles Minecraft (en jeu, liaison) pour /whitelist et /mclink')
+      .addStringOption((o) => o.setName('host').setDescription('Hôte RCON (avec mot-de-passe pour (re)configurer RCON)'))
+      .addStringOption((o) => o.setName('mot-de-passe').setDescription('Mot de passe RCON (avec host pour (re)configurer RCON)'))
       .addIntegerOption((o) => o.setName('port').setDescription('Port RCON (défaut 25575)').setMinValue(1).setMaxValue(65535))
-      .addRoleOption((o) => o.setName('role-en-jeu').setDescription('Rôle attribué aux joueurs connectés au serveur (optionnel)')))
+      .addRoleOption((o) => o.setName('role-en-jeu').setDescription('Rôle attribué aux joueurs connectés au serveur'))
+      .addRoleOption((o) => o.setName('role-liaison').setDescription('Rôle autorisant un membre à se lier via /mclink lier'))
+      .addIntegerOption((o) => o.setName('liaison-age-min').setDescription('Âge minimum du compte Discord pour /mclink lier (jours, 0 = off)').setMinValue(0).setMaxValue(365))
+      .addBooleanOption((o) => o.setName('liaison-exiger-verifie').setDescription('Exiger le rôle « règlement accepté » avant /mclink lier'))
+      .addBooleanOption((o) => o.setName('liaison-desactiver').setDescription('Désactiver la liaison libre (retire le rôle de liaison)')))
     .addSubcommand((s) => s.setName('minecraft-chat').setDescription('Miroir du chat Minecraft dans un salon staff (lecture seule)')
       .addChannelOption((o) => o.setName('salon')
         .setDescription('Salon où relayer le chat en jeu (à rendre visible staff uniquement)')
@@ -371,15 +375,33 @@ export default {
       return ok('✅ Serveur Minecraft configuré.');
     }
     if (sub === 'minecraft-rcon') {
-      const host = interaction.options.getString('host', true).trim();
-      const port = interaction.options.getInteger('port') ?? 25575;
-      const pw = interaction.options.getString('mot-de-passe', true);
+      const host = interaction.options.getString('host')?.trim();
+      const pw = interaction.options.getString('mot-de-passe');
+      const port = interaction.options.getInteger('port');
       const ingameRole = interaction.options.getRole('role-en-jeu');
-      await setConfig(gid, 'mc_rcon_host', host);
-      await setConfig(gid, 'mc_rcon_port', port);
-      await setConfig(gid, 'mc_rcon_password', pw);
-      if (ingameRole) await setConfig(gid, 'mc_ingame_role', ingameRole.id);
-      return ok(`✅ RCON configuré (\`${host}:${port}\`)${ingameRole ? ` — rôle en jeu : ${ingameRole}` : ''}.`);
+      const linkRole = interaction.options.getRole('role-liaison');
+      const minAge = interaction.options.getInteger('liaison-age-min');
+      const requireVerified = interaction.options.getBoolean('liaison-exiger-verifie');
+      const linkDisable = interaction.options.getBoolean('liaison-desactiver');
+
+      const changed: string[] = [];
+      // (Re)configuration RCON : host ET mot de passe ensemble.
+      if (host && pw) {
+        await setConfig(gid, 'mc_rcon_host', host);
+        await setConfig(gid, 'mc_rcon_port', port ?? 25575);
+        await setConfig(gid, 'mc_rcon_password', pw);
+        changed.push(`RCON \`${host}:${port ?? 25575}\``);
+      } else if (host || pw) {
+        return ok('❌ Pour (re)configurer RCON, fournissez à la fois l\'hôte ET le mot de passe.');
+      }
+      if (ingameRole) { await setConfig(gid, 'mc_ingame_role', ingameRole.id); changed.push(`rôle en jeu ${ingameRole}`); }
+      if (linkDisable) { await setConfig(gid, 'mc_link_role', null); changed.push('liaison libre désactivée'); }
+      else if (linkRole) { await setConfig(gid, 'mc_link_role', linkRole.id); changed.push(`rôle liaison ${linkRole}`); }
+      if (minAge !== null) { await setConfig(gid, 'mc_link_min_age_days', minAge); changed.push(`âge min liaison ${minAge} j`); }
+      if (requireVerified !== null) { await setConfig(gid, 'mc_link_require_verified', requireVerified ? '1' : '0'); changed.push(`vérifié ${requireVerified ? 'requis' : 'non requis'}`); }
+
+      if (!changed.length) return ok('ℹ️ Rien à modifier — fournissez au moins une option (host+mot-de-passe, role-en-jeu, role-liaison…).');
+      return ok(`✅ ${changed.join(' · ')}.`);
     }
     if (sub === 'minecraft-chat') {
       if (interaction.options.getBoolean('desactiver')) {
@@ -483,6 +505,8 @@ export default {
         { name: '🔊 Vocaux temporaires', value: showChan(await getConfig(gid, 'jtc_channel')), inline: true },
         { name: '⛏️ Serveur Minecraft', value: (await getConfig(gid, 'mc_server_ip')) || '*Non défini*', inline: true },
         { name: '💬 Chat Minecraft', value: (await getConfig(gid, 'mc_chat_enabled', '0')) === '1' ? showChan(await getConfig(gid, 'mc_chat_channel')) : '❌ Désactivé', inline: true },
+        { name: '🎮 Rôle en jeu (MC)', value: showRole(await getConfig(gid, 'mc_ingame_role')), inline: true },
+        { name: '🔗 Rôle liaison (MC)', value: showRole(await getConfig(gid, 'mc_link_role')), inline: true },
         { name: '🚫 Mots interdits', value: `${words.length} mot(s)`, inline: true },
         { name: '👥 Rôles par catégorie de ticket', value: ticketRolesSummary, inline: false },
         { name: '📁 Message tickets', value: ticketSummary, inline: false },

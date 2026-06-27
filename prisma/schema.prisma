@@ -256,6 +256,21 @@ model afk {
   @@id([guild_id, user_id])
 }
 
+/// Historique des changements de pseudo Discord (surnom serveur, nom
+/// d'utilisateur, nom global). Alimenté par les events nameHistory*, consulté
+/// par /pseudos. `kind` ∈ { 'nickname', 'username', 'global' }.
+model name_history {
+  id         Int     @id @default(autoincrement())
+  guild_id   String
+  user_id    String
+  kind       String
+  old_value  String?
+  new_value  String?
+  changed_at Int
+
+  @@index([guild_id, user_id, changed_at], map: "idx_name_history_user")
+}
+
 /// Liaisons compte Discord ↔ pseudo Minecraft (vérifiées par challenge).
 model mc_links {
   guild_id     String
@@ -270,10 +285,11 @@ model mc_links {
 
 /// Codes de vérification en attente pour /mclink — TTL court.
 model mc_link_codes {
-  code        String @id
+  code        String  @id
   guild_id    String
   user_id     String
   mc_username String
+  mc_uuid     String? // UUID Mojang (casse/identité canonique), si résolu
   expires_at  Int
 }
 
